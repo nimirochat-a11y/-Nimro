@@ -15,6 +15,7 @@ class AppwriteService {
   static const String endpoint = 'https://fra.cloud.appwrite.io/v1';
   static const String projectId = '6aa0cebd002a5e332081';
   static const String callbackScheme = 'appwrite-callback-$projectId';
+  static const String callbackUrl = '$callbackScheme://auth';
 
   late final Client client;
   late final Account account;
@@ -57,7 +58,7 @@ class AppwriteService {
     if (!_initialized) initialize();
     await account.createOAuth2Session(
       provider: provider,
-      success: callbackScheme,
+      success: callbackUrl,
     );
     return account.get();
   }
