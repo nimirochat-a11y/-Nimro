@@ -40,6 +40,14 @@ class LoginScreen extends StatelessWidget {
                           const EdgeInsets.only(left: 20, right: 20, top: 30),
                       child: Column(
                         children: [
+                          Image.asset(
+                            AssetRes.nimiroMark,
+                            height: 150,
+                            width: 150,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
+                          ),
+                          const SizedBox(height: 14),
                           Padding(
                             padding: const EdgeInsets.only(top: 30.0),
                             child: RichText(

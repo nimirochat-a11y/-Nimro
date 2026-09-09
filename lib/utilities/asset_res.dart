@@ -16,6 +16,7 @@ class AssetRes {
 
   // Images
   static const String nimiroLogo = '${images}nimiro_logo.png';
+  static const String nimiroMark = '${images}nimiro_mark.png';
   static const String icBackground = '${images}ic_background.jpg';
   static const String icNoImage = '${images}ic_no_image.png';
   static const String icNoFilter = '${images}ic_no_filter.png';
