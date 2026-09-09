@@ -128,9 +128,9 @@ class AuthScreenController extends BaseController {
       Get.back();
       if (data != null) _navigateScreen(data);
     } catch (e) {
-      Loggers.error(e);
+      Loggers.error('Google OAuth failed: $e');
       stopLoader();
-      showSnackBar('Google sign-in could not be completed');
+      showSnackBar('تعذر تسجيل الدخول بجوجل، حاول مرة أخرى');
     }
   }
 

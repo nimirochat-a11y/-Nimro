@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:nimiro/common/widget/privacy_policy_text.dart';
 import 'package:nimiro/common/widget/theme_blur_bg.dart';
 import 'package:nimiro/screen/auth_screen/auth_screen_controller.dart';
@@ -33,9 +34,35 @@ class LoginScreen extends StatelessWidget {
                 bottom: false,
                 child: Column(
                   children: [
-                    const SizedBox(height: 235),
+                    const SizedBox(height: 155),
+                    Text(
+                      'نيميرو',
+                      textDirection: TextDirection.rtl,
+                      style: GoogleFonts.getFont(
+                        'Aref Ruqaa',
+                        fontSize: 56,
+                        fontWeight: FontWeight.w700,
+                        color: whitePure(context),
+                        shadows: [
+                          Shadow(
+                            color: const Color(0xFF18D6F5).withValues(alpha: .45),
+                            blurRadius: 18,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'شاهد واستمتع وشارك لحظاتك',
+                      textDirection: TextDirection.rtl,
+                      style: TextStyleCustom.outFitRegular400(
+                        fontSize: 16,
+                        color: whitePure(context).withValues(alpha: .82),
+                      ),
+                    ),
+                    const SizedBox(height: 260),
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 42.0),
+                      padding: const EdgeInsets.only(bottom: 34.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -46,18 +73,19 @@ class LoginScreen extends StatelessWidget {
                             icon: Platform.isIOS
                                 ? AssetRes.icApple
                                 : AssetRes.icGoogle,
-                            label: Platform.isIOS
-                                ? 'Continue with Apple'
-                                : 'Continue with Google',
+                            label: Platform.isIOS ? 'تسجيل الدخول مع Apple' : 'تسجيل الدخول مع Google',
                           ),
                         ],
                       ),
                     ),
-                    PrivacyPolicyText(
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: PrivacyPolicyText(
                       boldTextColor: whitePure(context),
                       regularTextColor:
                           whitePure(context).withValues(alpha: .8),
-                    )
+                      ),
+                    ),
                   ],
                 ),
               ),
