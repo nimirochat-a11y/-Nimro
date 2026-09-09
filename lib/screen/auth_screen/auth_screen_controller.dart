@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:appwrite/appwrite.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -130,7 +131,10 @@ class AuthScreenController extends BaseController {
     } catch (e) {
       Loggers.error('Google OAuth failed: $e');
       stopLoader();
-      showSnackBar('تعذر تسجيل الدخول بجوجل، حاول مرة أخرى');
+      final message = e is AppwriteException
+          ? e.message
+          : 'تعذر تسجيل الدخول بجوجل، حاول مرة أخرى';
+      showSnackBar(message ?? 'تعذر تسجيل الدخول بجوجل، حاول مرة أخرى');
     }
   }
 
