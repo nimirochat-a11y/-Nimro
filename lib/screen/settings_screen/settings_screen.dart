@@ -159,6 +159,11 @@ class SettingsScreen extends StatelessWidget {
                 },
               ),
               SettingIconTextWithArrow(
+                icon: AssetRes.icReport,
+                title: 'Test Appwrite connection',
+                onTap: controller.checkAppwriteConnection,
+              ),
+              SettingIconTextWithArrow(
                 icon: AssetRes.icLogout,
                 title: LKey.logOut,
                 onTap: controller.onLogout,

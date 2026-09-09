@@ -34,4 +34,17 @@ class AppwriteService {
     realtime = Realtime(client);
     _initialized = true;
   }
+
+  /// Verifies that the configured Appwrite endpoint is reachable.
+  Future<bool> ping() async {
+    if (!_initialized) initialize();
+    try {
+      await client.ping();
+      return true;
+    } on AppwriteException {
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
 }
