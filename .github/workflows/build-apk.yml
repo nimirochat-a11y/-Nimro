@@ -37,6 +37,7 @@ jobs:
 
       - name: Accept Android SDK licenses and install NDK
         run: |
+          export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "ndk;29.0.14033849"
 
