@@ -19,6 +19,18 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android/sdk/system-images
+          sudo rm -rf /usr/local/lib/android/sdk/emulator
+          sudo rm -rf /usr/local/lib/android/sdk/platform-tools
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/powershell
+          sudo rm -rf /usr/local/lib/android/sdk/ndk/*
+          docker system prune -af || true
+          df -h "$GITHUB_WORKSPACE"
+
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
