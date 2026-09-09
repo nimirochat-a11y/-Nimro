@@ -10,6 +10,7 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
+import 'package:nimiro/common/service/appwrite/appwrite_service.dart';
 import 'package:nimiro/common/service/subscription/subscription_manager.dart';
 import 'package:nimiro/languages/dynamic_translations.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -17,6 +18,7 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart' as user;
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:appwrite/enums.dart' as appwrite_enums;
 
 class AuthScreenController extends BaseController {
   TextEditingController fullNameController = TextEditingController();
@@ -115,17 +117,12 @@ class AuthScreenController extends BaseController {
   void onGoogleTap() async {
     showLoader();
     try {
-      final credential = await signInWithGoogle();
-      final profile = credential.user;
-      if (profile == null || profile.email == null) {
-        throw Exception('Google account profile is empty');
-      }
+      final profile = await AppwriteService.instance
+          .signInWithOAuth(appwrite_enums.OAuthProvider.google);
       final user.User? data = await _registration(
-        identity: profile.email!,
+        identity: profile.email,
         loginMethod: LoginMethod.google,
-        fullname: profile.displayName?.isNotEmpty == true
-            ? profile.displayName
-            : profile.email!.split('@')[0],
+        fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
       );
       stopLoader();
@@ -140,17 +137,12 @@ class AuthScreenController extends BaseController {
   void onAppleTap() async {
     showLoader();
     try {
-      final credential = await signInWithApple();
-      final profile = credential.user;
-      if (profile == null || profile.email == null) {
-        throw Exception('Apple account profile is empty');
-      }
+      final profile = await AppwriteService.instance
+          .signInWithOAuth(appwrite_enums.OAuthProvider.apple);
       final user.User? data = await _registration(
-        identity: profile.email!,
+        identity: profile.email,
         loginMethod: LoginMethod.apple,
-        fullname: profile.displayName?.isNotEmpty == true
-            ? profile.displayName
-            : profile.email!.split('@')[0],
+        fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
       );
       stopLoader();

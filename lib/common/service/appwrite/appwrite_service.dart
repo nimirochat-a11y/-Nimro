@@ -14,6 +14,7 @@ class AppwriteService {
 
   static const String endpoint = 'https://fra.cloud.appwrite.io/v1';
   static const String projectId = '6aa0cebd002a5e332081';
+  static const String callbackScheme = 'appwrite-callback-$projectId';
 
   late final Client client;
   late final Account account;
@@ -54,7 +55,10 @@ class AppwriteService {
   /// The provider must be enabled and configured in the Appwrite Console.
   Future<models.User> signInWithOAuth(enums.OAuthProvider provider) async {
     if (!_initialized) initialize();
-    await account.createOAuth2Session(provider: provider);
+    await account.createOAuth2Session(
+      provider: provider,
+      success: callbackScheme,
+    );
     return account.get();
   }
 }
