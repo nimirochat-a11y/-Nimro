@@ -72,10 +72,17 @@ class SplashScreenController extends BaseController {
       List<Language> downloadLanguages = languages.where((element) => element.status == 1).toList();
       if (downloadLanguages.isEmpty) {
         showSnackBar(AppRes.languageAdd, second: 5);
+        Get.off(() => const LoginScreen());
         return;
       }
 
-      var downloadedFiles = await downloadAndParseLanguages(downloadLanguages);
+      Map<String, Map<String, String>> downloadedFiles = {};
+      try {
+        downloadedFiles = await downloadAndParseLanguages(downloadLanguages)
+            .timeout(const Duration(seconds: 20));
+      } catch (e) {
+        Loggers.error('Language loading skipped: $e');
+      }
 
       translations.addTranslations(downloadedFiles);
 
@@ -138,7 +145,9 @@ class SplashScreenController extends BaseController {
 
   Future<void> downloadAndProcessLanguage(Language language, Map<String, Map<String, String>> languageData) async {
     try {
-      final response = await http.get(Uri.parse(language.csvFile?.addBaseURL() ?? ''));
+      final response = await http
+          .get(Uri.parse(language.csvFile?.addBaseURL() ?? ''))
+          .timeout(const Duration(seconds: 10));
       if (response.statusCode == 200) {
         final csvContent = utf8.decode(response.bodyBytes);
         // Parse the CSV into a map
