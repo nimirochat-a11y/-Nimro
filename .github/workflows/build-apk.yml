@@ -24,7 +24,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -34,6 +33,12 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+
+      - name: Clean runner caches before Android build
+        run: |
+          rm -rf "$HOME/.gradle/caches" "$HOME/.gradle/wrapper/dists"
+          rm -rf android/.gradle build
+          df -h "$GITHUB_WORKSPACE" "$HOME"
 
       - name: Accept Android SDK licenses and install NDK
         run: |
