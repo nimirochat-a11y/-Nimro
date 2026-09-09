@@ -125,6 +125,7 @@ class AuthScreenController extends BaseController {
         loginMethod: LoginMethod.google,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
+        deviceTokenOverride: 'appwrite:${profile.$id}',
       );
       stopLoader();
       if (data != null) _navigateScreen(data);
@@ -148,6 +149,7 @@ class AuthScreenController extends BaseController {
         loginMethod: LoginMethod.apple,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
+        deviceTokenOverride: 'appwrite:${profile.$id}',
       );
       stopLoader();
       if (data != null) _navigateScreen(data);
@@ -163,8 +165,11 @@ class AuthScreenController extends BaseController {
       required LoginMethod loginMethod,
       String? fullname,
       required LoginVia loginVia,
-      String? password}) async {
-    String? deviceToken = await FirebaseNotificationManager.instance.getNotificationToken();
+      String? password,
+      String? deviceTokenOverride}) async {
+    String? deviceToken = deviceTokenOverride ??
+        await FirebaseNotificationManager.instance.getNotificationToken();
+    deviceToken ??= 'appwrite:$identity';
 
     user.User? userData;
     switch (loginVia) {
