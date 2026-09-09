@@ -15,7 +15,6 @@ class AppwriteService {
   static const String endpoint = 'https://fra.cloud.appwrite.io/v1';
   static const String projectId = '6aa0cebd002a5e332081';
   static const String callbackScheme = 'appwrite-callback-$projectId';
-  static const String callbackUrl = '$callbackScheme://auth';
 
   late final Client client;
   late final Account account;
@@ -56,10 +55,9 @@ class AppwriteService {
   /// The provider must be enabled and configured in the Appwrite Console.
   Future<models.User> signInWithOAuth(enums.OAuthProvider provider) async {
     if (!_initialized) initialize();
-    await account.createOAuth2Session(
-      provider: provider,
-      success: callbackUrl,
-    );
+    // For native Flutter, leave success/failure unset. The Appwrite SDK
+    // supplies the native callback scheme and exchanges key/secret itself.
+    await account.createOAuth2Session(provider: provider);
     return account.get();
   }
 }
