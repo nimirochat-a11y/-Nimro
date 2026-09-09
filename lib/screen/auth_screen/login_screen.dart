@@ -3,10 +3,8 @@ import 'dart:io';
 import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nimiro/common/widget/custom_divider.dart';
 import 'package:nimiro/common/widget/privacy_policy_text.dart';
 import 'package:nimiro/common/widget/theme_blur_bg.dart';
-import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/auth_screen/auth_screen_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
@@ -35,64 +33,9 @@ class LoginScreen extends StatelessWidget {
                 bottom: false,
                 child: Column(
                   children: [
+                    const SizedBox(height: 235),
                     Padding(
-                      padding:
-                          const EdgeInsets.only(left: 20, right: 20, top: 30),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(top: 36.0),
-                            child: RichText(
-                                textAlign: TextAlign.center,
-                                text: TextSpan(
-                                  text: LKey.signIn.tr.toUpperCase(),
-                                  style: TextStyleCustom.unboundedBlack900(
-                                    fontSize: 25,
-                                    color: whitePure(context),
-                                  ).copyWith(letterSpacing: -.2),
-                                  children: [
-                                    TextSpan(
-                                        text: '\n${LKey.toContinue.tr}'
-                                            .toUpperCase(),
-                                        style:
-                                            TextStyleCustom.unboundedBlack900(
-                                                fontSize: 25,
-                                                color: whitePure(context)
-                                                    .withValues(alpha: .5),
-                                                opacity: .5))
-                                  ],
-                                )),
-                          ),
-                          const SizedBox(height: 58),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CustomDivider(
-                          color: whitePure(context),
-                          height: .5,
-                          width: 100,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                          child: Text(
-                            LKey.continueWith.tr,
-                            style: TextStyleCustom.outFitRegular400(
-                                fontSize: 16, color: whitePure(context)),
-                          ),
-                        ),
-                        CustomDivider(
-                          color: whitePure(context),
-                          height: .5,
-                          width: 100,
-                        ),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 25.0),
+                      padding: const EdgeInsets.only(bottom: 42.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

@@ -127,7 +127,9 @@ class SessionManager {
 
   void setLang(String langCode) {
     storage.write(SessionKeys.lang, langCode);
-    UserService.instance.updateUserDetails(appLanguage: langCode);
+    if (isLogin()) {
+      UserService.instance.updateUserDetails(appLanguage: langCode);
+    }
   }
 
   String getLang() {
@@ -139,7 +141,7 @@ class SessionManager {
   }
 
   String getFallbackLang() {
-    return storage.read(SessionKeys.fallbackLang) ?? 'en';
+    return storage.read(SessionKeys.fallbackLang) ?? 'ar';
   }
 
   DateTime? getLastMessageReadDate({required String spaceId}) {
