@@ -49,7 +49,22 @@ class SplashScreenController extends BaseController {
 
   Future<void> fetchSettings() async {
     await Future.delayed(const Duration(milliseconds: 1000));
-    bool showNavigate = await CommonService.instance.fetchGlobalSettings();
+    bool showNavigate;
+    try {
+      showNavigate = await CommonService.instance
+          .fetchGlobalSettings()
+          .timeout(const Duration(seconds: 12));
+    } catch (e) {
+      Loggers.error('Settings loading failed: $e');
+      if (Get.currentRoute != '/login-screen') {
+        Get.off(() => const LoginScreen());
+      }
+      return;
+    }
+    if (!showNavigate) {
+      Get.off(() => const LoginScreen());
+      return;
+    }
     if (showNavigate) {
       final translations = Get.find<DynamicTranslations>();
       var setting = SessionManager.instance.getSettings();

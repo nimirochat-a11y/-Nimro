@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:nimiro/common/widget/theme_blur_bg.dart';
 import 'package:nimiro/screen/splash_screen/splash_screen_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 
@@ -34,23 +35,26 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF050B1A),
-      body: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final scale = 1.0 + (_controller.value * .035);
-          return Center(
-            child: Transform.scale(
-              scale: scale,
-              child: Image.asset(
-                AssetRes.nimiroLogo,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const ThemeBlurBg(),
+          AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) => Center(
+              child: Transform.scale(
+                scale: 1.0 + (_controller.value * .025),
+                child: Image.asset(
+                  AssetRes.nimiroLogo,
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
+                ),
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }

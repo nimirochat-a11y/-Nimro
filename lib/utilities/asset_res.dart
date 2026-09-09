@@ -15,8 +15,8 @@ class AssetRes {
   static const String countriesCSV = '${csv}countries.csv';
 
   // Images
-  static const String nimiroLogo = '${images}nimiro_logo.png';
-  static const String nimiroMark = '${images}nimiro_mark.png';
+  static const String nimiroLogo = '${images}nimiro_splash_logo.png';
+  static const String nimiroMark = '${images}nimiro_mark_transparent.png';
   static const String icBackground = '${images}ic_background.jpg';
   static const String icNoImage = '${images}ic_no_image.png';
   static const String icNoFilter = '${images}ic_no_filter.png';
