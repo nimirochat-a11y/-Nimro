@@ -10,6 +10,7 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
+import 'package:nimiro/common/service/appwrite/appwrite_service.dart';
 import 'package:nimiro/common/service/subscription/subscription_manager.dart';
 import 'package:nimiro/languages/dynamic_translations.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -17,6 +18,7 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart' as user;
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:appwrite/enums.dart' as appwrite_enums;
 
 class AuthScreenController extends BaseController {
   TextEditingController fullNameController = TextEditingController();
@@ -114,46 +116,39 @@ class AuthScreenController extends BaseController {
 
   void onGoogleTap() async {
     showLoader();
-    UserCredential? credential;
     try {
-      credential = await signInWithGoogle();
+      final profile = await AppwriteService.instance
+          .signInWithOAuth(appwrite_enums.OAuthProvider.google);
+      final user.User? data = await _registration(
+        identity: profile.email,
+        loginMethod: LoginMethod.google,
+        fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
+        loginVia: LoginVia.loginInUser,
+      );
+      Get.back();
+      if (data != null) _navigateScreen(data);
     } catch (e) {
       Loggers.error(e);
-      Get.back();
-    }
-
-    if (credential?.user == null) return;
-    user.User? data = await _registration(
-        identity: credential?.user?.email ?? '',
-        loginMethod: LoginMethod.google,
-        fullname: credential?.user?.displayName ?? credential?.user?.email?.split('@')[0],
-        loginVia: LoginVia.loginInUser);
-    Get.back();
-    if (data != null) {
-      _navigateScreen(data);
+      stopLoader();
     }
   }
 
   void onAppleTap() async {
     showLoader();
-    UserCredential? credential;
     try {
-      credential = await signInWithApple();
-      Loggers.info(
-          'EMAIL : ${credential.user?.email} FULLNAME : ${credential.user?.displayName ?? credential.user?.email?.split('@')[0]}');
+      final profile = await AppwriteService.instance
+          .signInWithOAuth(appwrite_enums.OAuthProvider.apple);
+      final user.User? data = await _registration(
+        identity: profile.email,
+        loginMethod: LoginMethod.apple,
+        fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
+        loginVia: LoginVia.loginInUser,
+      );
+      Get.back();
+      if (data != null) _navigateScreen(data);
     } catch (e) {
       Loggers.error(e);
-      Get.back();
-    }
-    if (credential?.user == null) return;
-    user.User? data = await _registration(
-        identity: credential?.user?.email ?? '',
-        loginMethod: LoginMethod.apple,
-        fullname: credential?.user?.displayName ?? credential?.user?.email?.split('@')[0],
-        loginVia: LoginVia.loginInUser);
-    Get.back();
-    if (data != null) {
-      _navigateScreen(data);
+      stopLoader();
     }
   }
 

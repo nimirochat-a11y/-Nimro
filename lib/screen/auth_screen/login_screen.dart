@@ -5,12 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/widget/custom_divider.dart';
 import 'package:nimiro/common/widget/privacy_policy_text.dart';
-import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/common/widget/theme_blur_bg.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/auth_screen/auth_screen_controller.dart';
-import 'package:nimiro/screen/auth_screen/forget_password_sheet.dart';
-import 'package:nimiro/screen/auth_screen/registration_screen.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
@@ -67,64 +64,20 @@ class LoginScreen extends StatelessWidget {
                                 )),
                           ),
                           const SizedBox(height: 50 * 1.5),
-                          LoginSheetTextField(
-                            hintText: LKey.enterYourEmail.tr,
-                            controller: controller.emailController,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 14),
-                          LoginSheetTextField(
-                            isPasswordField: true,
-                            hintText: LKey.enterPassword.tr,
-                            controller: controller.passwordController,
-                          ),
-                          Align(
-                            alignment: AlignmentDirectional.centerEnd,
-                            child: InkWell(
-                              onTap: () {
-                                Get.bottomSheet(const ForgetPasswordSheet(),
-                                        isScrollControlled: true)
-                                    .then((value) => controller
-                                        .forgetEmailController
-                                        .clear());
-                              },
-                              child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 14.0),
-                                  child: Text(LKey.forgetPassword.tr,
-                                      style: TextStyleCustom.outFitRegular400(
-                                          fontSize: 16,
-                                          color: whitePure(context)))),
+                          const SizedBox(height: 18),
+                          Text(
+                            Platform.isIOS
+                                ? 'Continue with Apple'
+                                : 'Continue with Google',
+                            style: TextStyleCustom.outFitRegular400(
+                              fontSize: 16,
+                              color: whitePure(context).withValues(alpha: .8),
                             ),
                           ),
-                          TextButtonCustom(
-                              onTap: controller.onLogin,
-                              title: LKey.logIn.tr,
-                              btnHeight: 50,
-                              horizontalMargin: 0)
                         ],
                       ),
                     ),
-                    InkWell(
-                      onTap: () {
-                        controller.fullNameController.clear();
-                        controller.emailController.clear();
-                        controller.passwordController.clear();
-                        controller.confirmPassController.clear();
-                        Get.to(() => const RegistrationScreen());
-                      },
-                      child: Container(
-                        height: 48,
-                        margin: const EdgeInsets.symmetric(vertical: 25),
-                        alignment: Alignment.center,
-                        color: whitePure(context).withValues(alpha: .2),
-                        child: Text(
-                          LKey.createAccountHere.tr,
-                          style: TextStyleCustom.outFitRegular400(
-                              color: whitePure(context), fontSize: 16),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(height: 25),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -153,15 +106,14 @@ class LoginScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          if (Platform.isIOS)
-                            SocialBtn(
-                              onTap: controller.onAppleTap,
-                              icon: AssetRes.icApple,
-                            ),
-                          if (Platform.isIOS) const SizedBox(width: 10),
                           SocialBtn(
-                              onTap: controller.onGoogleTap,
-                              icon: AssetRes.icGoogle),
+                            onTap: Platform.isIOS
+                                ? controller.onAppleTap
+                                : controller.onGoogleTap,
+                            icon: Platform.isIOS
+                                ? AssetRes.icApple
+                                : AssetRes.icGoogle,
+                          ),
                         ],
                       ),
                     ),

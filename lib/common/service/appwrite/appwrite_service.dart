@@ -1,4 +1,6 @@
 import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart' as enums;
+import 'package:appwrite/models.dart' as models;
 
 /// Central Appwrite client configuration for Nimiro.
 ///
@@ -46,5 +48,13 @@ class AppwriteService {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Starts an Appwrite OAuth session and returns the authenticated profile.
+  /// The provider must be enabled and configured in the Appwrite Console.
+  Future<models.User> signInWithOAuth(enums.OAuthProvider provider) async {
+    if (!_initialized) initialize();
+    await account.createOAuth2Session(provider: provider);
+    return account.get();
   }
 }
