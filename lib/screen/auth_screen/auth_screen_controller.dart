@@ -243,7 +243,7 @@ class AuthScreenController extends BaseController {
 
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-    googleSignIn.initialize();
+    await googleSignIn.initialize(serverClientId: '28441059803-78ro06cusr82bc0d9ksf3eoo12rvhat1.apps.googleusercontent.com');
     GoogleSignInAccount account = await googleSignIn.authenticate();
 
     // Create a new credential
