@@ -40,16 +40,8 @@ class LoginScreen extends StatelessWidget {
                           const EdgeInsets.only(left: 20, right: 20, top: 30),
                       child: Column(
                         children: [
-                          Image.asset(
-                            AssetRes.nimiroMark,
-                            height: 150,
-                            width: 150,
-                            fit: BoxFit.contain,
-                            filterQuality: FilterQuality.high,
-                          ),
-                          const SizedBox(height: 14),
                           Padding(
-                            padding: const EdgeInsets.only(top: 30.0),
+                            padding: const EdgeInsets.only(top: 36.0),
                             child: RichText(
                                 textAlign: TextAlign.center,
                                 text: TextSpan(
@@ -71,17 +63,7 @@ class LoginScreen extends StatelessWidget {
                                   ],
                                 )),
                           ),
-                          const SizedBox(height: 50 * 1.5),
-                          const SizedBox(height: 18),
-                          Text(
-                            Platform.isIOS
-                                ? 'Continue with Apple'
-                                : 'Continue with Google',
-                            style: TextStyleCustom.outFitRegular400(
-                              fontSize: 16,
-                              color: whitePure(context).withValues(alpha: .8),
-                            ),
-                          ),
+                          const SizedBox(height: 58),
                         ],
                       ),
                     ),
@@ -121,6 +103,9 @@ class LoginScreen extends StatelessWidget {
                             icon: Platform.isIOS
                                 ? AssetRes.icApple
                                 : AssetRes.icGoogle,
+                            label: Platform.isIOS
+                                ? 'Continue with Apple'
+                                : 'Continue with Google',
                           ),
                         ],
                       ),
@@ -214,8 +199,14 @@ class _LoginSheetTextFieldState extends State<LoginSheetTextField> {
 class SocialBtn extends StatelessWidget {
   final String icon;
   final VoidCallback onTap;
+  final String label;
 
-  const SocialBtn({super.key, required this.icon, required this.onTap});
+  const SocialBtn({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    required this.label,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -223,11 +214,32 @@ class SocialBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         height: 57,
-        width: 57,
-        decoration:
-            BoxDecoration(shape: BoxShape.circle, color: whitePure(context)),
-        alignment: Alignment.center,
-        child: Image.asset(icon, height: 32, width: 32),
+        width: 255,
+        decoration: BoxDecoration(
+          color: whitePure(context),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .22),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(icon, height: 24, width: 24),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyleCustom.outFitMedium500(
+                fontSize: 15,
+                color: const Color(0xFF172B4D),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
