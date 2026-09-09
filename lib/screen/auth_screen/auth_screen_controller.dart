@@ -130,6 +130,7 @@ class AuthScreenController extends BaseController {
     } catch (e) {
       Loggers.error(e);
       stopLoader();
+      showSnackBar('Google sign-in could not be completed');
     }
   }
 
@@ -149,6 +150,7 @@ class AuthScreenController extends BaseController {
     } catch (e) {
       Loggers.error(e);
       stopLoader();
+      showSnackBar('Apple sign-in could not be completed');
     }
   }
 
@@ -159,7 +161,6 @@ class AuthScreenController extends BaseController {
       required LoginVia loginVia,
       String? password}) async {
     String? deviceToken = await FirebaseNotificationManager.instance.getNotificationToken();
-    if (deviceToken == null) return null;
 
     user.User? userData;
     switch (loginVia) {
