@@ -18,7 +18,6 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/screen/auth_screen/login_screen.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen.dart';
 import 'package:nimiro/screen/on_boarding_screen/on_boarding_screen.dart';
-import 'package:nimiro/screen/select_language_screen/select_language_screen.dart';
 import 'package:nimiro/utilities/app_res.dart';
 
 class SplashScreenController extends BaseController {
@@ -70,7 +69,9 @@ class SplashScreenController extends BaseController {
       // intentionally not required for startup or for changing the locale.
       var setting = SessionManager.instance.getSettings();
       SessionManager.instance.setFallbackLang('ar');
-      SessionManager.instance.setLang('ar');
+      if (SessionManager.instance.storage.read(SessionKeys.lang) == null) {
+        SessionManager.instance.setLang('ar');
+      }
       await SessionManager.instance
           .setBool(SessionKeys.isLanguageScreenSelect, true);
 
@@ -84,11 +85,8 @@ class SplashScreenController extends BaseController {
           }
         });
       } else {
-        bool isLanguageSelect = SessionManager.instance.getBool(SessionKeys.isLanguageScreenSelect);
         bool onBoardingShow = SessionManager.instance.getBool(SessionKeys.isOnBoardingScreenSelect);
-        if (isLanguageSelect == false) {
-          Get.off(() => const SelectLanguageScreen(languageNavigationType: LanguageNavigationType.fromStart));
-        } else if (onBoardingShow == false && (setting?.onBoarding ?? []).isNotEmpty) {
+        if (onBoardingShow == false && (setting?.onBoarding ?? []).isNotEmpty) {
           Get.off(() => const OnBoardingScreen());
         } else {
           Get.off(() => const LoginScreen());
