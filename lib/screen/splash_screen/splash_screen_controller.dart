@@ -66,26 +66,9 @@ class SplashScreenController extends BaseController {
       return;
     }
     if (showNavigate) {
-      final translations = Get.find<DynamicTranslations>();
+      // Arabic and English are bundled with the app. Server language files are
+      // intentionally not required for startup or for changing the locale.
       var setting = SessionManager.instance.getSettings();
-      var languages = setting?.languages ?? [];
-      List<Language> downloadLanguages = languages.where((element) => element.status == 1).toList();
-      if (downloadLanguages.isEmpty) {
-        showSnackBar(AppRes.languageAdd, second: 5);
-        Get.off(() => const LoginScreen());
-        return;
-      }
-
-      Map<String, Map<String, String>> downloadedFiles = {};
-      try {
-        downloadedFiles = await downloadAndParseLanguages(downloadLanguages)
-            .timeout(const Duration(seconds: 20));
-      } catch (e) {
-        Loggers.error('Language loading skipped: $e');
-      }
-
-      translations.addTranslations(downloadedFiles);
-
       SessionManager.instance.setFallbackLang('ar');
       SessionManager.instance.setLang('ar');
       await SessionManager.instance
