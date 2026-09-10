@@ -205,23 +205,43 @@ class AuthScreenController extends BaseController {
 
     Setting? setting = SessionManager.instance.getSettings();
     if (userData?.isDummy == 0 && userData?.newRegister == true && setting?.registrationBonusStatus == 1) {
-      final translations = Get.find<DynamicTranslations>();
-      final languageData = translations.keys[userData?.appLanguage] ?? {};
-
-      NotificationService.instance.pushNotification(
-          title: languageData[LKey.registrationBonusTitle] ?? LKey.registrationBonusTitle.tr,
-          body: languageData[LKey.registrationBonusDescription] ?? LKey.registrationBonusDescription.tr,
-          type: NotificationType.other,
-          deviceType: userData?.device,
-          token: userData?.deviceToken,
-          authorizationToken: userData?.token?.authToken);
+      _sendRegistrationBonusSafely(userData);
     }
-    SubscriptionManager.shared.login('${userData?.id}');
     if (userData != null) {
+      _loginToSubscriptionsSafely(userData.id);
       // Subscribe My Following Ids For Live streaming notification
       return userData;
     }
     return null;
+  }
+
+  Future<void> _loginToSubscriptionsSafely(int? userId) async {
+    if (userId == null) return;
+    try {
+      await SubscriptionManager.shared.login('$userId');
+    } catch (e) {
+      Loggers.error('Subscription login skipped: $e');
+    }
+  }
+
+  Future<void> _sendRegistrationBonusSafely(user.User? userData) async {
+    if (userData == null) return;
+    try {
+      final translations = Get.find<DynamicTranslations>();
+      final languageData = translations.keys[userData.appLanguage] ?? {};
+      await NotificationService.instance
+          .pushNotification(
+            title: languageData[LKey.registrationBonusTitle] ?? LKey.registrationBonusTitle.tr,
+            body: languageData[LKey.registrationBonusDescription] ?? LKey.registrationBonusDescription.tr,
+            type: NotificationType.other,
+            deviceType: userData.device,
+            token: userData.deviceToken,
+            authorizationToken: userData.token?.authToken,
+          )
+          .timeout(const Duration(seconds: 3));
+    } catch (e) {
+      Loggers.error('Registration bonus notification skipped: $e');
+    }
   }
 
   Future<UserCredential?> createUserWithEmailAndPassword() async {
