@@ -1,4 +1,4 @@
-const String baseURL = 'http://nimiro.chat/';
+const String baseURL = 'https://nimiro.chat/';
 const String apiURL = '${baseURL}api/';
 const String apiKey = 'retry123';
 
