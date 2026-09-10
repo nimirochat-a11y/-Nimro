@@ -35,7 +35,12 @@ class AuthScreenController extends BaseController {
     super.onInit();
   }
 
+  bool _isLoggingIn = false;
+
   Future<void> onLogin() async {
+    if (_isLoggingIn) return;
+    _isLoggingIn = true;
+    try {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
@@ -77,6 +82,9 @@ class AuthScreenController extends BaseController {
       if (data != null) {
         _navigateScreen(data);
       }
+    }
+  } finally {
+      _isLoggingIn = false;
     }
   }
 
