@@ -60,10 +60,8 @@ class UserService {
         fromJson: UserModel.fromJson);
 
     if (model.status == true) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        SessionManager.instance.setUser(model.data);
-        SessionManager.instance.setAuthToken(model.data?.token);
-      });
+      SessionManager.instance.setUser(model.data);
+      SessionManager.instance.setAuthToken(model.data?.token);
     }
     return model.data;
   }
@@ -86,10 +84,8 @@ class UserService {
         fromJson: UserModel.fromJson);
 
     if (model.status == true) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        SessionManager.instance.setUser(model.data);
-        SessionManager.instance.setAuthToken(model.data?.token);
-      });
+      SessionManager.instance.setUser(model.data);
+      SessionManager.instance.setAuthToken(model.data?.token);
     } else {
       BaseController.share.stopLoader();
       BaseController.share.showSnackBar(model.message);
