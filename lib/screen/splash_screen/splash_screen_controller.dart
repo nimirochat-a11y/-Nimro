@@ -12,7 +12,6 @@ import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/service/network_helper/network_helper.dart';
 import 'package:nimiro/common/widget/no_internet_sheet.dart';
-import 'package:nimiro/common/widget/restart_widget.dart';
 import 'package:nimiro/languages/dynamic_translations.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/screen/auth_screen/login_screen.dart';
@@ -75,7 +74,6 @@ class SplashScreenController extends BaseController {
       await SessionManager.instance
           .setBool(SessionKeys.isLanguageScreenSelect, true);
 
-      RestartWidget.restartApp(Get.context!);
       if (SessionManager.instance.isLogin()) {
         UserService.instance.fetchUserDetails(userId: SessionManager.instance.getUserID()).then((value) {
           if (value != null) {
