@@ -20,7 +20,8 @@ import 'package:nimiro/utilities/app_res.dart';
 enum LoginMethod {
   email,
   google,
-  apple;
+  apple,
+  guest;
 
   String title() {
     switch (this) {
@@ -30,6 +31,8 @@ enum LoginMethod {
         return 'google';
       case LoginMethod.apple:
         return 'apple';
+      case LoginMethod.guest:
+        return 'guest';
     }
   }
 }

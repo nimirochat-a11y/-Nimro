@@ -66,14 +66,22 @@ class LoginScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SocialBtn(
-                            onTap: Platform.isIOS
-                                ? controller.onAppleTap
-                                : controller.onGoogleTap,
-                            icon: Platform.isIOS
-                                ? AssetRes.icApple
-                                : AssetRes.icGoogle,
-                            label: Platform.isIOS ? 'تسجيل الدخول مع Apple' : 'تسجيل الدخول مع Google',
+                          Column(
+                            children: [
+                              SocialBtn(
+                                onTap: Platform.isIOS
+                                    ? controller.onAppleTap
+                                    : controller.onGoogleTap,
+                                icon: Platform.isIOS
+                                    ? AssetRes.icApple
+                                    : AssetRes.icGoogle,
+                                label: Platform.isIOS
+                                    ? 'تسجيل الدخول مع Apple'
+                                    : 'تسجيل الدخول مع Google',
+                              ),
+                              const SizedBox(height: 14),
+                              GuestBtn(onTap: controller.onGuestTap),
+                            ],
                           ),
                         ],
                       ),
@@ -207,6 +215,43 @@ class SocialBtn extends StatelessWidget {
               style: TextStyleCustom.outFitMedium500(
                 fontSize: 15,
                 color: const Color(0xFF172B4D),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class GuestBtn extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const GuestBtn({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        height: 48,
+        width: 255,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: whitePure(context).withValues(alpha: .7)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.person_outline, color: whitePure(context), size: 22),
+            const SizedBox(width: 10),
+            Text(
+              'الدخول كضيف',
+              style: TextStyleCustom.outFitMedium500(
+                fontSize: 15,
+                color: whitePure(context),
               ),
             ),
           ],

@@ -139,6 +139,28 @@ class AuthScreenController extends BaseController {
     }
   }
 
+  Future<void> onGuestTap() async {
+    showLoader();
+    try {
+      final guestId = 'guest_${DateTime.now().microsecondsSinceEpoch}';
+      final data = await _registration(
+        identity: guestId,
+        loginMethod: LoginMethod.guest,
+        fullname: 'Guest User',
+        loginVia: LoginVia.loginInUser,
+        deviceTokenOverride: 'guest:$guestId',
+      );
+      stopLoader();
+      if (data != null) {
+        _navigateScreen(data);
+      }
+    } catch (e) {
+      Loggers.error('Guest login failed: $e');
+      stopLoader();
+      showSnackBar('تعذر الدخول كضيف، حاول مرة أخرى');
+    }
+  }
+
   void onAppleTap() async {
     showLoader();
     try {
