@@ -164,7 +164,7 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
 
   Future<void> _fetchLanguageFromUser() async {
     String savedLanguage = SessionManager.instance.getLang();
-    String userLanguage = user?.appLanguage ?? 'en';
+    String userLanguage = user?.appLanguage ?? savedLanguage;
     if (userLanguage != savedLanguage) {
       SessionManager.instance.setLang(userLanguage);
       WidgetsBinding.instance.addPostFrameCallback((_) {
