@@ -57,6 +57,14 @@ class User {
     return null;
   }
 
+  static bool? _toBool(dynamic v) {
+    if (v == null) return null;
+    if (v is bool) return v;
+    if (v is num) return v != 0;
+    if (v is String) return v == '1' || v.toLowerCase() == 'true';
+    return null;
+  }
+
   User(
       {this.id,
       this.identity,
@@ -270,7 +278,7 @@ class User {
     followStatus = json['follow_status'];
     isBlock = json['is_block'];
     appLanguage = json['app_language'];
-    newRegister = json['new_register'];
+    newRegister = _toBool(json['new_register']);
     token = json['token'] != null ? Token.fromJson(json['token']) : null;
     followingIds = json["following_ids"] != null
         ? List<int>.from(json["following_ids"].map((x) => x))
