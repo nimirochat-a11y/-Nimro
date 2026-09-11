@@ -3,10 +3,6 @@ import 'package:appwrite/enums.dart' as enums;
 import 'package:appwrite/models.dart' as models;
 
 /// Central Appwrite client configuration for Nimiro.
-///
-/// This is intentionally additive: Firebase remains active until each feature
-/// is migrated and verified. No Appwrite API key or server secret belongs in
-/// the mobile application.
 class AppwriteService {
   AppwriteService._();
 
@@ -38,7 +34,6 @@ class AppwriteService {
     _initialized = true;
   }
 
-  /// Verifies that the configured Appwrite endpoint is reachable.
   Future<bool> ping() async {
     if (!_initialized) initialize();
     try {
@@ -51,17 +46,24 @@ class AppwriteService {
     }
   }
 
-  /// Starts an Appwrite OAuth session and returns the authenticated profile.
-  /// The provider must be enabled and configured in the Appwrite Console.
+  /// Opens the native OAuth callback, exchanges userId/secret for a session,
+  /// and returns the authenticated Appwrite profile.
   Future<models.User> signInWithOAuth(enums.OAuthProvider provider) async {
     if (!_initialized) initialize();
-    // On mobile there is no shared cookie jar, so createOAuth2Session leaves
-    // the account in a "guest" role even after a successful provider login.
-    // createOAuth2Token instead returns a userId/secret pair from the
-    // callback URL, which we exchange explicitly for a real session before
-    // calling account.get().
-    final token = await account.createOAuth2Token(provider: provider);
-    await account.createSession(userId: token.userId, secret: token.secret);
+
+    final callback = await account.createOAuth2Token(
+      provider: provider,
+      success: '$callbackScheme://success',
+      failure: '$callbackScheme://failure',
+    );
+    final callbackUri = Uri.parse(callback.toString());
+    final userId = callbackUri.queryParameters['userId'];
+    final secret = callbackUri.queryParameters['secret'];
+    if (userId == null || secret == null || userId.isEmpty || secret.isEmpty) {
+      throw AppwriteException('OAuth callback did not contain a userId and secret');
+    }
+
+    await account.createSession(userId: userId, secret: secret);
     return account.get();
   }
 }
