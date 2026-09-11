@@ -42,6 +42,21 @@ class UserModel {
 }
 
 class User {
+  static int? _toInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
+
+  static num? _toNum(dynamic v) {
+    if (v == null) return null;
+    if (v is num) return v;
+    if (v is String) return num.tryParse(v);
+    return null;
+  }
+
   User(
       {this.id,
       this.identity,
@@ -217,7 +232,7 @@ class User {
     userMobileNo = json['user_mobile_no'];
     profilePhoto = json['profile_photo'];
     loginMethod = json['login_method'];
-    device = json['device'];
+    device = _toInt(json['device']);
     deviceToken = json['device_token'];
     notifyPostLike = json['notify_post_like'];
     notifyPostComment = json['notify_post_comment'];
@@ -226,7 +241,7 @@ class User {
     notifyGiftReceived = json['notify_gift_received'];
     notifyChat = json['notify_chat'];
     isVerify = json['is_verify'];
-    whoCanViewPost = json['who_can_view_post'];
+    whoCanViewPost = _toNum(json['who_can_view_post']);
     showMyFollowing = json['show_my_following'];
     receiveMessage = json['receive_message'];
     coinWallet = json['coin_wallet'];
