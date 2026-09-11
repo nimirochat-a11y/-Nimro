@@ -55,9 +55,13 @@ class AppwriteService {
   /// The provider must be enabled and configured in the Appwrite Console.
   Future<models.User> signInWithOAuth(enums.OAuthProvider provider) async {
     if (!_initialized) initialize();
-    // For native Flutter, leave success/failure unset. The Appwrite SDK
-    // supplies the native callback scheme and exchanges key/secret itself.
-    await account.createOAuth2Session(provider: provider);
+    // On mobile there is no shared cookie jar, so createOAuth2Session leaves
+    // the account in a "guest" role even after a successful provider login.
+    // createOAuth2Token instead returns a userId/secret pair from the
+    // callback URL, which we exchange explicitly for a real session before
+    // calling account.get().
+    final token = await account.createOAuth2Token(provider: provider);
+    await account.createSession(userId: token.userId, secret: token.secret);
     return account.get();
   }
 }
