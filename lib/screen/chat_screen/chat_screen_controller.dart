@@ -285,6 +285,8 @@ class ChatScreenController extends BlockUserController
         bodyMessage = 'Sent a GIF';
       case MessageType.storyReply:
         bodyMessage = 'Sent a Story Reply';
+      case null:
+        bodyMessage = '';
     }
     NotificationService.instance.pushNotification(
         title: myUser?.fullname ?? '',
