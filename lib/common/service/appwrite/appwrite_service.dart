@@ -18,7 +18,7 @@ class AppwriteService {
 
   late final Client client;
   late final Account account;
-  late final Databases databases;
+  late final TablesDB tablesDB;
   late final Realtime realtime;
 
   bool _initialized = false;
@@ -33,7 +33,7 @@ class AppwriteService {
       ..setProject(projectId);
 
     account = Account(client);
-    databases = Databases(client);
+    tablesDB = TablesDB(client);
     realtime = Realtime(client);
     _initialized = true;
   }

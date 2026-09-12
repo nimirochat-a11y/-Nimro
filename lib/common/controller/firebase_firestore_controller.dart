@@ -8,18 +8,15 @@ import 'package:nimiro/common/service/appwrite/appwrite_service.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 
-/// Replaces the previous Firestore-backed controller. Keeps the same public
-/// method names/signatures so existing call sites do not need to change.
-/// Backed by Appwrite Databases (collection: app_users).
 class FirebaseFirestoreController extends BaseController {
   RxList<AppUser> users = <AppUser>[].obs;
   static final instance = FirebaseFirestoreController();
 
-  Databases get _db {
+  TablesDB get _db {
     if (!AppwriteService.instance.isInitialized) {
       AppwriteService.instance.initialize();
     }
-    return AppwriteService.instance.databases;
+    return AppwriteService.instance.tablesDB;
   }
 
   void fetchUserIfNeeded(int userId) {
@@ -31,10 +28,10 @@ class FirebaseFirestoreController extends BaseController {
     }
     Loggers.info('[LOAD_USER] Fetching user $userId from Appwrite');
     _db
-        .getDocument(
+        .getRow(
           databaseId: AppwriteService.databaseId,
-          collectionId: AppwriteService.appUsersCollectionId,
-          documentId: '$userId',
+          tableId: AppwriteService.appUsersCollectionId,
+          rowId: '$userId',
         )
         .then((doc) {
           final fetchedUser = AppUser.fromJson(doc.data);
@@ -50,10 +47,10 @@ class FirebaseFirestoreController extends BaseController {
     if (user == null) return;
     AppUser chatUser = user.appUser;
     try {
-      await _db.updateDocument(
+      await _db.updateRow(
         databaseId: AppwriteService.databaseId,
-        collectionId: AppwriteService.appUsersCollectionId,
-        documentId: '${user.id}',
+        tableId: AppwriteService.appUsersCollectionId,
+        rowId: '${user.id}',
         data: chatUser.toJson(),
       );
     } on AppwriteException catch (e) {
@@ -65,19 +62,18 @@ class FirebaseFirestoreController extends BaseController {
     if (user == null) return;
     AppUser chatUser = user.appUser;
     try {
-      await _db.getDocument(
+      await _db.getRow(
         databaseId: AppwriteService.databaseId,
-        collectionId: AppwriteService.appUsersCollectionId,
-        documentId: '${user.id}',
+        tableId: AppwriteService.appUsersCollectionId,
+        rowId: '${user.id}',
       );
-      // Document already exists — nothing to do.
     } on AppwriteException catch (e) {
       if (e.code == 404) {
         try {
-          await _db.createDocument(
+          await _db.createRow(
             databaseId: AppwriteService.databaseId,
-            collectionId: AppwriteService.appUsersCollectionId,
-            documentId: '${user.id}',
+            tableId: AppwriteService.appUsersCollectionId,
+            rowId: '${user.id}',
             data: chatUser.toJson(),
           );
         } on AppwriteException catch (createError) {
@@ -92,10 +88,10 @@ class FirebaseFirestoreController extends BaseController {
   Future<void> deleteUser(int? userId) async {
     if (userId == null) return;
     try {
-      await _db.deleteDocument(
+      await _db.deleteRow(
         databaseId: AppwriteService.databaseId,
-        collectionId: AppwriteService.appUsersCollectionId,
-        documentId: '$userId',
+        tableId: AppwriteService.appUsersCollectionId,
+        rowId: '$userId',
       );
     } on AppwriteException catch (e) {
       Loggers.error('[DELETE_USER] Failed to delete user $userId — ${e.message}');

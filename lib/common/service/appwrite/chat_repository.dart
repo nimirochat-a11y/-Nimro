@@ -4,11 +4,11 @@ import 'package:nimiro/common/service/appwrite/appwrite_service.dart';
 
 /// Appwrite-backed replacement for the Firestore chat structure.
 ///
-/// Conversation documents are stored one per direction, keyed as
+/// Conversation rows are stored one per direction, keyed as
 /// "{ownerUserId}_{otherUserId}", mirroring the old
 /// users/{id}/users_list/{otherId} Firestore path.
 ///
-/// Message documents live in a single flat collection and are filtered by
+/// Message rows live in a single flat table and are filtered by
 /// `conversation_id`.
 class ChatRepository {
   ChatRepository._();
@@ -17,11 +17,11 @@ class ChatRepository {
   static const String conversationsCollectionId = 'conversations';
   static const String messagesCollectionId = 'messages';
 
-  Databases get _db {
+  TablesDB get _db {
     if (!AppwriteService.instance.isInitialized) {
       AppwriteService.instance.initialize();
     }
-    return AppwriteService.instance.databases;
+    return AppwriteService.instance.tablesDB;
   }
 
   Realtime get _realtime {
@@ -39,12 +39,12 @@ class ChatRepository {
   Future<Map<String, dynamic>?> getConversation(
       int ownerUserId, int otherUserId) async {
     try {
-      final doc = await _db.getDocument(
+      final row = await _db.getRow(
         databaseId: AppwriteService.databaseId,
-        collectionId: conversationsCollectionId,
-        documentId: conversationDocId(ownerUserId, otherUserId),
+        tableId: conversationsCollectionId,
+        rowId: conversationDocId(ownerUserId, otherUserId),
       );
-      return doc.data;
+      return row.data;
     } on AppwriteException catch (e) {
       if (e.code == 404) return null;
       rethrow;
@@ -63,18 +63,18 @@ class ChatRepository {
       ...data,
     };
     try {
-      await _db.updateDocument(
+      await _db.updateRow(
         databaseId: AppwriteService.databaseId,
-        collectionId: conversationsCollectionId,
-        documentId: docId,
+        tableId: conversationsCollectionId,
+        rowId: docId,
         data: payload,
       );
     } on AppwriteException catch (e) {
       if (e.code == 404) {
-        await _db.createDocument(
+        await _db.createRow(
           databaseId: AppwriteService.databaseId,
-          collectionId: conversationsCollectionId,
-          documentId: docId,
+          tableId: conversationsCollectionId,
+          rowId: docId,
           data: payload,
         );
       } else {
@@ -83,7 +83,7 @@ class ChatRepository {
     }
   }
 
-  /// Subscribes to realtime changes for a single conversation document.
+  /// Subscribes to realtime changes for a single conversation row.
   RealtimeSubscription subscribeToConversation({
     required int ownerUserId,
     required int otherUserId,
@@ -91,9 +91,10 @@ class ChatRepository {
     required void Function() onDelete,
   }) {
     final docId = conversationDocId(ownerUserId, otherUserId);
-    final channel =
-        'databases.${AppwriteService.databaseId}.collections.$conversationsCollectionId.documents.$docId';
-    final subscription = _realtime.subscribe([channel]);
+    final channel = Channel.tablesdb(AppwriteService.databaseId)
+        .table(conversationsCollectionId)
+        .row(docId);
+    final subscription = _realtime.subscribe([channel.toString()]);
     subscription.stream.listen((event) {
       final isDelete = event.events.any((e) => e.endsWith('.delete'));
       if (isDelete) {
@@ -111,22 +112,22 @@ class ChatRepository {
     required String messageId,
     required Map<String, dynamic> data,
   }) async {
-    await _db.createDocument(
+    await _db.createRow(
       databaseId: AppwriteService.databaseId,
-      collectionId: messagesCollectionId,
-      documentId: messageId,
+      tableId: messagesCollectionId,
+      rowId: messageId,
       data: data,
     );
   }
 
   Future<Map<String, dynamic>?> getMessage(String messageId) async {
     try {
-      final doc = await _db.getDocument(
+      final row = await _db.getRow(
         databaseId: AppwriteService.databaseId,
-        collectionId: messagesCollectionId,
-        documentId: messageId,
+        tableId: messagesCollectionId,
+        rowId: messageId,
       );
-      return doc.data;
+      return row.data;
     } on AppwriteException catch (e) {
       if (e.code == 404) return null;
       rethrow;
@@ -135,23 +136,23 @@ class ChatRepository {
 
   Future<void> updateMessage(
       String messageId, Map<String, dynamic> data) async {
-    await _db.updateDocument(
+    await _db.updateRow(
       databaseId: AppwriteService.databaseId,
-      collectionId: messagesCollectionId,
-      documentId: messageId,
+      tableId: messagesCollectionId,
+      rowId: messageId,
       data: data,
     );
   }
 
   Future<void> deleteMessage(String messageId) async {
-    await _db.deleteDocument(
+    await _db.deleteRow(
       databaseId: AppwriteService.databaseId,
-      collectionId: messagesCollectionId,
-      documentId: messageId,
+      tableId: messagesCollectionId,
+      rowId: messageId,
     );
   }
 
-  Future<models.DocumentList> listMessages({
+  Future<models.RowList> listMessages({
     required String conversationId,
     required int limit,
     String? cursorAfterDocumentId,
@@ -164,23 +165,22 @@ class ChatRepository {
     if (cursorAfterDocumentId != null) {
       queries.add(Query.cursorAfter(cursorAfterDocumentId));
     }
-    return _db.listDocuments(
+    return _db.listRows(
       databaseId: AppwriteService.databaseId,
-      collectionId: messagesCollectionId,
+      tableId: messagesCollectionId,
       queries: queries,
     );
   }
 
-  /// Subscribes to realtime create/update/delete events for messages
-  /// belonging to [conversationId]. The caller is responsible for filtering
-  /// events by conversation_id since Appwrite realtime channels are
-  /// collection-wide, not query-scoped.
+  /// Subscribes to realtime create/update/delete events for all messages.
+  /// The caller filters events by conversation_id since Appwrite realtime
+  /// channels are table-wide, not query-scoped.
   RealtimeSubscription subscribeToMessages({
     required void Function(String event, Map<String, dynamic> payload) onEvent,
   }) {
     final channel =
-        'databases.${AppwriteService.databaseId}.collections.$messagesCollectionId.documents';
-    final subscription = _realtime.subscribe([channel]);
+        Channel.tablesdb(AppwriteService.databaseId).table(messagesCollectionId).row();
+    final subscription = _realtime.subscribe([channel.toString()]);
     subscription.stream.listen((event) {
       final type = event.events.any((e) => e.endsWith('.create'))
           ? 'create'
