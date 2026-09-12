@@ -316,6 +316,8 @@ class ChatScreenController extends BlockUserController
         return '$sentPrefix@${post.user?.username ?? ''}\'s post';
       case MessageType.storyReply:
         return '${sentPrefix}a Story Reply';
+      case null:
+        return '';
     }
   }
   void onTextFieldChanged(String value) {
