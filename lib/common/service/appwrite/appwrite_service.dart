@@ -12,6 +12,10 @@ class AppwriteService {
   static const String projectId = '6aa0cebd002a5e332081';
   static const String callbackScheme = 'appwrite-callback-$projectId';
 
+  // Databases
+  static const String databaseId = 'nimiro_db';
+  static const String appUsersCollectionId = 'app_users';
+
   late final Client client;
   late final Account account;
   late final Databases databases;
