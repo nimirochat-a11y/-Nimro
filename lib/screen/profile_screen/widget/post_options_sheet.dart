@@ -12,10 +12,10 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
 class PostOptionsSheet extends StatelessWidget {
-  final ProfileScreenController controller;
+  final ProfileScreenController? controller;
   final Function(PublishType type)? onChanged;
 
-  const PostOptionsSheet({super.key, required this.controller, this.onChanged});
+  const PostOptionsSheet({super.key, this.controller, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +24,8 @@ class PostOptionsSheet extends StatelessWidget {
       children: [
         Container(
           decoration: ShapeDecoration(
-              color: whitePure(context),
+              color: Theme.of(context).bottomSheetTheme.backgroundColor ??
+                  scaffoldBackgroundColor(context),
               shape: const SmoothRectangleBorder(
                 borderRadius: SmoothBorderRadius.vertical(
                     top: SmoothRadius(cornerRadius: 30, cornerSmoothing: 1)),
@@ -42,13 +43,13 @@ class PostOptionsSheet extends StatelessWidget {
                       PublishType data = postOptions[index];
                       return PostOptionIconWithText(
                           onTap: () {
-                            Get.back();
-                            onChanged?.call(data);
+                                Get.back();
+                                onChanged?.call(data);
                             switch (data) {
                               case PublishType.feed:
                                 Get.to(() => CreateFeedScreen(
                                     createType: CreateFeedType.feed,
-                                    onAddPost: controller.onAddPost));
+                                    onAddPost: controller?.onAddPost));
                               case PublishType.story:
                                 Get.to(() => const CameraScreen(cameraType: CameraScreenType.story));
                               case PublishType.reels:
@@ -97,13 +98,20 @@ class PostOptionIconWithText extends StatelessWidget {
               child: Row(
                 children: [
                   Image.asset(image,
-                      color: textDarkGrey(context), height: 35, width: 35),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : textDarkGrey(context),
+                      height: 35,
+                      width: 35),
                   const SizedBox(width: 20),
                   Expanded(
                       child: Text(
                     text,
                     style: TextStyleCustom.unboundedRegular400(
-                        fontSize: 15, color: textDarkGrey(context)),
+                        fontSize: 15,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : textDarkGrey(context)),
                   ))
                 ],
               ),

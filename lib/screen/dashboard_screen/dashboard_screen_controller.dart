@@ -20,17 +20,17 @@ import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/camera_screen/camera_screen.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen_controller.dart';
 import 'package:nimiro/screen/gif_sheet/gif_sheet_controller.dart';
+import 'package:nimiro/screen/profile_screen/widget/post_options_sheet.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/firebase_const.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
 
 class DashboardScreenController extends BaseController with GetSingleTickerProviderStateMixin {
   List<String> bottomIconList = [
-    AssetRes.icReel,
     AssetRes.icPost,
-    AssetRes.icLiveStream,
+    AssetRes.icReel,
+    '',
     AssetRes.icSearch,
-    AssetRes.icChat,
     AssetRes.icProfile
   ];
   RxInt selectedPageIndex = 0.obs;
@@ -98,9 +98,15 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   }
 
   onChanged(int index) {
+    // The center button is an action, not a page in the indexed stack.
+    if (index == 2) {
+      HapticFeedback.lightImpact();
+      Get.bottomSheet(const PostOptionsSheet(), isScrollControlled: true);
+      return;
+    }
     SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(statusBarBrightness: index == 0 || index == 2 ? Brightness.dark : Brightness.light));
-    if (index == 1) {
+        SystemUiOverlayStyle(statusBarBrightness: index == 1 || index == 3 ? Brightness.dark : Brightness.light));
+    if (index == 0) {
       onFeedPostScrollDown(index);
     }
     if (selectedPageIndex.value == index) return;
@@ -110,6 +116,11 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     animationController
       ..reset()
       ..forward();
+  }
+
+  int get contentPageIndex {
+    if (selectedPageIndex.value <= 1) return selectedPageIndex.value;
+    return selectedPageIndex.value - 1;
   }
 
   onFeedPostScrollDown(int index) {

@@ -115,6 +115,8 @@ class LKey {
   static const String showChatBtn = "Show Chat Button";
   static const String notifications = "Notifications";
   static const String general = "General";
+  static const String darkMode = "Dark Mode";
+  static const String lightMode = "Light Mode";
   static const String postLikes = "Post Likes";
   static const String commentsOnPost = "Comments On Post";
   static const String mentions = "Mentions";

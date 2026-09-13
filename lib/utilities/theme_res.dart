@@ -10,7 +10,7 @@ class ThemeRes {
       scaffoldBackgroundColor: ColorRes.whitePure,
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: ColorRes.whitePure),
-      appBarTheme: const AppBarTheme(backgroundColor: ColorRes.bgLightGrey),
+      appBarTheme: const AppBarTheme(backgroundColor: ColorRes.whitePure),
       fontFamily: FontRes.outFitRegular400,
       bottomSheetTheme:
           const BottomSheetThemeData(backgroundColor: ColorRes.whitePure),
@@ -27,8 +27,12 @@ class ThemeRes {
         labelLarge: TextStyle(color: ColorRes.disabledGrey),
       ),
       textSelectionTheme:
-          const TextSelectionThemeData(selectionColor: ColorRes.disabledGrey),
-      cardTheme: const CardThemeData(color: ColorRes.blueFollow),
+          const TextSelectionThemeData(
+            cursorColor: Colors.black,
+            selectionColor: ColorRes.disabledGrey,
+            selectionHandleColor: Colors.black,
+          ),
+      cardTheme: const CardThemeData(color: ColorRes.whitePure),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       primaryColor: ColorRes.themeAccentSolid,
@@ -43,7 +47,37 @@ class ThemeRes {
   /// Theme dark mode
 
   static ThemeData darkTheme(BuildContext context) {
-    return ThemeData();
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: Colors.black,
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.black,
+      ),
+      appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
+      fontFamily: FontRes.outFitRegular400,
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Color(0xFF101010)),
+      cardTheme: const CardThemeData(color: Color(0xFF151515)),
+      primaryColor: ColorRes.themeAccentSolid,
+      primaryColorDark: Colors.black,
+      cardColor: const Color(0xFF151515),
+      canvasColor: Colors.black,
+      dividerColor: const Color(0xFF303030),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(color: Colors.white),
+        titleMedium: TextStyle(color: Colors.white),
+        titleSmall: TextStyle(color: Colors.white),
+        labelSmall: TextStyle(color: ColorRes.themeAccentSolid),
+        labelLarge: TextStyle(color: Colors.white),
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Colors.white,
+        selectionColor: Color(0xFF505050),
+        selectionHandleColor: Colors.white,
+      ),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      useMaterial3: false,
+    );
   }
 }
 
@@ -91,7 +125,9 @@ Color blackPure(BuildContext context) {
 }
 
 Color bgLightGrey(BuildContext context) {
-  return Theme.of(context).appBarTheme.backgroundColor ?? ColorRes.bgLightGrey;
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF101010)
+      : (Theme.of(context).appBarTheme.backgroundColor ?? ColorRes.whitePure);
 }
 
 Color themeColor(BuildContext context) {

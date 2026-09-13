@@ -44,6 +44,9 @@ class CustomSearchTextField extends StatelessWidget {
       child: TextField(
         onTap: onTap,
         controller: controller,
+        scrollPadding: const EdgeInsets.only(bottom: 120),
+        textInputAction: TextInputAction.search,
+        keyboardType: TextInputType.text,
         decoration: InputDecoration(
             border: InputBorder.none,
             enabled: enable ?? true,
