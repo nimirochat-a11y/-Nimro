@@ -87,6 +87,8 @@ class _TextFieldCustomState extends State<TextFieldCustom> {
           child: TextField(
             controller: widget.controller,
             enabled: widget.enabled,
+            scrollPadding: const EdgeInsets.only(bottom: 120),
+            textInputAction: isExpand ? TextInputAction.newline : TextInputAction.next,
             onTapOutside: (event) =>
                 FocusManager.instance.primaryFocus?.unfocus(),
             obscureText: widget.isPasswordField && isHide,

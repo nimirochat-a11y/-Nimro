@@ -35,6 +35,7 @@ class FeedTextFieldView extends StatelessWidget {
               },
               keyboardType: TextInputType.twitter,
               textInputAction: TextInputAction.newline,
+              scrollPadding: const EdgeInsets.only(bottom: 120),
               expands: true,
               minLines: null,
               maxLines: null,

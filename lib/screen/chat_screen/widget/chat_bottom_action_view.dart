@@ -101,6 +101,8 @@ class ChatTextField extends StatelessWidget {
         return TextField(
           controller: controller,
           onChanged: onChange,
+          scrollPadding: const EdgeInsets.only(bottom: 120),
+          textInputAction: TextInputAction.newline,
           textAlignVertical: TextAlignVertical.center,
           minLines: 1,
           maxLines: 3,

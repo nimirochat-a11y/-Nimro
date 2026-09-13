@@ -88,6 +88,8 @@ class CommentBottomTextFieldView extends StatelessWidget {
                                   },
                                   controller: helper.detectableTextController,
                                   focusNode: helper.detectableTextFocusNode,
+                                  scrollPadding: const EdgeInsets.only(bottom: 120),
+                                  textInputAction: TextInputAction.newline,
                                   style: TextStyleCustom.outFitRegular400(
                                       color: textDarkGrey(context),
                                       fontSize: 16),
