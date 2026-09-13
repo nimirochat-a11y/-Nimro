@@ -23,8 +23,14 @@ class CoinWalletScreenController extends BaseController {
     fetchOfferings();
   }
 
-  void fetchData() {
+  void fetchData() async {
     myUser.value = SessionManager.instance.getUser();
+    final freshUser =
+        await UserService.instance.fetchUserDetails(userId: myUser.value?.id);
+    if (freshUser != null) {
+      myUser.value = freshUser;
+      SessionManager.instance.setUser(freshUser);
+    }
   }
 
   void fetchOfferings() {
