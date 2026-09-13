@@ -78,7 +78,7 @@ class MyApp extends StatelessWidget {
       translations: Get.find<DynamicTranslations>(),
       locale: Locale(SessionManager.instance.getLang()),
       fallbackLocale: Locale(SessionManager.instance.getFallbackLang()),
-      themeMode: ThemeMode.light,
+      themeMode: SessionManager.instance.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       darkTheme: ThemeRes.darkTheme(context),
       theme: ThemeRes.lightTheme(context),
       debugShowCheckedModeBanner: false,

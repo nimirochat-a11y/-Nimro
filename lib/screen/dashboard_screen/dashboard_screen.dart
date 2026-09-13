@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 import 'package:nimiro/common/widget/banner_ads_custom.dart';
-import 'package:nimiro/common/widget/gradient_border.dart';
-import 'package:nimiro/common/widget/gradient_icon.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen_controller.dart';
 import 'package:nimiro/screen/explore_screen/explore_screen.dart';
@@ -36,8 +34,8 @@ class DashboardScreen extends StatelessWidget {
               child: ProsteIndexedStack(
                 index: controller.selectedPageIndex.value,
                 children: [
-                  IndexedStackChild(child: const HomeScreen(), preload: true),
                   IndexedStackChild(child: FeedScreen(myUser: myUser), preload: true),
+                  IndexedStackChild(child: const HomeScreen(), preload: true),
                   IndexedStackChild(child: const LiveStreamSearchScreen(), preload: true),
                   IndexedStackChild(child: const ExploreScreen(), preload: true),
                   IndexedStackChild(child: const MessageScreen(), preload: true),
@@ -65,13 +63,22 @@ class DashboardScreen extends StatelessWidget {
           postUpload.uploadType == UploadType.none ? false : true;
       return AnimatedContainer(
         duration: const Duration(milliseconds: 100),
-        color: blackPure(context),
-        padding: const EdgeInsets.only(top: 5),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF071326)
+              : const Color(0xFF0B1D3A),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: const [
+            BoxShadow(color: Colors.black26, blurRadius: 18, offset: Offset(0, -5)),
+          ],
+        ),
+        padding: const EdgeInsets.only(top: 9),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: List.generate(
                 controller.bottomIconList.length,
                 (index) {
@@ -141,27 +148,36 @@ class DashboardScreen extends StatelessWidget {
 
       return SafeArea(
         bottom: isPostUploading ? false : true,
-        child: GradientBorder(
-          onPressed: () => controller.onChanged(index),
-          strokeWidth: isSelected ? 2 : 0,
-          radius: 30,
-          gradient: isSelected ? StyleRes.themeGradient : null,
-          child: Padding(
-            padding: const EdgeInsets.all(3),
+        child: InkWell(
+          onTap: () => controller.onChanged(index),
+          borderRadius: BorderRadius.circular(18),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            width: 50,
+            height: 50,
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            decoration: BoxDecoration(
+              gradient: isSelected ? StyleRes.themeGradient : null,
+              color: isSelected ? null : Colors.white.withValues(alpha: .07),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: isSelected ? Colors.white.withValues(alpha: .35) : Colors.transparent,
+              ),
+            ),
             child: AnimatedScale(
               scale: scaleValue,
               duration: const Duration(milliseconds: 300),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  GradientIcon(
-                    gradient:
-                        isSelected ? null : StyleRes.textDarkGreyGradient(),
-                    child: Image.asset(controller.bottomIconList[index],
-                        height: 38, width: 38),
+                  ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      isSelected ? Colors.white : Colors.white70,
+                      BlendMode.srcIn,
+                    ),
+                    child: Image.asset(controller.bottomIconList[index], height: 30, width: 30),
                   ),
                   if (index == 4) _buildUnreadCount(controller, context),
-                  // Moved to a separate function
                 ],
               ),
             ),

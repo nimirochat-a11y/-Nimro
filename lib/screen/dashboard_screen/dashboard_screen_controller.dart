@@ -26,8 +26,8 @@ import 'package:zego_express_engine/zego_express_engine.dart';
 
 class DashboardScreenController extends BaseController with GetSingleTickerProviderStateMixin {
   List<String> bottomIconList = [
-    AssetRes.icReel,
     AssetRes.icPost,
+    AssetRes.icReel,
     AssetRes.icLiveStream,
     AssetRes.icSearch,
     AssetRes.icChat,
@@ -99,8 +99,8 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
 
   onChanged(int index) {
     SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(statusBarBrightness: index == 0 || index == 2 ? Brightness.dark : Brightness.light));
-    if (index == 1) {
+        SystemUiOverlayStyle(statusBarBrightness: index == 1 || index == 2 ? Brightness.dark : Brightness.light));
+    if (index == 0) {
       onFeedPostScrollDown(index);
     }
     if (selectedPageIndex.value == index) return;

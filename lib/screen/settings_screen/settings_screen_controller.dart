@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as auth;
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
@@ -19,6 +20,7 @@ class SettingsScreenController extends BaseController {
   Rx<Setting?> settings = Rx<Setting?>(null);
   Rx<WhoCanSeePost> selectedWhoCanSeePost = WhoCanSeePost.values.first.obs;
   RxBool isUpdateApiCalled = false.obs;
+  RxBool isDarkMode = SessionManager.instance.isDarkMode.obs;
 
   @override
   void onInit() {
@@ -57,6 +59,12 @@ class SettingsScreenController extends BaseController {
     } finally {
       stopLoader();
     }
+  }
+
+  Future<void> toggleDarkMode(bool value) async {
+    isDarkMode.value = value;
+    await SessionManager.instance.setDarkMode(value);
+    Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
   }
 
   onChangedToggle(bool value, SettingToggle settingToggle) async {

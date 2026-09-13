@@ -43,7 +43,32 @@ class ThemeRes {
   /// Theme dark mode
 
   static ThemeData darkTheme(BuildContext context) {
-    return ThemeData();
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: const Color(0xFF050B1A),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Color(0xFF071326),
+      ),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF071326)),
+      fontFamily: FontRes.outFitRegular400,
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Color(0xFF0B1D3A)),
+      cardTheme: const CardThemeData(color: Color(0xFF10264A)),
+      primaryColor: ColorRes.themeAccentSolid,
+      primaryColorDark: Colors.white,
+      cardColor: const Color(0xFF10264A),
+      canvasColor: const Color(0xFF050B1A),
+      dividerColor: const Color(0xFF243858),
+      textTheme: const TextTheme(
+        titleLarge: TextStyle(color: Colors.white),
+        titleMedium: TextStyle(color: Color(0xFFE4EBF7)),
+        titleSmall: TextStyle(color: Color(0xFF9CAAC2)),
+        labelSmall: TextStyle(color: ColorRes.themeAccentSolid),
+        labelLarge: TextStyle(color: Color(0xFF7586A3)),
+      ),
+      splashColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      useMaterial3: false,
+    );
   }
 }
 
