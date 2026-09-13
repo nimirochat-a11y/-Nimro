@@ -46,6 +46,8 @@ class AssetRes {
   static const String icFillBookmark1 = '${icons}ic_fill_bookmark_1.png';
   static const String icAlert = '${icons}ic_alert.png';
   static const String icBlueTick = '${icons}ic_blue_tick.png';
+  static const String icGreenTick = '${icons}ic_green_tick.png';
+  static const String icNimiroVerified = '${icons}ic_nimiro_verified.png';
   static const String icLocationPin = '${icons}ic_location_pin.png';
   static const String icComment = '${icons}ic_comment.png';
   static const String icMusic = '${icons}ic_music.png';

@@ -34,6 +34,12 @@ class FullNameWithBlueTick extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final verificationFlags = isVerify ?? 0;
+    final badgeIcons = <String>[
+      if ((verificationFlags & 1) != 0) AssetRes.icBlueTick,
+      if ((verificationFlags & 2) != 0) AssetRes.icGreenTick,
+      if ((verificationFlags & 4) != 0) AssetRes.icNimiroVerified,
+    ];
     return InkWell(
       onTap: onTap,
       child: Row(
@@ -54,12 +60,16 @@ class FullNameWithBlueTick extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (isVerify == 1) const SizedBox(width: 3),
-          if (isVerify == 1)
-            Image.asset(
-              icon ?? AssetRes.icBlueTick,
-              height: iconSize ?? 15,
+          if (badgeIcons.isNotEmpty) const SizedBox(width: 3),
+          ...badgeIcons.map(
+            (badgeIcon) => Padding(
+              padding: const EdgeInsetsDirectional.only(end: 2),
+              child: Image.asset(
+                icon ?? badgeIcon,
+                height: iconSize ?? 15,
+              ),
             ),
+          ),
           const SizedBox(width: 6),
           if (child != null) child!
         ],
