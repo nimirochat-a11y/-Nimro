@@ -1,27 +1,28 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
+import 'package:nimiro/common/service/supabase/chat_repository.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen_controller.dart';
-import 'package:nimiro/utilities/firebase_const.dart';
 
 class MessageScreenController extends BaseController {
   List<String> chatCategories = [LKey.chats.tr, LKey.requests.tr];
   RxInt selectedChatCategory = 0.obs;
-  FirebaseFirestore db = FirebaseFirestore.instance;
   PageController pageController = PageController();
   User? myUser = SessionManager.instance.getUser();
   RxList<ChatThread> chatsUsers = <ChatThread>[].obs;
   RxList<ChatThread> requestsUsers = <ChatThread>[].obs;
   final dashboardController = Get.find<DashboardScreenController>();
   final firebaseFirestoreController = Get.find<FirebaseFirestoreController>();
+  final ChatRepository _repo = ChatRepository.instance;
+  RealtimeChannel? _subscription;
 
   @override
   void onInit() {
@@ -30,90 +31,82 @@ class MessageScreenController extends BaseController {
     _listenToUserChatsAndRequests();
   }
 
+  @override
+  void onClose() {
+    super.onClose();
+    if (_subscription != null) _repo.unsubscribe(_subscription!);
+  }
+
   void onPageChanged(int index) {
     selectedChatCategory.value = index;
   }
 
   Future<void> _listenToUserChatsAndRequests() async {
+    if (myUser?.id == null) return;
     isLoading.value = true;
-    db
-        .collection(FirebaseConst.users)
-        .doc(myUser?.id.toString())
-        .collection(FirebaseConst.usersList)
-        .withConverter(
-            fromFirestore: (snapshot, options) => ChatThread.fromJson(snapshot.data()!),
-            toFirestore: (ChatThread value, options) => value.toJson())
-        .where(FirebaseConst.isDeleted, isEqualTo: false)
-        .orderBy(FirebaseConst.id, descending: true)
-        .snapshots()
-        .listen((event) {
-      isLoading.value = false;
-      for (var change in event.docChanges) {
-        final ChatThread? chatUser = change.doc.data();
-        if (chatUser == null) continue;
-
-        switch (change.type) {
-          case DocumentChangeType.added:
-            if (chatUser.userId != -1) {
-              firebaseFirestoreController.fetchUserIfNeeded(chatUser.userId ?? -1);
-            }
-            if (chatUser.chatType == ChatType.approved) {
-              chatsUsers.add(chatUser);
-            } else {
-              requestsUsers.add(chatUser);
-            }
-
-            break;
-          case DocumentChangeType.modified:
-            // Remove the user from their current list
-            final userId = chatUser.userId;
-            chatsUsers.removeWhere((user) => user.userId == userId);
-            requestsUsers.removeWhere((user) => user.userId == userId);
-
-            (chatUser.chatType == ChatType.approved ? chatsUsers : requestsUsers).add(chatUser);
-          case DocumentChangeType.removed:
-            // Remove the user from their current list
-            final userId = chatUser.userId;
-            chatsUsers.removeWhere((user) => user.userId == userId);
-            requestsUsers.removeWhere((user) => user.userId == userId);
-            break;
-        }
+    try {
+      final rows = await _repo.listConversationsForUser(myUser!.id!);
+      for (var row in rows) {
+        _applyRow(row, isDelete: false);
       }
+    } catch (e) {
+      Loggers.error('Failed to load conversations: $e');
+    }
+    isLoading.value = false;
 
-      chatsUsers.sort(
-        (a, b) {
-          return (b.id ?? '0').compareTo(a.id ?? '0');
-        },
-      );
-      requestsUsers.sort(
-        (a, b) {
-          return (b.id ?? '0').compareTo(a.id ?? '0');
-        },
-      );
+    _subscription = _repo.subscribeToUserConversations(
+      userId: myUser!.id!,
+      onChange: (event, data) {
+        final isDeletedFlag = event == 'delete' || data['is_deleted'] == true;
+        _applyRow(data, isDelete: isDeletedFlag);
+      },
+    );
+  }
 
-      // Loggers.success('CHAT USER: ${chatsUsers.length}');
-      // Loggers.success('REQUEST USER: ${requestsUsers.length}');
-    });
+  void _applyRow(Map<String, dynamic> row, {required bool isDelete}) {
+    final chatUser = ChatThread.fromJson(row);
+    final userId = chatUser.userId;
+    chatsUsers.removeWhere((user) => user.userId == userId);
+    requestsUsers.removeWhere((user) => user.userId == userId);
+    if (isDelete) return;
+    if (userId != null && userId != -1) {
+      firebaseFirestoreController.fetchUserIfNeeded(userId);
+    }
+    if (chatUser.chatType == ChatType.approved) {
+      chatsUsers.add(chatUser);
+    } else {
+      requestsUsers.add(chatUser);
+    }
+    _sortLists();
+  }
+
+  void _sortLists() {
+    chatsUsers.sort((a, b) => (b.id ?? '0').compareTo(a.id ?? '0'));
+    requestsUsers.sort((a, b) => (b.id ?? '0').compareTo(a.id ?? '0'));
   }
 
   void onLongPress(ChatThread chatConversation) {
     Get.bottomSheet(ConfirmationSheet(
-      title: LKey.deleteChatUserTitle.trParams({'user_name': chatConversation.chatUser?.username ?? ''}),
+      title: LKey.deleteChatUserTitle
+          .trParams({'user_name': chatConversation.chatUser?.username ?? ''}),
       description: LKey.deleteChatUserDescription.tr,
       onTap: () async {
         int time = DateTime.now().millisecondsSinceEpoch;
         showLoader();
-        await db
-            .collection(FirebaseConst.users)
-            .doc(myUser?.id.toString())
-            .collection(FirebaseConst.usersList)
-            .doc(chatConversation.userId.toString())
-            .update({
-          FirebaseConst.deletedId: time,
-          FirebaseConst.isDeleted: true,
-        }).catchError((error) {
-          Loggers.error('USER NOT DELETE : $error');
-        });
+        if (myUser?.id != null && chatConversation.userId != null) {
+          try {
+            await _repo.upsertConversation(
+              ownerUserId: myUser!.id!,
+              otherUserId: chatConversation.userId!,
+              data: {
+                'deleted_id': time,
+                'is_deleted': true,
+              },
+            );
+          } catch (error) {
+            Loggers.error('USER NOT DELETE : $error');
+          }
+        }
         stopLoader();
       },
     ));

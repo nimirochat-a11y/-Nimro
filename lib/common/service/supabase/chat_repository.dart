@@ -167,6 +167,60 @@ class ChatRepository {
     return channel;
   }
 
+  // ---- Conversation list (inbox) ----
+
+  Future<List<Map<String, dynamic>>> listConversationsForUser(
+      int userId) async {
+    final result = await _db
+        .from('conversations')
+        .select()
+        .eq('user_id', userId)
+        .eq('is_deleted', false)
+        .order('id', ascending: false);
+    return List<Map<String, dynamic>>.from(result);
+  }
+
+  RealtimeChannel subscribeToUserConversations({
+    required int userId,
+    required void Function(
+            String event, Map<String, dynamic> data)
+        onChange,
+  }) {
+    final channel = _db.channel('user_conversations_$userId');
+    channel
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'conversations',
+          filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: userId),
+          callback: (payload) {
+            String type;
+            switch (payload.eventType) {
+              case PostgresChangeEvent.insert:
+                type = 'create';
+                break;
+              case PostgresChangeEvent.update:
+                type = 'update';
+                break;
+              case PostgresChangeEvent.delete:
+                type = 'delete';
+                break;
+              default:
+                type = 'unknown';
+            }
+            final data = payload.eventType == PostgresChangeEvent.delete
+                ? payload.oldRecord
+                : payload.newRecord;
+            onChange(type, data);
+          },
+        )
+        .subscribe();
+    return channel;
+  }
+
   void unsubscribe(RealtimeChannel channel) {
     _db.removeChannel(channel);
   }
