@@ -28,9 +28,8 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   List<String> bottomIconList = [
     AssetRes.icPost,
     AssetRes.icReel,
-    AssetRes.icLiveStream,
+    '',
     AssetRes.icSearch,
-    AssetRes.icChat,
     AssetRes.icProfile
   ];
   RxInt selectedPageIndex = 0.obs;
@@ -98,8 +97,14 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   }
 
   onChanged(int index) {
+    // The center button is an action, not a page in the indexed stack.
+    if (index == 2) {
+      HapticFeedback.lightImpact();
+      Get.to(() => const CameraScreen(cameraType: CameraScreenType.post));
+      return;
+    }
     SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(statusBarBrightness: index == 1 || index == 2 ? Brightness.dark : Brightness.light));
+        SystemUiOverlayStyle(statusBarBrightness: index == 1 || index == 3 ? Brightness.dark : Brightness.light));
     if (index == 0) {
       onFeedPostScrollDown(index);
     }
@@ -110,6 +115,11 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     animationController
       ..reset()
       ..forward();
+  }
+
+  int get contentPageIndex {
+    if (selectedPageIndex.value <= 1) return selectedPageIndex.value;
+    return selectedPageIndex.value - 1;
   }
 
   onFeedPostScrollDown(int index) {

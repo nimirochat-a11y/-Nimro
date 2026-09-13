@@ -9,8 +9,6 @@ import 'package:nimiro/screen/dashboard_screen/dashboard_screen_controller.dart'
 import 'package:nimiro/screen/explore_screen/explore_screen.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen.dart';
 import 'package:nimiro/screen/home_screen/home_screen.dart';
-import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen.dart';
-import 'package:nimiro/screen/message_screen/message_screen.dart';
 import 'package:nimiro/screen/profile_screen/profile_screen.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
@@ -31,13 +29,11 @@ class DashboardScreen extends StatelessWidget {
           children: [
             Expanded(
               child: ProsteIndexedStack(
-                index: controller.selectedPageIndex.value,
+                index: controller.contentPageIndex,
                 children: [
                   IndexedStackChild(child: FeedScreen(myUser: myUser), preload: true),
                   IndexedStackChild(child: const HomeScreen(), preload: true),
-                  IndexedStackChild(child: const LiveStreamSearchScreen(), preload: true),
                   IndexedStackChild(child: const ExploreScreen(), preload: true),
-                  IndexedStackChild(child: const MessageScreen(), preload: true),
                   IndexedStackChild(
                       child: ProfileScreen(isDashBoard: false, user: myUser,
                           isTopBarVisible: false),
@@ -171,8 +167,18 @@ class DashboardScreen extends StatelessWidget {
               duration: const Duration(milliseconds: 300),
               child: Stack(
                 alignment: Alignment.center,
-                children: [
-                  if (index == 3)
+                  children: [
+                  if (index == 2)
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: selectedColor,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.add_rounded, size: 30, color: Colors.white),
+                    )
+                  else if (index == 3)
                     Icon(
                       Icons.search_rounded,
                       size: 28,
@@ -186,7 +192,6 @@ class DashboardScreen extends StatelessWidget {
                       ),
                       child: Image.asset(controller.bottomIconList[index], height: 27, width: 27),
                     ),
-                  if (index == 4) _buildUnreadCount(controller, context),
                 ],
               ),
             ),
@@ -196,15 +201,4 @@ class DashboardScreen extends StatelessWidget {
     });
   }
 
-  Widget _buildUnreadCount(
-      DashboardScreenController controller, BuildContext context) {
-    return Obx(() {
-      final count = controller.unReadCount.value;
-      return count > 0
-          ? Text(count > 9 ? '9+' : '$count',
-              style: TextStyleCustom.outFitRegular400(
-                  color: whitePure(context), fontSize: 12))
-          : const SizedBox();
-    });
-  }
 }
