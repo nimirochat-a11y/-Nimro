@@ -97,28 +97,33 @@ class EditProfileScreenController extends BaseController {
       return showSnackBar(LKey.validUsernameEmpty.tr);
     }
     showLoader();
-    User? userData = await UserService.instance.updateUserDetails(
-        fullname: fullNameController.text.trim(),
-        userName: usernameController.text.trim(),
-        bio: bioController.text.trim(),
-        email: emailController.text.trim(),
-        profilePhoto: fileProfileImage.value,
-        phoneNumber: phoneNumberController.text.trim(),
-        mobileCountryCode: int.parse(
-            phoneController.selectedCode.value!.phoneCode.replaceAll('+', '')),
-        country: phoneController.selectedCode.value?.countryName,
-        countryCode: phoneController.selectedCode.value?.countryCode);
-    stopLoader();
-    if (userData == null) return;
-    onUpdateUser?.call(userData);
-    if (Get.isRegistered<FeedScreenController>()) {
-      final controller = Get.find<FeedScreenController>();
-      controller.myUser.value = userData;
+    try {
+      User? userData = await UserService.instance.updateUserDetails(
+          fullname: fullNameController.text.trim(),
+          userName: usernameController.text.trim(),
+          bio: bioController.text.trim(),
+          email: emailController.text.trim(),
+          profilePhoto: fileProfileImage.value,
+          phoneNumber: phoneNumberController.text.trim(),
+          mobileCountryCode: int.parse(
+              phoneController.selectedCode.value!.phoneCode.replaceAll('+', '')),
+          country: phoneController.selectedCode.value?.countryName,
+          countryCode: phoneController.selectedCode.value?.countryCode);
+      if (userData == null) return;
+      onUpdateUser?.call(userData);
+      if (Get.isRegistered<FeedScreenController>()) {
+        final controller = Get.find<FeedScreenController>();
+        controller.myUser.value = userData;
+      }
+      if (fileProfileImage.value != null) {
+        File(fileProfileImage.value?.path ?? '').delete();
+      }
+      Get.back();
+    } catch (e) {
+      showSnackBar('حدث خطأ أثناء الحفظ: $e');
+    } finally {
+      stopLoader();
     }
-    if (fileProfileImage.value != null) {
-      File(fileProfileImage.value?.path ?? '').delete();
-    }
-    Get.back();
   }
 
   void checkUsernameAvailability(String value) {
@@ -157,6 +162,9 @@ class EditProfileScreenController extends BaseController {
       final isAvailable = model.status ?? true;
       isValidUserName.value = isAvailable;
       usernameCache[username] = isAvailable; // Cache the result
+      if (!isAvailable) {
+        showSnackBar(LKey.usernameTaken.tr);
+      }
     });
   }
 

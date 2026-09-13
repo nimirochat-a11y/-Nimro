@@ -246,6 +246,7 @@ class LKey {
   static const String urlTitleEmpty =
       "Please enter a title. The title field is empty.";
   static const String validUsernameEmpty = "Please enter a valid username.";
+  static const String usernameTaken = "This username is already taken. Please choose another one.";
   static const String confirmPasswordEmpty =
       "Please confirm your password. The confirm password field is empty.";
   static const String passwordMismatch =
