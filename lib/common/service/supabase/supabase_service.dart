@@ -35,23 +35,29 @@ class SupabaseService {
   Future<({String id, String email, String name})> signInWithOAuth(
       OAuthProvider provider) async {
     if (!_initialized) await initialize();
+    // Start listening BEFORE launching the browser, so we never miss the
+    // auth state change event if it fires before we'd otherwise subscribe.
+    final sessionFuture = client.auth.onAuthStateChange
+        .firstWhere((s) => s.session != null)
+        .timeout(const Duration(seconds: 90));
     await client.auth.signInWithOAuth(
       provider,
       redirectTo: oauthRedirect,
       authScreenLaunchMode: LaunchMode.externalApplication,
     );
-    final authState = await client.auth.onAuthStateChange
-        .firstWhere((s) => s.session != null)
-        .timeout(const Duration(seconds: 90));
-    final user = authState.session?.user;
-    if (user == null) {
+    // If the session was already established by the time signInWithOAuth
+    // returned (deep link processed faster than we could await), use it
+    // directly instead of waiting on the stream.
+    final existingSession = client.auth.currentSession;
+    final authUser = existingSession?.user ?? (await sessionFuture).session?.user;
+    if (authUser == null) {
       throw Exception('لم يتم استلام بيانات المستخدم من جوجل');
     }
-    final email = user.email ?? '';
-    final name = (user.userMetadata?['full_name'] ??
-            user.userMetadata?['name'] ??
+    final email = authUser.email ?? '';
+    final name = (authUser.userMetadata?['full_name'] ??
+            authUser.userMetadata?['name'] ??
             (email.isNotEmpty ? email.split('@')[0] : 'User'))
         .toString();
-    return (id: user.id, email: email, name: name);
+    return (id: authUser.id, email: email, name: name);
   }
 }

@@ -139,7 +139,7 @@ class AuthScreenController extends BaseController {
     } catch (e) {
       Loggers.error('Google OAuth failed: $e');
       stopLoader();
-      showSnackBar('تعذر تسجيل الدخول بجوجل، حاول مرة أخرى');
+      showSnackBar('خطأ تسجيل الدخول: $e');
     }
   }
 
