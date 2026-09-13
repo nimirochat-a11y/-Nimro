@@ -63,8 +63,9 @@ class ApiService {
     Loggers.info("header: $header");
     Loggers.info("Parameters: ${params.isEmpty ? "Empty" : params}");
     try {
-      final response =
-          await client.post(Uri.parse(url), headers: header, body: params);
+      final response = await client
+          .post(Uri.parse(url), headers: header, body: params)
+          .timeout(const Duration(seconds: 30));
       Loggers.success(response.statusCode);
       if (cancelToken?.isCancelled ?? false) {
         if (kDebugMode) {
@@ -204,7 +205,9 @@ class ApiService {
     Loggers.info("FILES : ${request.files.map((e) => e)}");
 
     try {
-      final responseStream = await client.send(request);
+      final responseStream = await client
+          .send(request)
+          .timeout(const Duration(seconds: 45));
 
       if (cancelToken?.isCancelled ?? false) {
         if (kDebugMode) {
@@ -213,7 +216,9 @@ class ApiService {
         throw Exception('Request was cancelled');
       }
 
-      final responseStr = await responseStream.stream.bytesToString();
+      final responseStr = await responseStream.stream
+          .bytesToString()
+          .timeout(const Duration(seconds: 45));
       final decodedResponse = jsonDecode(responseStr) as Map<String, dynamic>;
 
       if (kDebugMode) {
@@ -231,6 +236,7 @@ class ApiService {
       return decodedResponse as T;
     } finally {
       _cleanupClient(cancelToken);
+      client.close();
     }
   }
 
