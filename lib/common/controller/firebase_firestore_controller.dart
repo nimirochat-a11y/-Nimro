@@ -5,7 +5,7 @@ import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class FirebaseFirestoreController extends BaseController {
   RxList<AppUser> users = <AppUser>[].obs;

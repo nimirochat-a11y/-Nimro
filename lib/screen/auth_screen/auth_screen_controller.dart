@@ -18,7 +18,7 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart' as user;
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show OAuthProvider;
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 class AuthScreenController extends BaseController {
   TextEditingController fullNameController = TextEditingController();
@@ -126,7 +126,7 @@ class AuthScreenController extends BaseController {
     showLoader();
     try {
       final profile = await SupabaseService.instance
-          .signInWithOAuth(OAuthProvider.google);
+          .signInWithOAuth(supabase.OAuthProvider.google);
       final user.User? data = await _registration(
         identity: profile.email,
         loginMethod: LoginMethod.google,
@@ -169,7 +169,7 @@ class AuthScreenController extends BaseController {
     showLoader();
     try {
       final profile = await SupabaseService.instance
-          .signInWithOAuth(OAuthProvider.apple);
+          .signInWithOAuth(supabase.OAuthProvider.apple);
       final user.User? data = await _registration(
         identity: profile.email,
         loginMethod: LoginMethod.apple,
