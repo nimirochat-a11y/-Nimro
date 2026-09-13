@@ -170,17 +170,17 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                   if (index == 2)
                     Container(
-                      width: 42,
-                      height: 42,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.white
                             : textDarkGrey(context),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         Icons.add_rounded,
-                        size: 29,
+                        size: 25,
                         color: Theme.of(context).brightness == Brightness.dark
                             ? Colors.black
                             : Colors.white,

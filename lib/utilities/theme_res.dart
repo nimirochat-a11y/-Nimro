@@ -27,7 +27,11 @@ class ThemeRes {
         labelLarge: TextStyle(color: ColorRes.disabledGrey),
       ),
       textSelectionTheme:
-          const TextSelectionThemeData(selectionColor: ColorRes.disabledGrey),
+          const TextSelectionThemeData(
+            cursorColor: Colors.black,
+            selectionColor: ColorRes.disabledGrey,
+            selectionHandleColor: Colors.black,
+          ),
       cardTheme: const CardThemeData(color: ColorRes.whitePure),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
@@ -64,6 +68,11 @@ class ThemeRes {
         titleSmall: TextStyle(color: Colors.white),
         labelSmall: TextStyle(color: ColorRes.themeAccentSolid),
         labelLarge: TextStyle(color: Colors.white),
+      ),
+      textSelectionTheme: const TextSelectionThemeData(
+        cursorColor: Colors.white,
+        selectionColor: Color(0xFF505050),
+        selectionHandleColor: Colors.white,
       ),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,

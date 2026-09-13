@@ -23,7 +23,7 @@ class CommentBottomTextFieldView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<CommentSheetController>();
     return Container(
-      color: whitePure(context),
+      color: scaffoldBackgroundColor(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -96,6 +96,10 @@ class CommentBottomTextFieldView extends StatelessWidget {
                                   onChanged: helper.onChanged,
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
+                                    filled: true,
+                                    fillColor: Theme.of(context).brightness == Brightness.dark
+                                        ? const Color(0xFF151515)
+                                        : Colors.white,
                                     contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 15, vertical: 8),
                                     suffixIconConstraints:

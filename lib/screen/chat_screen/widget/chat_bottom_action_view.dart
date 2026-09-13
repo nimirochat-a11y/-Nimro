@@ -110,6 +110,10 @@ class ChatTextField extends StatelessWidget {
               FocusManager.instance.primaryFocus?.unfocus(),
           decoration: InputDecoration(
             isCollapsed: true,
+            filled: true,
+            fillColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF151515)
+                : Colors.white,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
             border: InputBorder.none,
@@ -187,7 +191,10 @@ class ChatTextField extends StatelessWidget {
             ),
           ),
           style: TextStyleCustom.outFitRegular400(
-              color: textLightGrey(context), fontSize: 16),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : textDarkGrey(context),
+              fontSize: 16),
         );
       }),
     );
