@@ -12,7 +12,6 @@ import 'package:nimiro/screen/home_screen/home_screen.dart';
 import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen.dart';
 import 'package:nimiro/screen/message_screen/message_screen.dart';
 import 'package:nimiro/screen/profile_screen/profile_screen.dart';
-import 'package:nimiro/utilities/style_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -64,15 +63,13 @@ class DashboardScreen extends StatelessWidget {
       return AnimatedContainer(
         duration: const Duration(milliseconds: 100),
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? const Color(0xFF071326)
-              : const Color(0xFF0B1D3A),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: const [
-            BoxShadow(color: Colors.black26, blurRadius: 18, offset: Offset(0, -5)),
-          ],
+          color: Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
+              scaffoldBackgroundColor(context),
+          border: Border(
+            top: BorderSide(color: Theme.of(context).dividerColor.withValues(alpha: .55)),
+          ),
         ),
-        padding: const EdgeInsets.only(top: 9),
+        padding: const EdgeInsets.only(top: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -96,11 +93,14 @@ class DashboardScreen extends StatelessWidget {
                 margin: Platform.isAndroid || !isPostUploading
                     ? EdgeInsets.zero
                     : const EdgeInsets.only(bottom: 20, top: 5),
-                color: Colors.white,
-                child: Stack(
+                    color: scaffoldBackgroundColor(context),
+                    child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    Container(height: 30, decoration: BoxDecoration(gradient: StyleRes.themeGradient)),
+                    Container(
+                      height: 30,
+                      color: themeAccentSolid(context).withValues(alpha: .9),
+                    ),
                     Align(
                       alignment: AlignmentDirectional.centerEnd,
                       child: LayoutBuilder(builder: (context, constraints) {
@@ -109,7 +109,11 @@ class DashboardScreen extends StatelessWidget {
                           height: 30,
                           width: constraints.maxWidth - progress,
                           duration: const Duration(milliseconds: 250),
-                          decoration: BoxDecoration(color: textDarkGrey(context)),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.black.withValues(alpha: .28)
+                                : Colors.white.withValues(alpha: .35),
+                          ),
                         );
                       }),
                     ),
@@ -145,24 +149,22 @@ class DashboardScreen extends StatelessWidget {
     return Obx(() {
       final isSelected = controller.selectedPageIndex.value == index;
       final scaleValue = isSelected ? controller.scaleValue.value : 1.0;
+      final selectedColor = themeAccentSolid(context);
+      final inactiveColor = textLightGrey(context);
 
       return SafeArea(
         bottom: isPostUploading ? false : true,
         child: InkWell(
           onTap: () => controller.onChanged(index),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 220),
             width: 50,
-            height: 50,
-            margin: const EdgeInsets.symmetric(horizontal: 2),
+            height: 46,
+            margin: const EdgeInsets.symmetric(horizontal: 1),
             decoration: BoxDecoration(
-              gradient: isSelected ? StyleRes.themeGradient : null,
-              color: isSelected ? null : Colors.white.withValues(alpha: .07),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: isSelected ? Colors.white.withValues(alpha: .35) : Colors.transparent,
-              ),
+              color: isSelected ? selectedColor.withValues(alpha: .12) : Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: AnimatedScale(
               scale: scaleValue,
@@ -170,13 +172,20 @@ class DashboardScreen extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      isSelected ? Colors.white : Colors.white70,
-                      BlendMode.srcIn,
+                  if (index == 3)
+                    Icon(
+                      Icons.search_rounded,
+                      size: 28,
+                      color: isSelected ? selectedColor : inactiveColor,
+                    )
+                  else
+                    ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                        isSelected ? selectedColor : inactiveColor,
+                        BlendMode.srcIn,
+                      ),
+                      child: Image.asset(controller.bottomIconList[index], height: 27, width: 27),
                     ),
-                    child: Image.asset(controller.bottomIconList[index], height: 30, width: 30),
-                  ),
                   if (index == 4) _buildUnreadCount(controller, context),
                 ],
               ),
