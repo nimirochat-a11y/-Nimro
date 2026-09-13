@@ -230,7 +230,7 @@ class User {
       );
 
   User.fromJson(dynamic json) {
-    id = json['id'];
+    id = _toInt(json['id']);
     identity = json['identity'];
     isDummy = json['is_dummy'];
     fullname = json['fullname'];
