@@ -1,22 +1,21 @@
-import 'dart:async';
-import 'package:appwrite/appwrite.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/manager/logger.dart';
-import 'package:nimiro/common/service/appwrite/appwrite_service.dart';
+import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FirebaseFirestoreController extends BaseController {
   RxList<AppUser> users = <AppUser>[].obs;
   static final instance = FirebaseFirestoreController();
 
-  TablesDB get _db {
-    if (!AppwriteService.instance.isInitialized) {
-      AppwriteService.instance.initialize();
+  SupabaseClient get _db {
+    if (!SupabaseService.instance.isInitialized) {
+      SupabaseService.instance.initialize();
     }
-    return AppwriteService.instance.tablesDB;
+    return SupabaseService.instance.client;
   }
 
   void fetchUserIfNeeded(int userId) {
@@ -26,15 +25,15 @@ class FirebaseFirestoreController extends BaseController {
       Loggers.info('[LOAD_USER] User $userId already loaded, skipping fetch');
       return;
     }
-    Loggers.info('[LOAD_USER] Fetching user $userId from Appwrite');
+    Loggers.info('[LOAD_USER] Fetching user $userId from Supabase');
     _db
-        .getRow(
-          databaseId: AppwriteService.databaseId,
-          tableId: AppwriteService.appUsersCollectionId,
-          rowId: '$userId',
-        )
-        .then((doc) {
-          final fetchedUser = AppUser.fromJson(doc.data);
+        .from('app_users')
+        .select()
+        .eq('doc_id', '$userId')
+        .maybeSingle()
+        .then((row) {
+          if (row == null) return;
+          final fetchedUser = AppUser.fromJson(row);
           users.add(fetchedUser);
           Loggers.info('[LOAD_USER] User ${fetchedUser.userId} added to list');
         })
@@ -47,14 +46,12 @@ class FirebaseFirestoreController extends BaseController {
     if (user == null) return;
     AppUser chatUser = user.appUser;
     try {
-      await _db.updateRow(
-        databaseId: AppwriteService.databaseId,
-        tableId: AppwriteService.appUsersCollectionId,
-        rowId: '${user.id}',
-        data: chatUser.toJson(),
-      );
-    } on AppwriteException catch (e) {
-      Loggers.error('[UPDATE_USER] Failed to update user ${user.id} — ${e.message}');
+      await _db
+          .from('app_users')
+          .update(chatUser.toJson())
+          .eq('doc_id', '${user.id}');
+    } catch (e) {
+      Loggers.error('[UPDATE_USER] Failed to update user ${user.id} — $e');
     }
   }
 
@@ -62,39 +59,22 @@ class FirebaseFirestoreController extends BaseController {
     if (user == null) return;
     AppUser chatUser = user.appUser;
     try {
-      await _db.getRow(
-        databaseId: AppwriteService.databaseId,
-        tableId: AppwriteService.appUsersCollectionId,
-        rowId: '${user.id}',
-      );
-    } on AppwriteException catch (e) {
-      if (e.code == 404) {
-        try {
-          await _db.createRow(
-            databaseId: AppwriteService.databaseId,
-            tableId: AppwriteService.appUsersCollectionId,
-            rowId: '${user.id}',
-            data: chatUser.toJson(),
-          );
-        } on AppwriteException catch (createError) {
-          Loggers.error('[ADD_USER] Failed to create user ${user.id} — ${createError.message}');
-        }
-      } else {
-        Loggers.error('[ADD_USER] Failed to check user ${user.id} — ${e.message}');
-      }
+      final payload = <String, dynamic>{
+        'doc_id': '${user.id}',
+        ...chatUser.toJson(),
+      };
+      await _db.from('app_users').upsert(payload, onConflict: 'doc_id');
+    } catch (e) {
+      Loggers.error('[ADD_USER] Failed to add user ${user.id} — $e');
     }
   }
 
   Future<void> deleteUser(int? userId) async {
     if (userId == null) return;
     try {
-      await _db.deleteRow(
-        databaseId: AppwriteService.databaseId,
-        tableId: AppwriteService.appUsersCollectionId,
-        rowId: '$userId',
-      );
-    } on AppwriteException catch (e) {
-      Loggers.error('[DELETE_USER] Failed to delete user $userId — ${e.message}');
+      await _db.from('app_users').delete().eq('doc_id', '$userId');
+    } catch (e) {
+      Loggers.error('[DELETE_USER] Failed to delete user $userId — $e');
     }
   }
 }

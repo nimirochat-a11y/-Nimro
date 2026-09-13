@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:appwrite/appwrite.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -19,7 +19,7 @@ import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
-import 'package:nimiro/common/service/appwrite/chat_repository.dart';
+import 'package:nimiro/common/service/supabase/chat_repository.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
@@ -66,8 +66,8 @@ class ChatScreenController extends BlockUserController
   final ChatRepository _repo = ChatRepository.instance;
   MessageType chatType = MessageType.text;
   RxList<MessageData> chatList = <MessageData>[].obs;
-  List<RealtimeSubscription> chatListeners = [];
-  List<RealtimeSubscription> usersStreams = [];
+  List<RealtimeChannel> chatListeners = [];
+  List<RealtimeChannel> usersStreams = [];
   StreamSubscription<PlayerState>? playerControllerListen;
   String? lastMessageDocumentId;
   RecorderController recorderController = RecorderController();
@@ -94,10 +94,10 @@ class ChatScreenController extends BlockUserController
     super.onClose();
     chatId = '';
     for (var listener in chatListeners) {
-      listener.close();
+      _repo.unsubscribe(listener);
     }
     for (var listener in usersStreams) {
-      listener.close();
+      _repo.unsubscribe(listener);
     }
     playerControllerListen?.cancel();
     recorderController.dispose();

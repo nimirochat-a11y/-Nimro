@@ -5,7 +5,7 @@ import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/service/appwrite/appwrite_service.dart';
+import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -50,7 +50,7 @@ class SettingsScreenController extends BaseController {
   Future<void> checkAppwriteConnection() async {
     showLoader(barrierDismissible: false);
     try {
-      final isConnected = await AppwriteService.instance.ping();
+      final isConnected = await SupabaseService.instance.ping();
       showSnackBar(isConnected
           ? 'Appwrite connection is working.'
           : 'Appwrite connection failed. Check the endpoint and platform settings.');
