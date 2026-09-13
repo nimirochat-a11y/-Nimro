@@ -97,7 +97,12 @@ class _TopActionButton extends StatelessWidget {
           alignment: Alignment.bottomCenter,
           children: [
             ColorFiltered(
-              colorFilter: ColorFilter.mode(whitePure(context), BlendMode.srcIn),
+              colorFilter: ColorFilter.mode(
+                Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : textDarkGrey(context),
+                BlendMode.srcIn,
+              ),
               child: Image.asset(icon, width: 24, height: 24),
             ),
             Obx(() {

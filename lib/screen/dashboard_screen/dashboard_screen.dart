@@ -170,13 +170,21 @@ class DashboardScreen extends StatelessWidget {
                   children: [
                   if (index == 2)
                     Container(
-                      width: 44,
-                      height: 44,
+                      width: 42,
+                      height: 42,
                       decoration: BoxDecoration(
-                        color: selectedColor,
-                        shape: BoxShape.circle,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : textDarkGrey(context),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.add_rounded, size: 30, color: Colors.white),
+                      child: Icon(
+                        Icons.add_rounded,
+                        size: 29,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.black
+                            : Colors.white,
+                      ),
                     )
                   else if (index == 3)
                     Icon(

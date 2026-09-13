@@ -20,6 +20,7 @@ import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/camera_screen/camera_screen.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen_controller.dart';
 import 'package:nimiro/screen/gif_sheet/gif_sheet_controller.dart';
+import 'package:nimiro/screen/profile_screen/widget/post_options_sheet.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/firebase_const.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
@@ -100,7 +101,7 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     // The center button is an action, not a page in the indexed stack.
     if (index == 2) {
       HapticFeedback.lightImpact();
-      Get.to(() => const CameraScreen(cameraType: CameraScreenType.post));
+      Get.bottomSheet(const PostOptionsSheet(), isScrollControlled: true);
       return;
     }
     SystemChrome.setSystemUIOverlayStyle(

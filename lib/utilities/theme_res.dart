@@ -10,7 +10,7 @@ class ThemeRes {
       scaffoldBackgroundColor: ColorRes.whitePure,
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: ColorRes.whitePure),
-      appBarTheme: const AppBarTheme(backgroundColor: ColorRes.bgLightGrey),
+      appBarTheme: const AppBarTheme(backgroundColor: ColorRes.whitePure),
       fontFamily: FontRes.outFitRegular400,
       bottomSheetTheme:
           const BottomSheetThemeData(backgroundColor: ColorRes.whitePure),
@@ -28,7 +28,7 @@ class ThemeRes {
       ),
       textSelectionTheme:
           const TextSelectionThemeData(selectionColor: ColorRes.disabledGrey),
-      cardTheme: const CardThemeData(color: ColorRes.blueFollow),
+      cardTheme: const CardThemeData(color: ColorRes.whitePure),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       primaryColor: ColorRes.themeAccentSolid,
@@ -116,7 +116,9 @@ Color blackPure(BuildContext context) {
 }
 
 Color bgLightGrey(BuildContext context) {
-  return Theme.of(context).appBarTheme.backgroundColor ?? ColorRes.bgLightGrey;
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF101010)
+      : (Theme.of(context).appBarTheme.backgroundColor ?? ColorRes.whitePure);
 }
 
 Color themeColor(BuildContext context) {
