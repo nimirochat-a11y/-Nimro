@@ -118,6 +118,8 @@ class AuthScreenController extends BaseController {
   }
 
   void onGoogleTap() async {
+    if (_isLoggingIn) return;
+    _isLoggingIn = true;
     showLoader();
     try {
       final profile = await SupabaseService.instance
@@ -135,6 +137,8 @@ class AuthScreenController extends BaseController {
       Loggers.error('Google OAuth failed: $e');
       stopLoader();
       showSnackBar('خطأ تسجيل الدخول: $e');
+    } finally {
+      _isLoggingIn = false;
     }
   }
 

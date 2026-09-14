@@ -460,8 +460,8 @@ class Link {
   });
 
   Link.fromJson(dynamic json) {
-    id = json['id'];
-    userId = json['user_id'];
+    id = User._toNum(json['id']);
+    userId = User._toNum(json['user_id']);
     title = json['title'];
     url = json['url'];
     createdAt = json['created_at'];
@@ -497,11 +497,11 @@ class Token {
   });
 
   Token.fromJson(dynamic json) {
-    userId = json['user_id'];
+    userId = User._toNum(json['user_id']);
     authToken = json['auth_token'];
     updatedAt = json['updated_at'];
     createdAt = json['created_at'];
-    id = json['id'];
+    id = User._toNum(json['id']);
   }
 
   num? userId;

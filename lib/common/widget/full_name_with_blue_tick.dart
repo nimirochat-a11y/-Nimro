@@ -76,6 +76,11 @@ class FullNameWithBlueTick extends StatelessWidget {
                   : badgeIcon == AssetRes.icGreenTick
                       ? 2
                       : 4;
+              final badgeGlowColor = verificationFlag == 1
+                  ? const Color(0xFF2E8BFF)
+                  : verificationFlag == 2
+                      ? const Color(0xFF27C978)
+                      : const Color(0xFF28A9FF);
               return Padding(
                 padding: const EdgeInsetsDirectional.only(end: 2),
                 child: InkWell(
@@ -84,19 +89,17 @@ class FullNameWithBlueTick extends StatelessWidget {
                   borderRadius: BorderRadius.circular(badgeSize),
                   child: Container(
                     padding: isNimiroBadge ? const EdgeInsets.all(1) : null,
-                    decoration: isNimiroBadge
-                        ? BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF18D6F5)
-                                    .withValues(alpha: .5),
-                                blurRadius: 5,
-                                spreadRadius: .5,
-                              ),
-                            ],
-                          )
-                        : null,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: badgeGlowColor.withValues(
+                              alpha: isNimiroBadge ? .52 : .28),
+                          blurRadius: isNimiroBadge ? 5 : 3,
+                          spreadRadius: isNimiroBadge ? .5 : 0,
+                        ),
+                      ],
+                    ),
                     child: Image.asset(
                       icon ?? badgeIcon,
                       height: badgeSize,
