@@ -1,11 +1,8 @@
-import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nimiro/common/widget/custom_divider.dart';
 import 'package:nimiro/screen/home_screen/home_screen_controller.dart';
 import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 import 'package:nimiro/utilities/app_res.dart';
-import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -17,96 +14,14 @@ class HomeScreen extends StatelessWidget {
     final controller = Get.put(HomeScreenController());
     return Scaffold(
       backgroundColor: blackPure(context),
-      body: Stack(
-        children: [
-          ReelsScreen(
-            isHomePage: true,
-            reels: controller.reels,
-            position: 0,
-            isLoading: controller.isLoading,
-            onFetchMoreData: () => controller.onRefreshPage(reset: false),
-            widget: HomeTopCenterWidget(controller: controller),
-            onRefresh: controller.onRefreshPage,
-          ),
-          Obx(
-            () => GestureDetector(
-              onTap: !controller.isAnimateTab.value ? null : controller.onAnimationBack,
-              child: Container(color: !controller.isAnimateTab.value ? null : Colors.black.withValues(alpha: 0.5)),
-            ),
-          ),
-          SafeArea(
-            minimum: EdgeInsets.only(top: AppBar().preferredSize.height * 1.5),
-            child: SizeTransition(
-              sizeFactor: controller.animation,
-              axis: Axis.vertical,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                child: Column(
-                  children: [
-                    Center(
-                      child: CustomPaint(
-                        painter: TrianglePainter(
-                            strokeColor: whitePure(context), strokeWidth: 0, paintingStyle: PaintingStyle.fill),
-                        child: const SizedBox(height: 9, width: 15),
-                      ),
-                    ),
-                    Container(
-                      width: MediaQuery.of(context).size.width,
-                      constraints: const BoxConstraints(maxHeight: 200),
-                      decoration: ShapeDecoration(
-                        color: whitePure(context),
-                        shape: SmoothRectangleBorder(
-                          borderRadius: SmoothBorderRadius(cornerRadius: 8, cornerSmoothing: 1),
-                        ),
-                      ),
-                      child: ListView.builder(
-                        primary: false,
-                        shrinkWrap: true,
-                        padding: EdgeInsets.zero,
-                        itemCount: TabType.values.length,
-                        itemBuilder: (context, index) {
-                          TabType tabType = TabType.values[index];
-                          return Obx(() {
-                            bool isSelected = controller.selectedReelCategory.value == tabType;
-                            return Column(
-                              children: [
-                                InkWell(
-                                  onTap: () => controller.onTabTypeChanged(tabType),
-                                  child: Container(
-                                    height: 25,
-                                    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            tabType.title.toUpperCase(),
-                                            style: TextStyleCustom.unboundedBold700(
-                                                fontSize: 14,
-                                                color: isSelected ? textDarkGrey(context) : textLightGrey(context)),
-                                          ),
-                                        ),
-                                        if (isSelected)
-                                          Image.asset(AssetRes.icCheckCircle,
-                                              color: isSelected ? textDarkGrey(context) : textLightGrey(context),
-                                              height: 24,
-                                              width: 24),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (index < TabType.values.length - 1) const CustomDivider(),
-                              ],
-                            );
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        ],
+      body: ReelsScreen(
+        isHomePage: true,
+        reels: controller.reels,
+        position: 0,
+        isLoading: controller.isLoading,
+        onFetchMoreData: () => controller.onRefreshPage(reset: false),
+        widget: HomeTopCenterWidget(controller: controller),
+        onRefresh: controller.onRefreshPage,
       ),
     );
   }
@@ -119,53 +34,46 @@ class HomeTopCenterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: controller.onToggleDropDown,
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Obx(() => Text(controller.selectedReelCategory.value.title.toUpperCase(),
-                style: TextStyleCustom.unboundedBold700(fontSize: 16, color: whitePure(context)))),
-            const SizedBox(width: 5),
-            Image.asset(AssetRes.icDownArrow, color: whitePure(context), height: 12, width: 12),
-          ],
+    return SizedBox(
+      height: 38,
+      width: 250,
+      child: Obx(
+        () => ListView.separated(
+          scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          itemCount: TabType.values.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            final tabType = TabType.values[index];
+            final isSelected = controller.selectedReelCategory.value == tabType;
+            return InkWell(
+              borderRadius: BorderRadius.circular(22),
+              onTap: () => controller.onTabTypeChanged(tabType),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? whitePure(context).withValues(alpha: .22) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: whitePure(context).withValues(alpha: isSelected ? .65 : .28),
+                  ),
+                ),
+                child: Text(
+                  tabType.title.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyleCustom.unboundedBold700(
+                    fontSize: 11,
+                    color: whitePure(context),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
-  }
-}
-
-class TrianglePainter extends CustomPainter {
-  final Color strokeColor;
-  final PaintingStyle paintingStyle;
-  final double strokeWidth;
-
-  TrianglePainter({this.strokeColor = Colors.black, this.strokeWidth = 3, this.paintingStyle = PaintingStyle.stroke});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = strokeColor
-      ..strokeWidth = strokeWidth
-      ..style = paintingStyle;
-
-    canvas.drawPath(getTrianglePath(size.width, size.height), paint);
-  }
-
-  Path getTrianglePath(double x, double y) {
-    return Path()
-      ..moveTo(0, y)
-      ..lineTo(x / 2, 0)
-      ..lineTo(x, y)
-      ..lineTo(0, y);
-  }
-
-  @override
-  bool shouldRepaint(TrianglePainter oldDelegate) {
-    return oldDelegate.strokeColor != strokeColor ||
-        oldDelegate.paintingStyle != paintingStyle ||
-        oldDelegate.strokeWidth != strokeWidth;
   }
 }
