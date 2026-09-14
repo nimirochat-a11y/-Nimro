@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/navigation/navigate_with_controller.dart';
