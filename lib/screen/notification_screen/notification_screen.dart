@@ -22,7 +22,9 @@ class NotificationScreen extends StatelessWidget {
     final controller = Get.put(NotificationScreenController());
     return Scaffold(
       backgroundColor: scaffoldBackgroundColor(context),
-      body: Column(
+      body: DefaultTextStyle.merge(
+        style: const TextStyle(decoration: TextDecoration.none),
+        child: Column(
         children: [
           CustomAppBar(
               title: LKey.notifications.tr,
@@ -40,11 +42,13 @@ class NotificationScreen extends StatelessWidget {
                         curve: Curves.linear);
                   })),
           Expanded(
-            child: Obx(() {
-              return PageView(
-                controller: controller.pageController,
-                onPageChanged: controller.onTabChange,
-                children: [
+            child: ColoredBox(
+              color: scaffoldBackgroundColor(context),
+              child: Obx(() {
+                return PageView(
+                  controller: controller.pageController,
+                  onPageChanged: controller.onTabChange,
+                  children: [
                   /// Activity Notifications Page
                   _NotificationListWrapper<ActivityNotification>(
                       isLoading: controller.isActivityNotification.value,
@@ -63,11 +67,13 @@ class NotificationScreen extends StatelessWidget {
                         SystemNotificationPage(data: data),
                     loadMore: controller.fetchAdminNotification,
                   ),
-                ],
-              );
-            }),
+                  ],
+                );
+              }),
+            ),
           )
-        ],
+          ],
+        ),
       ),
     );
   }

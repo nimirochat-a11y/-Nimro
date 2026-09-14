@@ -18,10 +18,12 @@ class MessageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(MessageScreenController());
-    return Container(
-      color: scaffoldBackgroundColor(context),
-      child: Column(
-        children: [
+    return DefaultTextStyle.merge(
+      style: const TextStyle(decoration: TextDecoration.none),
+      child: Container(
+        color: scaffoldBackgroundColor(context),
+        child: Column(
+          children: [
         Container(
           color: scaffoldBackgroundColor(context),
           child: SafeArea(
@@ -70,24 +72,28 @@ class MessageScreen extends StatelessWidget {
           ),
         ),
         const CustomSearchTextField(),
-        Expanded(
-          child: Obx(
-            () => controller.isLoading.value &&
-                    (controller.selectedChatCategory.value == 0
-                        ? controller.chatsUsers.isEmpty
-                        : controller.requestsUsers.isEmpty)
-                ? const LoaderWidget()
-                : PageView(
-                    controller: controller.pageController,
-                    onPageChanged: controller.onPageChanged,
-                    children: const [
-                      ChatsListView(),
-                      RequestsListView(),
-                    ],
-                  ),
-          ),
-        )
-        ],
+          Expanded(
+            child: ColoredBox(
+              color: scaffoldBackgroundColor(context),
+              child: Obx(
+                () => controller.isLoading.value &&
+                        (controller.selectedChatCategory.value == 0
+                            ? controller.chatsUsers.isEmpty
+                            : controller.requestsUsers.isEmpty)
+                    ? const LoaderWidget()
+                    : PageView(
+                        controller: controller.pageController,
+                        onPageChanged: controller.onPageChanged,
+                        children: const [
+                          ChatsListView(),
+                          RequestsListView(),
+                        ],
+                      ),
+              ),
+            ),
+          )
+          ],
+        ),
       ),
     );
   }

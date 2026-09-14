@@ -30,7 +30,7 @@ class ChatConversationUserCard extends StatelessWidget {
       child: Obx(() {
         AppUser? user = chatConversation.chatUserRx.value;
         return Container(
-          color: bgLightGrey(context),
+          color: scaffoldBackgroundColor(context),
           padding: const EdgeInsets.all(10),
           margin: const EdgeInsets.symmetric(vertical: 2),
           child: Row(

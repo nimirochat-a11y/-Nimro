@@ -94,16 +94,25 @@ class FullNameWithBlueTick extends StatelessWidget {
                       boxShadow: [
                         BoxShadow(
                           color: badgeGlowColor.withValues(
-                              alpha: isNimiroBadge ? .52 : .28),
-                          blurRadius: isNimiroBadge ? 5 : 3,
-                          spreadRadius: isNimiroBadge ? .5 : 0,
+                              alpha: isNimiroBadge ? .72 : .42),
+                          blurRadius: isNimiroBadge ? 7 : 4,
+                          spreadRadius: isNimiroBadge ? .8 : .2,
                         ),
                       ],
                     ),
-                    child: Image.asset(
-                      icon ?? badgeIcon,
-                      height: badgeSize,
-                      filterQuality: FilterQuality.high,
+                    child: ColorFiltered(
+                      colorFilter: const ColorFilter.matrix([
+                        1.15, -0.11, -0.02, 0, 4,
+                        -0.04, 1.10, -0.01, 0, 4,
+                        -0.01, -0.08, 1.16, 0, 4,
+                        0, 0, 0, 1, 0,
+                      ]),
+                      child: Image.asset(
+                        icon ?? badgeIcon,
+                        height: badgeSize,
+                        filterQuality: FilterQuality.high,
+                        isAntiAlias: true,
+                      ),
                     ),
                   ),
                 ),

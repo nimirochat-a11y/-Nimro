@@ -44,23 +44,35 @@ class NotificationScreenController extends BaseController {
   Future<void> fetchAdminNotification() async {
     if (isAdminNotification.value) return;
     isAdminNotification.value = true;
-    List<AdminNotificationData> items = await NotificationService.instance
-        .fetchAdminNotifications(lastItemId: adminNotifications.lastOrNull?.id);
-    isAdminNotification.value = false;
-    if (items.isNotEmpty) {
-      adminNotifications.addAll(items);
+    try {
+      final items = await NotificationService.instance
+          .fetchAdminNotifications(lastItemId: adminNotifications.lastOrNull?.id)
+          .timeout(const Duration(seconds: 15));
+      if (items.isNotEmpty) {
+        adminNotifications.addAll(items);
+      }
+    } catch (error) {
+      Loggers.error('Failed to load admin notifications: $error');
+    } finally {
+      isAdminNotification.value = false;
     }
   }
 
   Future<void> fetchActivityNotifications() async {
     if (isActivityNotification.value) return;
     isActivityNotification.value = true;
-    List<ActivityNotification> items = await NotificationService.instance
-        .fetchActivityNotifications(
-            lastItemId: activityNotifications.lastOrNull?.id);
-    isActivityNotification.value = false;
-    if (items.isNotEmpty) {
-      activityNotifications.addAll(items);
+    try {
+      final items = await NotificationService.instance
+          .fetchActivityNotifications(
+              lastItemId: activityNotifications.lastOrNull?.id)
+          .timeout(const Duration(seconds: 15));
+      if (items.isNotEmpty) {
+        activityNotifications.addAll(items);
+      }
+    } catch (error) {
+      Loggers.error('Failed to load activity notifications: $error');
+    } finally {
+      isActivityNotification.value = false;
     }
   }
 
