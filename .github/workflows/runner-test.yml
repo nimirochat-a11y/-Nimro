@@ -1,0 +1,14 @@
+name: Runner availability test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  runner-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify hosted runner
+        run: |
+          echo "GitHub hosted runner started successfully"
+          uname -a
+          echo "Runner: $RUNNER_NAME"
