@@ -39,7 +39,7 @@ class CommentCard extends StatelessWidget {
     }
     return ContextMenuWidget(
       child: Container(
-        color: whitePure(context),
+        color: bgLightGrey(context),
         padding: const EdgeInsets.all(10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -34,16 +34,18 @@ class CommentSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(CommentSheetController(
         post.obs, comment, replyComment, isFromNotification, CommentHelper()));
-    return Container(
-      margin: isFromBottomSheet
-          ? EdgeInsets.only(top: AppBar().preferredSize.height * 2.5)
-          : null,
-      decoration: ShapeDecoration(
-          shape: const SmoothRectangleBorder(
-              borderRadius: SmoothBorderRadius.vertical(
-                  top: SmoothRadius(cornerRadius: 40, cornerSmoothing: 1))),
-          color: scaffoldBackgroundColor(context)),
-      child: Column(
+    return DefaultTextStyle.merge(
+      style: const TextStyle(decoration: TextDecoration.none),
+      child: Container(
+        margin: isFromBottomSheet
+            ? EdgeInsets.only(top: AppBar().preferredSize.height * 2.5)
+            : null,
+        decoration: ShapeDecoration(
+            shape: const SmoothRectangleBorder(
+                borderRadius: SmoothBorderRadius.vertical(
+                    top: SmoothRadius(cornerRadius: 40, cornerSmoothing: 1))),
+            color: scaffoldBackgroundColor(context)),
+        child: Column(
         children: [
           if (isFromBottomSheet)
             Obx(() => BottomSheetTopView(
@@ -51,7 +53,9 @@ class CommentSheet extends StatelessWidget {
                     '${(controller.post.value?.comments ?? 0).toInt().numberFormat} ${LKey.comments.tr}',
                 sideBtnVisibility: false)),
           Obx(() {
-            Widget content = Stack(
+            Widget content = ColoredBox(
+              color: scaffoldBackgroundColor(context),
+              child: Stack(
               key: isFromBottomSheet ? null : controller.commentKey,
               children: [
                 controller.getCommentsList.isEmpty && controller.isLoading.value
@@ -67,6 +71,7 @@ class CommentSheet extends StatelessWidget {
                         : CommentsView(controller: controller),
                 HashTagAndMentionUserView(helper: controller.commentHelper),
               ],
+              ),
             );
             return !isFromBottomSheet ? content : Expanded(child: content);
           }),
@@ -75,6 +80,7 @@ class CommentSheet extends StatelessWidget {
                 helper: controller.commentHelper,
                 isFromBottomSheet: isFromBottomSheet),
         ],
+        ),
       ),
     );
   }

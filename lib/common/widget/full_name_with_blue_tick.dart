@@ -100,19 +100,11 @@ class FullNameWithBlueTick extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: ColorFiltered(
-                      colorFilter: const ColorFilter.matrix([
-                        1.15, -0.11, -0.02, 0, 4,
-                        -0.04, 1.10, -0.01, 0, 4,
-                        -0.01, -0.08, 1.16, 0, 4,
-                        0, 0, 0, 1, 0,
-                      ]),
-                      child: Image.asset(
-                        icon ?? badgeIcon,
-                        height: badgeSize,
-                        filterQuality: FilterQuality.high,
-                        isAntiAlias: true,
-                      ),
+                    child: Image.asset(
+                      icon ?? badgeIcon,
+                      height: badgeSize,
+                      filterQuality: FilterQuality.high,
+                      isAntiAlias: true,
                     ),
                   ),
                 ),
