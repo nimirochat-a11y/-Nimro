@@ -1,12 +1,8 @@
-import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/home_screen/home_screen_controller.dart';
-import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen.dart';
 import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 import 'package:nimiro/utilities/app_res.dart';
-import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -29,7 +25,6 @@ class HomeScreen extends StatelessWidget {
             widget: HomeTopCenterWidget(controller: controller),
             onRefresh: controller.onRefreshPage,
           ),
-          HomeTopCenterWidget(controller: controller),
         ],
       ),
     );
@@ -61,12 +56,6 @@ class HomeTopCenterWidget extends StatelessWidget {
                     onTap: () => controller.onTabTypeChanged(tabType),
                   );
                 })),
-            _buildTab(
-              context,
-              title: LKey.livestreams.tr,
-              icon: AssetRes.icLive,
-              onTap: () => Get.to(() => const LiveStreamSearchScreen()),
-            ),
           ],
         ),
       ),
@@ -74,32 +63,24 @@ class HomeTopCenterWidget extends StatelessWidget {
   }
 
   Widget _buildTab(BuildContext context,
-      {required String title, required VoidCallback onTap, bool isSelected = false, String? icon}) {
+      {required String title, required VoidCallback onTap, bool isSelected = false}) {
     final foreground = isSelected ? whitePure(context) : whitePure(context).withValues(alpha: .72);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(8),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          decoration: ShapeDecoration(
-            color: isSelected ? themeAccentSolid(context) : Colors.white.withValues(alpha: .12),
-            shape: SmoothRectangleBorder(
-              borderRadius: SmoothBorderRadius(cornerRadius: 22, cornerSmoothing: 1),
-              side: BorderSide(color: Colors.white.withValues(alpha: isSelected ? .35 : .18)),
-            ),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: isSelected ? themeAccentSolid(context) : Colors.transparent, width: 2)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                Image.asset(icon, color: foreground, height: 18, width: 18),
-                const SizedBox(width: 6),
-              ],
               Text(title.toUpperCase(),
-                  style: TextStyleCustom.unboundedBold700(fontSize: 11, color: foreground)),
+                  style: TextStyleCustom.unboundedBold700(fontSize: 12, color: foreground)),
             ],
           ),
         ),
