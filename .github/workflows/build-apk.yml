@@ -12,24 +12,12 @@ permissions:
 jobs:
   build-apk:
     name: Build Nimiro release APK
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 45
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
-      - name: Free runner disk space
-        run: |
-          sudo rm -rf /usr/local/lib/android/sdk/system-images
-          sudo rm -rf /usr/local/lib/android/sdk/emulator
-          sudo rm -rf /usr/local/lib/android/sdk/platform-tools
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/local/lib/android/sdk/ndk/*
-          docker system prune -af || true
-          df -h "$GITHUB_WORKSPACE"
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -45,12 +33,6 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Clean runner caches before Android build
-        run: |
-          rm -rf "$HOME/.gradle/caches" "$HOME/.gradle/wrapper/dists"
-          rm -rf android/.gradle build
-          df -h "$GITHUB_WORKSPACE" "$HOME"
 
       - name: Accept Android SDK licenses and install NDK
         run: |
