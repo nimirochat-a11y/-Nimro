@@ -1,8 +1,9 @@
 import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nimiro/common/widget/custom_divider.dart';
+import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/home_screen/home_screen_controller.dart';
+import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen.dart';
 import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 import 'package:nimiro/utilities/app_res.dart';
 import 'package:nimiro/utilities/asset_res.dart';
@@ -28,84 +29,7 @@ class HomeScreen extends StatelessWidget {
             widget: HomeTopCenterWidget(controller: controller),
             onRefresh: controller.onRefreshPage,
           ),
-          Obx(
-            () => GestureDetector(
-              onTap: !controller.isAnimateTab.value ? null : controller.onAnimationBack,
-              child: Container(color: !controller.isAnimateTab.value ? null : Colors.black.withValues(alpha: 0.5)),
-            ),
-          ),
-          SafeArea(
-            minimum: EdgeInsets.only(top: AppBar().preferredSize.height * 1.5),
-            child: SizeTransition(
-              sizeFactor: controller.animation,
-              axis: Axis.vertical,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                child: Column(
-                  children: [
-                    Center(
-                      child: CustomPaint(
-                        painter: TrianglePainter(
-                            strokeColor: whitePure(context), strokeWidth: 0, paintingStyle: PaintingStyle.fill),
-                        child: const SizedBox(height: 9, width: 15),
-                      ),
-                    ),
-                    Container(
-                      width: MediaQuery.of(context).size.width,
-                      constraints: const BoxConstraints(maxHeight: 200),
-                      decoration: ShapeDecoration(
-                        color: whitePure(context),
-                        shape: SmoothRectangleBorder(
-                          borderRadius: SmoothBorderRadius(cornerRadius: 8, cornerSmoothing: 1),
-                        ),
-                      ),
-                      child: ListView.builder(
-                        primary: false,
-                        shrinkWrap: true,
-                        padding: EdgeInsets.zero,
-                        itemCount: TabType.values.length,
-                        itemBuilder: (context, index) {
-                          TabType tabType = TabType.values[index];
-                          return Obx(() {
-                            bool isSelected = controller.selectedReelCategory.value == tabType;
-                            return Column(
-                              children: [
-                                InkWell(
-                                  onTap: () => controller.onTabTypeChanged(tabType),
-                                  child: Container(
-                                    height: 25,
-                                    margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 15),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            tabType.title.toUpperCase(),
-                                            style: TextStyleCustom.unboundedBold700(
-                                                fontSize: 14,
-                                                color: isSelected ? textDarkGrey(context) : textLightGrey(context)),
-                                          ),
-                                        ),
-                                        if (isSelected)
-                                          Image.asset(AssetRes.icCheckCircle,
-                                              color: isSelected ? textDarkGrey(context) : textLightGrey(context),
-                                              height: 24,
-                                              width: 24),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (index < TabType.values.length - 1) const CustomDivider(),
-                              ],
-                            );
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
+          HomeTopCenterWidget(controller: controller),
         ],
       ),
     );
@@ -119,18 +43,65 @@ class HomeTopCenterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: controller.onToggleDropDown,
-      child: SafeArea(
-        bottom: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        margin: const EdgeInsets.only(top: 8),
+        height: 42,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           children: [
-            Obx(() => Text(controller.selectedReelCategory.value.title.toUpperCase(),
-                style: TextStyleCustom.unboundedBold700(fontSize: 16, color: whitePure(context)))),
-            const SizedBox(width: 5),
-            Image.asset(AssetRes.icDownArrow, color: whitePure(context), height: 12, width: 12),
+            ...TabType.values.map((tabType) => Obx(() {
+                  final isSelected = controller.selectedReelCategory.value == tabType;
+                  return _buildTab(
+                    context,
+                    title: tabType.title,
+                    isSelected: isSelected,
+                    onTap: () => controller.onTabTypeChanged(tabType),
+                  );
+                })),
+            _buildTab(
+              context,
+              title: LKey.livestreams.tr,
+              icon: AssetRes.icLive,
+              onTap: () => Get.to(() => const LiveStreamSearchScreen()),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTab(BuildContext context,
+      {required String title, required VoidCallback onTap, bool isSelected = false, String? icon}) {
+    final foreground = isSelected ? whitePure(context) : whitePure(context).withValues(alpha: .72);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(22),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: ShapeDecoration(
+            color: isSelected ? themeAccentSolid(context) : Colors.white.withValues(alpha: .12),
+            shape: SmoothRectangleBorder(
+              borderRadius: SmoothBorderRadius(cornerRadius: 22, cornerSmoothing: 1),
+              side: BorderSide(color: Colors.white.withValues(alpha: isSelected ? .35 : .18)),
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Image.asset(icon, color: foreground, height: 18, width: 18),
+                const SizedBox(width: 6),
+              ],
+              Text(title.toUpperCase(),
+                  style: TextStyleCustom.unboundedBold700(fontSize: 11, color: foreground)),
+            ],
+          ),
         ),
       ),
     );
