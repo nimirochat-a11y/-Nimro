@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/widget/custom_app_bar.dart';
-import 'package:nimiro/common/widget/custom_tab_switcher.dart';
 import 'package:nimiro/common/widget/load_more_widget.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
 import 'package:nimiro/common/widget/no_data_widget.dart';
@@ -24,86 +23,39 @@ class NotificationScreen extends StatelessWidget {
       body: Column(
         children: [
           CustomAppBar(
-              title: LKey.notifications.tr,
-              titleStyle: TextStyleCustom.unboundedSemiBold600(
-                  fontSize: 15, color: textDarkGrey(context)),
-              widget: CustomTabSwitcher(
-                  items: [(LKey.activity.tr), (LKey.system.tr)],
-                  selectedIndex: controller.selectedTabIndex,
-                  margin:
-                      const EdgeInsets.only(left: 15, right: 15, bottom: 15),
-                  onTap: (index) {
-                    controller.onTabChange(index);
-                    controller.pageController.animateToPage(index,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.linear);
-                  })),
+            title: LKey.notifications.tr,
+            titleStyle: TextStyleCustom.unboundedSemiBold600(
+                fontSize: 15, color: textDarkGrey(context)),
+          ),
           Expanded(
             child: Obx(() {
-              return PageView(
-                controller: controller.pageController,
-                onPageChanged: controller.onTabChange,
-                children: [
-                  /// Activity Notifications Page
-                  _NotificationListWrapper<ActivityNotification>(
-                      isLoading: controller.isActivityNotification.value,
-                      isEmpty: controller.activityNotifications.isEmpty,
-                      items: controller.activityNotifications,
-                      itemBuilder: (context, data) => ActivityNotificationPage(
-                          data: data, controller: controller),
-                      loadMore: controller.fetchActivityNotifications),
-
-                  /// Admin Notifications Page
-                  _NotificationListWrapper<AdminNotificationData>(
-                    isLoading: controller.isAdminNotification.value,
-                    isEmpty: controller.adminNotifications.isEmpty,
-                    items: controller.adminNotifications,
-                    itemBuilder: (context, data) =>
-                        SystemNotificationPage(data: data),
-                    loadMore: controller.fetchAdminNotification,
+              final items = controller.mergedNotifications;
+              if (controller.isMergedLoading && controller.isMergedEmpty) {
+                return const LoaderWidget();
+              }
+              return NoDataView(
+                showShow: items.isEmpty,
+                child: LoadMoreWidget(
+                  loadMore: controller.fetchMoreMerged,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final data = items[index];
+                      if (data is ActivityNotification) {
+                        return ActivityNotificationPage(
+                            data: data, controller: controller);
+                      } else if (data is AdminNotificationData) {
+                        return SystemNotificationPage(data: data);
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
-                ],
+                ),
               );
             }),
           )
         ],
-      ),
-    );
-  }
-}
-
-class _NotificationListWrapper<T> extends StatelessWidget {
-  final bool isLoading;
-  final bool isEmpty;
-  final List<T> items;
-  final Widget Function(BuildContext, T) itemBuilder;
-  final Future<void> Function() loadMore;
-
-  const _NotificationListWrapper({
-    required this.isLoading,
-    required this.isEmpty,
-    required this.items,
-    required this.itemBuilder,
-    required this.loadMore,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading && isEmpty) {
-      return const LoaderWidget();
-    }
-
-    return NoDataView(
-      showShow: isEmpty,
-      child: LoadMoreWidget(
-        loadMore: loadMore,
-        child: ListView.builder(
-          padding: const EdgeInsets.only(bottom: 20),
-          itemCount: items.length,
-          itemBuilder: (context, index) {
-            return itemBuilder(context, items[index]);
-          },
-        ),
       ),
     );
   }

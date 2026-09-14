@@ -41,6 +41,12 @@ class MessageScreenController extends BaseController {
     selectedChatCategory.value = index;
   }
 
+  /// Requests pinned first, followed by regular chats below.
+  List<ChatThread> get combinedThreads => [
+        ...requestsUsers,
+        ...chatsUsers,
+      ];
+
   Future<void> _listenToUserChatsAndRequests() async {
     if (myUser?.id == null) return;
     isLoading.value = true;
@@ -53,7 +59,6 @@ class MessageScreenController extends BaseController {
       Loggers.error('Failed to load conversations: $e');
     }
     isLoading.value = false;
-
     _subscription = _repo.subscribeToUserConversations(
       userId: myUser!.id!,
       onChange: (event, data) {
