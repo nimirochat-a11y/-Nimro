@@ -27,6 +27,7 @@ class CustomTabSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Obx(
       () => Container(
         height: 45,
@@ -60,7 +61,7 @@ class CustomTabSwitcher extends StatelessWidget {
                         borderRadius: SmoothBorderRadius(
                             cornerRadius: 10 - 2, cornerSmoothing: 1),
                       ),
-                      color: whitePure(context),
+                      color: isDark ? const Color(0xFF263244) : whitePure(context),
                     ),
                   ),
                 );
@@ -84,7 +85,7 @@ class CustomTabSwitcher extends StatelessWidget {
                                 color: !isSelected
                                     ? textLightGrey(context)
                                     : (selectedFontColor ??
-                                        textDarkGrey(context)),
+                                        (isDark ? Colors.white : textDarkGrey(context))),
                                 fontSize: 15),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

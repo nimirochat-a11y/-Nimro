@@ -18,8 +18,10 @@ class MessageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(MessageScreenController());
-    return Column(
-      children: [
+    return Container(
+      color: scaffoldBackgroundColor(context),
+      child: Column(
+        children: [
         Container(
           color: scaffoldBackgroundColor(context),
           child: SafeArea(
@@ -85,7 +87,8 @@ class MessageScreen extends StatelessWidget {
                   ),
           ),
         )
-      ],
+        ],
+      ),
     );
   }
 }

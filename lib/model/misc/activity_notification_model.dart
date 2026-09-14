@@ -38,6 +38,19 @@ class ActivityNotificationModel {
 }
 
 class ActivityNotification {
+  static int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static num? _toNum(dynamic value) {
+    if (value is num) return value;
+    if (value is String) return num.tryParse(value);
+    return null;
+  }
+
   ActivityNotification({
     this.id,
     this.fromUserId,
@@ -51,13 +64,13 @@ class ActivityNotification {
   });
 
   ActivityNotification.fromJson(dynamic json) {
-    id = json['id'];
-    fromUserId = json['from_user_id'];
-    toUserId = json['to_user_id'];
+    id = _toInt(json['id']);
+    fromUserId = _toNum(json['from_user_id']);
+    toUserId = _toNum(json['to_user_id']);
     type = json['type'] != null
-        ? ActivityNotifyType.fromString(json['type'])
+        ? ActivityNotifyType.fromString(_toInt(json['type']) ?? -1)
         : ActivityNotifyType.none;
-    dataId = json['data_id'];
+    dataId = _toNum(json['data_id']);
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
     data = json['data'] != null

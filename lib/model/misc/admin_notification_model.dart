@@ -28,6 +28,13 @@ class AdminNotificationModel {
 }
 
 class AdminNotificationData {
+  static int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
   AdminNotificationData({
     this.id,
     this.title,
@@ -38,7 +45,7 @@ class AdminNotificationData {
   });
 
   AdminNotificationData.fromJson(dynamic json) {
-    id = json['id'];
+    id = _toInt(json['id']);
     title = json['title'];
     description = json['description'];
     image = json['image'];

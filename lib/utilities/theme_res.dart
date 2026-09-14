@@ -100,7 +100,7 @@ class ThemeRes {
       textTheme: const TextTheme(
         titleLarge: TextStyle(color: Colors.white),
         titleMedium: TextStyle(color: Colors.white),
-        titleSmall: TextStyle(color: Colors.white),
+        titleSmall: TextStyle(color: Color(0xFFB8C1CC)),
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white),
         bodySmall: TextStyle(color: Color(0xFFB8C1CC)),

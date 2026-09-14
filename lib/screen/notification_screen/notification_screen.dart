@@ -21,6 +21,7 @@ class NotificationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.put(NotificationScreenController());
     return Scaffold(
+      backgroundColor: scaffoldBackgroundColor(context),
       body: Column(
         children: [
           CustomAppBar(
