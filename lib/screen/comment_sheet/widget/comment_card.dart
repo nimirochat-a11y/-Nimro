@@ -63,7 +63,7 @@ class CommentCard extends StatelessWidget {
                         NavigationService.shared
                             .openProfileScreen(comment?.user);
                       },
-                      username: comment?.user?.username ?? '',
+                      username: comment?.user?.fullname ?? '',
                       isVerify: comment?.user?.isVerify,
                       child: Text(
                           '${comment?.createdAt?.timeAgo ?? ''}${comment?.isPinned == 1 ? AppRes.postPinIcon : ''}',

@@ -98,7 +98,7 @@ class UserCard<T> extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       FullNameWithBlueTick(
-                          username: userName,
+                          username: fullName,
                           fontSize: 13,
                           iconSize: 14,
                           isVerify: isVerified),

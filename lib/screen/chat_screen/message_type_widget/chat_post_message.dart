@@ -206,7 +206,7 @@ class ChatPostProfile extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             child: FullNameWithBlueTick(
-                username: user?.username ?? '',
+                username: user?.fullname ?? '',
                 fontColor: whitePure(context),
                 iconSize: 18,
                 isVerify: user?.isVerify),

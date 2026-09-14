@@ -74,13 +74,8 @@ class AuthScreenController extends BaseController {
         _navigateScreen(data);
       }
     } else {
-      final user.User? data = await _registration(
-          identity: email, loginMethod: LoginMethod.email, loginVia: LoginVia.logInFakeUser, password: password);
       stopLoader();
-
-      if (data != null) {
-        _navigateScreen(data);
-      }
+      return showSnackBar(LKey.invalidEmail.tr);
     }
   } finally {
       _isLoggingIn = false;
@@ -143,28 +138,6 @@ class AuthScreenController extends BaseController {
     }
   }
 
-  Future<void> onGuestTap() async {
-    showLoader();
-    try {
-      final guestId = 'guest_${DateTime.now().microsecondsSinceEpoch}';
-      final data = await _registration(
-        identity: guestId,
-        loginMethod: LoginMethod.guest,
-        fullname: 'Guest User',
-        loginVia: LoginVia.loginInUser,
-        deviceTokenOverride: 'guest:$guestId',
-      );
-      stopLoader();
-      if (data != null) {
-        _navigateScreen(data);
-      }
-    } catch (e) {
-      Loggers.error('Guest login failed: $e');
-      stopLoader();
-      showSnackBar('تعذر الدخول كضيف، حاول مرة أخرى');
-    }
-  }
-
   void onAppleTap() async {
     showLoader();
     try {
@@ -191,7 +164,6 @@ class AuthScreenController extends BaseController {
       required LoginMethod loginMethod,
       String? fullname,
       required LoginVia loginVia,
-      String? password,
       String? deviceTokenOverride}) async {
     String? deviceToken = deviceTokenOverride ??
         await FirebaseNotificationManager.instance.getNotificationToken();
@@ -202,9 +174,6 @@ class AuthScreenController extends BaseController {
       case LoginVia.loginInUser:
         userData = await UserService.instance
             .logInUser(identity: identity, loginMethod: loginMethod, deviceToken: deviceToken, fullName: fullname);
-      case LoginVia.logInFakeUser:
-        userData = await UserService.instance
-            .logInFakeUser(identity: identity, loginMethod: loginMethod, deviceToken: deviceToken, password: password);
     }
 
     Setting? setting = SessionManager.instance.getSettings();
@@ -340,4 +309,4 @@ class AuthScreenController extends BaseController {
   }
 }
 
-enum LoginVia { loginInUser, logInFakeUser }
+enum LoginVia { loginInUser }

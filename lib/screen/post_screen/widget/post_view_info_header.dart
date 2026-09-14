@@ -48,7 +48,7 @@ class PostViewInfoHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               FullNameWithBlueTick(
-                username: user?.username,
+                username: user?.fullname,
                 fontSize: 12,
                 iconSize: 18,
                 isVerify: user?.isVerify,

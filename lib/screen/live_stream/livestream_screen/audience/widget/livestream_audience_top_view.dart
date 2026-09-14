@@ -155,7 +155,7 @@ class _BuildCenterView extends StatelessWidget {
               spacing: 3,
               children: [
                 FullNameWithBlueTick(
-                  username: hostUser?.username,
+                  username: hostUser?.fullname,
                   fontSize: 13,
                   iconSize: 18,
                   fontColor: whitePure(context),

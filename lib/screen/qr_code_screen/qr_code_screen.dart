@@ -64,7 +64,7 @@ class QrCodeScreen extends StatelessWidget {
                         Column(
                           children: [
                             FullNameWithBlueTick(
-                              username: controller.myUser?.username,
+                              username: controller.myUser?.fullname,
                               fontSize: 14,
                               iconSize: 20,
                               isVerify: controller.myUser?.isVerify,

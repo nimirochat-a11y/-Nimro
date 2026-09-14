@@ -48,7 +48,7 @@ class QrCodeScreenController extends BaseController {
     final box = context.findRenderObject() as RenderBox?;
     final origin = box!.localToGlobal(Offset.zero) & box.size;
 
-    final params = ShareParams(files: [XFile(path)], title: myUser?.username ?? '', sharePositionOrigin: origin);
+    final params = ShareParams(files: [XFile(path)], title: myUser?.fullname ?? '', sharePositionOrigin: origin);
     try {
       final result = await SharePlus.instance.share(params);
       if (result.status == ShareResultStatus.success) {

@@ -203,7 +203,7 @@ class LivestreamScreenController extends BaseController {
 
   Future<ZegoRoomLoginResult> loginRoom() async {
     final roomID = liveData.value.roomID ?? '';
-    final user = ZegoUser('$myUserId', myUser.value?.username ?? '');
+    final user = ZegoUser('$myUserId', myUser.value?.fullname ?? '');
 
     final roomConfig = ZegoRoomConfig.defaultConfig()
       ..isUserStatusNotify = true;
@@ -1334,7 +1334,7 @@ class LivestreamScreenController extends BaseController {
     NotificationService.instance.pushNotification(
         type: NotificationType.liveStream,
         title: LKey.liveStreamNotificationTitle
-            .trParams({'name': hostUser?.username ?? ''}),
+            .trParams({'name': hostUser?.fullname ?? ''}),
         body: LKey.liveStreamNotificationBody.tr,
         deviceType: 1,
         topic: '${liveData.hostId}_ios',
@@ -1342,7 +1342,7 @@ class LivestreamScreenController extends BaseController {
     NotificationService.instance.pushNotification(
         type: NotificationType.liveStream,
         title: LKey.liveStreamNotificationTitle
-            .trParams({'name': hostUser?.username ?? ''}),
+            .trParams({'name': hostUser?.fullname ?? ''}),
         body: LKey.liveStreamNotificationBody.tr,
         deviceType: 0,
         topic: '${liveData.hostId}_android',

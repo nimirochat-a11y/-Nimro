@@ -175,7 +175,7 @@ class ShareSheetWidget extends StatelessWidget {
                                                   ],
                                                 ),
                                                 Expanded(
-                                                  child: Text(chatUser?.username ?? '',
+                                                  child: Text(chatUser?.fullname ?? '',
                                                       style: TextStyleCustom.outFitRegular400(
                                                           color: textDarkGrey(context), fontSize: 14),
                                                       overflow: TextOverflow.ellipsis,

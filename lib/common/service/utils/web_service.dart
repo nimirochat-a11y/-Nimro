@@ -39,7 +39,6 @@ class _GiftWallet {
 
 class _User {
   String loginInUser = "${apiURL}user/logInUser";
-  String logInFakeUser = "${apiURL}user/logInFakeUser";
   String deleteMyAccount = "${apiURL}user/deleteMyAccount";
   String logOutUser = "${apiURL}user/logOutUser";
   String fetchUserDetails = "${apiURL}user/fetchUserDetails";

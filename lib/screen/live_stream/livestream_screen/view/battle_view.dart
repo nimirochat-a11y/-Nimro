@@ -365,7 +365,7 @@ class BuildStates extends StatelessWidget {
               ),
             SizedBox(width: !isLeft ? 30 : 5),
             Flexible(
-              child: Text(user.username ?? '',
+              child: Text(user.fullname ?? '',
                   style: TextStyleCustom.unboundedMedium500(
                       color: whitePure(context), fontSize: 11),
                   maxLines: 1,

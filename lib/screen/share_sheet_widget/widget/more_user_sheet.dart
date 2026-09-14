@@ -97,7 +97,7 @@ class MoreUserSheet extends StatelessWidget {
                               child: Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 10),
-                                child: Text(chatUser?.username ?? '',
+                                child: Text(chatUser?.fullname ?? '',
                                     style: TextStyleCustom.outFitRegular400(
                                         color: textDarkGrey(context),
                                         fontSize: 14),

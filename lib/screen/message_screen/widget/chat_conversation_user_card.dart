@@ -43,7 +43,7 @@ class ChatConversationUserCard extends StatelessWidget {
                   spacing: 2,
                   children: [
                     FullNameWithBlueTick(
-                      username: user?.username,
+                      username: user?.fullname,
                       fontSize: 13,
                       iconSize: 18,
                       isVerify: user?.isVerify,

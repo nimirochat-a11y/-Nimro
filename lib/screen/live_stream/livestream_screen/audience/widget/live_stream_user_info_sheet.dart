@@ -146,7 +146,7 @@ class _LiveStreamUserInfoSheetState extends State<LiveStreamUserInfoSheet> {
                                   fullName: user?.fullname),
                               const SizedBox(height: 10),
                               FullNameWithBlueTick(
-                                  username: user?.username,
+                                  username: user?.fullname,
                                   isVerify: user?.isVerify,
                                   fontSize: 14,
                                   iconSize: 18),

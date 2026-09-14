@@ -230,37 +230,37 @@ class User {
       );
 
   User.fromJson(dynamic json) {
-    id = json['id'];
+    id = _toInt(json['id']);
     identity = json['identity'];
-    isDummy = json['is_dummy'];
+    isDummy = _toInt(json['is_dummy']);
     fullname = json['fullname'];
     username = json['username'];
     userEmail = json['user_email'];
-    mobileCountryCode = json['mobile_country_code'];
+    mobileCountryCode = _toInt(json['mobile_country_code']);
     userMobileNo = json['user_mobile_no'];
     profilePhoto = json['profile_photo'];
     loginMethod = json['login_method'];
     device = _toInt(json['device']);
     deviceToken = json['device_token'];
-    notifyPostLike = json['notify_post_like'];
-    notifyPostComment = json['notify_post_comment'];
-    notifyFollow = json['notify_follow'];
-    notifyMention = json['notify_mention'];
-    notifyGiftReceived = json['notify_gift_received'];
-    notifyChat = json['notify_chat'];
-    isVerify = json['is_verify'];
+    notifyPostLike = _toNum(json['notify_post_like']);
+    notifyPostComment = _toNum(json['notify_post_comment']);
+    notifyFollow = _toNum(json['notify_follow']);
+    notifyMention = _toNum(json['notify_mention']);
+    notifyGiftReceived = _toNum(json['notify_gift_received']);
+    notifyChat = _toNum(json['notify_chat']);
+    isVerify = _toInt(json['is_verify']);
     whoCanViewPost = _toNum(json['who_can_view_post']);
-    showMyFollowing = json['show_my_following'];
-    receiveMessage = json['receive_message'];
-    coinWallet = json['coin_wallet'];
-    coinCollectedLifetime = json['coin_collected_lifetime'];
-    coinGiftedLifetime = json['coin_gifted_lifetime'];
-    coinPurchasedLifetime = json['coin_purchased_lifetime'];
+    showMyFollowing = _toNum(json['show_my_following']);
+    receiveMessage = _toNum(json['receive_message']);
+    coinWallet = _toNum(json['coin_wallet']);
+    coinCollectedLifetime = _toNum(json['coin_collected_lifetime']);
+    coinGiftedLifetime = _toNum(json['coin_gifted_lifetime']);
+    coinPurchasedLifetime = _toNum(json['coin_purchased_lifetime']);
     bio = json['bio'];
-    followerCount = json['follower_count'];
-    followingCount = json['following_count'];
-    totalPostLikesCount = json['total_post_likes_count'];
-    isFreez = json['is_freez'];
+    followerCount = _toNum(json['follower_count']);
+    followingCount = _toNum(json['following_count']);
+    totalPostLikesCount = _toInt(json['total_post_likes_count']);
+    isFreez = _toNum(json['is_freez']);
     country = json['country'];
     countryCode = json['countryCode'];
     region = json['region'];
@@ -271,17 +271,19 @@ class User {
     timezone = json['timezone'];
     appLastUsedAt = json['app_last_used_at'];
     savedMusicIds = json['saved_music_ids'];
-    isModerator = json['is_moderator'];
+    isModerator = _toInt(json['is_moderator']);
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
-    isFollowing = json['is_following'];
-    followStatus = json['follow_status'];
-    isBlock = json['is_block'];
+    isFollowing = _toBool(json['is_following']);
+    followStatus = _toInt(json['follow_status']);
+    isBlock = _toBool(json['is_block']);
     appLanguage = json['app_language'];
     newRegister = _toBool(json['new_register']);
     token = json['token'] != null ? Token.fromJson(json['token']) : null;
     followingIds = json["following_ids"] != null
-        ? List<int>.from(json["following_ids"].map((x) => x))
+        ? List<dynamic>.from(json["following_ids"])
+            .map<int>((x) => _toInt(x) ?? 0)
+            .toList()
         : null;
     if (json['links'] != null) {
       links = [];

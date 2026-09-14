@@ -43,7 +43,7 @@ class LivestreamEndSheet extends StatelessWidget {
                           strokeWidth: 6),
                       const SizedBox(height: 11),
                       FullNameWithBlueTick(
-                        username: userState?.user?.username ?? 'Unknown',
+                        username: userState?.user?.fullname ?? 'Unknown',
                         fontSize: 14,
                         fontColor: whitePure(context),
                         isVerify: userState?.user?.isVerify,

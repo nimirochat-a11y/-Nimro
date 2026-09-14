@@ -241,7 +241,7 @@ class UserNameView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FullNameWithBlueTick(
-          username: user?.username,
+          username: user?.fullname,
           style: TextStyleCustom.unboundedSemiBold600(color: textDarkGrey(context), fontSize: 17),
           isVerify: user?.isVerify,
           iconSize: 22,

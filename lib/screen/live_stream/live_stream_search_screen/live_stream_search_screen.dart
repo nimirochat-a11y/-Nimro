@@ -336,7 +336,7 @@ class LiveStreamListView extends StatelessWidget {
                   borderRadius: SmoothBorderRadius(cornerRadius: 30),
                   border: Border.all(color: whitePure(context).withValues(alpha: .15))),
               child: FullNameWithBlueTick(
-                  username: hostUser.username,
+                  username: hostUser.fullname,
                   isVerify: hostUser.isVerify,
                   iconSize: 16,
                   icon: AssetRes.icVerifiedWhite,

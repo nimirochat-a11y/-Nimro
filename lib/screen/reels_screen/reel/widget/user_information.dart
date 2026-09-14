@@ -73,7 +73,7 @@ class UserInfoHeader extends StatelessWidget {
           child: InkWell(
             onTap: () => controller.onUserTap(user),
             child: FullNameWithBlueTick(
-                username: user?.username,
+                username: user?.fullname,
                 isVerify: user?.isVerify,
                 fontColor: whitePure(context),
                 fontSize: 14,

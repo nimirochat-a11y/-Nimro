@@ -257,6 +257,16 @@ class LKey {
       "A verification link has been sent to your email. Please verify the link to log in.";
   static const String verifyEmailFirst =
       "Please verify your email first, then proceed to log in.";
+  static const String verificationBadgeTitle = "Verification Badge";
+  static const String blueVerificationTitle = "Blue Verification";
+  static const String blueVerificationDescription =
+      "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.";
+  static const String greenVerificationTitle = "Green Verification";
+  static const String greenVerificationDescription =
+      "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.";
+  static const String nimiroVerificationTitle = "Nimiro Official Verification";
+  static const String nimiroVerificationDescription =
+      "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.";
   static const String deleteLinkTitle = "Delete Link?";
   static const String phoneCode = "Phone Code";
   static const String noData = "No Data Found";

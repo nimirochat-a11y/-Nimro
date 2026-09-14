@@ -83,7 +83,7 @@ class LiveStreamJoinSheet extends StatelessWidget {
                 const SizedBox(height: 10),
                 RichText(
                   text: TextSpan(
-                      text: hostUser?.username,
+                      text: hostUser?.fullname,
                       style: TextStyleCustom.outFitSemiBold600(
                           color: textLightGrey(context), fontSize: 16),
                       children: [

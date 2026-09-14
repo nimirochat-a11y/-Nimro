@@ -15,7 +15,7 @@ class BlockUserController extends BaseController {
   void blockUser(User? user, Function() completion) {
     Get.bottomSheet(
         ConfirmationSheet(
-          title: LKey.blockUser.trParams({'username': user?.username ?? ''}),
+          title: LKey.blockUser.trParams({'username': user?.fullname ?? ''}),
           description: LKey.blockUserConfirmation.tr,
           positiveText: LKey.block.tr,
           onTap: () async {
@@ -46,7 +46,7 @@ class BlockUserController extends BaseController {
   Future<void> unblockUser(User? user, Function() completion) async {
     await Get.bottomSheet(
         ConfirmationSheet(
-          title: LKey.unblockUser.trParams({'username': user?.username ?? ''}),
+          title: LKey.unblockUser.trParams({'username': user?.fullname ?? ''}),
           description: LKey.unblockUserConfirmation.tr,
           positiveText: LKey.unBlock.tr,
           onTap: () async {

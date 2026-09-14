@@ -44,7 +44,7 @@ class ActivityNotificationPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FullNameWithBlueTick(
-                    username: data.fromUser?.username,
+                    username: data.fromUser?.fullname,
                     fontSize: 12,
                     isVerify: data.fromUser?.isVerify,
                     onTap: () => controller.onDescriptionTap(data)),

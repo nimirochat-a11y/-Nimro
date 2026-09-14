@@ -128,7 +128,7 @@ class _AudioSheetState extends State<AudioSheet> {
                 ),
                 const SizedBox(height: 7),
                 FullNameWithBlueTick(
-                  username: widget.music?.user?.username ??
+                  username: widget.music?.user?.fullname ??
                       widget.music?.artist ??
                       '',
                   fontSize: 14,

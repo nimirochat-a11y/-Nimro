@@ -47,7 +47,7 @@ class ChatTopProfileView extends StatelessWidget {
                     User user = User(
                       id: chatUser?.userId,
                       fullname: chatUser?.fullname,
-                      username: chatUser?.username,
+                      username: chatUser?.fullname,
                       profilePhoto: chatUser?.profile,
                       isVerify: chatUser?.isVerify,
                     );
@@ -72,7 +72,7 @@ class ChatTopProfileView extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             FullNameWithBlueTick(
-                                username: chatUser?.username ?? '',
+                                username: chatUser?.fullname ?? '',
                                 fontSize: 13,
                                 iconSize: 18,
                                 isVerify: chatUser?.isVerify),
