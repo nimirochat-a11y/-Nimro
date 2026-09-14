@@ -57,7 +57,9 @@ class HashTagAndMentionUserView extends StatelessWidget {
             helper.isLoading.value
                 ? Container(
                     decoration: ShapeDecoration(
-                        color: !helper.isLoading.value && items.isEmpty ? null : whitePure(context),
+                        color: !helper.isLoading.value && items.isEmpty
+                            ? null
+                            : bgMediumGrey(context),
                         shape: SmoothRectangleBorder(
                             borderRadius:
                                 SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1))),
@@ -77,7 +79,7 @@ class HashTagAndMentionUserView extends StatelessWidget {
                         decoration: ShapeDecoration(
                             color: !helper.isLoading.value && items.isEmpty
                                 ? null
-                                : whitePure(context),
+                                : bgMediumGrey(context),
                             shape: SmoothRectangleBorder(
                                 borderRadius:
                                     SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1))),

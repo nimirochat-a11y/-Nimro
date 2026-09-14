@@ -23,7 +23,8 @@ class MusicSheet extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(top: AppBar().preferredSize.height * 2),
       decoration: ShapeDecoration(
-        color: whitePure(context),
+        color: Theme.of(context).bottomSheetTheme.backgroundColor ??
+            scaffoldBackgroundColor(context),
         shape: const SmoothRectangleBorder(
           borderRadius: SmoothBorderRadius.vertical(
             top: SmoothRadius(cornerRadius: 30, cornerSmoothing: 1),

@@ -58,8 +58,8 @@ class ThemeRes {
       primaryColor: ColorRes.themeAccentSolid,
       dividerColor: ColorRes.bgGrey,
       cardColor: ColorRes.bgMediumGrey,
-      primaryColorDark: ColorRes.blackPure,
-      canvasColor: ColorRes.themeColor,
+      primaryColorDark: Colors.black,
+      canvasColor: ColorRes.whitePure,
       useMaterial3: false,
     );
   }
@@ -168,7 +168,7 @@ Color blackPure(BuildContext context) {
 Color bgLightGrey(BuildContext context) {
   return Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFF101010)
-      : ColorRes.bgLightGrey;
+      : ColorRes.whitePure;
 }
 
 Color themeColor(BuildContext context) {

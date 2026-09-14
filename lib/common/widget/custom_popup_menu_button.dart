@@ -36,7 +36,9 @@ class CustomPopupMenuButton extends StatelessWidget {
       onCanceled: onCanceled,
       surfaceTintColor: disableGrey(context),
       offset: offset ?? Offset.zero,
-      color: whitePure(context),
+      color: Theme.of(context).brightness == Brightness.dark
+          ? bgMediumGrey(context)
+          : whitePure(context),
       shadowColor: Colors.black,
       position: PopupMenuPosition.under,
       popUpAnimationStyle: const AnimationStyle(curve: Curves.linear),
