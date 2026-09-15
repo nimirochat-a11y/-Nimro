@@ -32,7 +32,8 @@ class FeedTopView extends StatelessWidget {
                   scrollDirection: Axis.horizontal,
                   padding: EdgeInsets.zero,
                   children: [
-                    ...PostCategory.values.map((category) => Obx(() {
+                    ...const [PostCategory.discover, PostCategory.following, PostCategory.nearby]
+                        .map((category) => Obx(() {
                           final isSelected = controller.selectedPostCategory.value == category;
                           return _CategoryTab(
                             title: category.title,

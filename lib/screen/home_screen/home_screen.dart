@@ -14,18 +14,14 @@ class HomeScreen extends StatelessWidget {
     final controller = Get.put(HomeScreenController());
     return Scaffold(
       backgroundColor: blackPure(context),
-      body: Stack(
-        children: [
-          ReelsScreen(
-            isHomePage: true,
-            reels: controller.reels,
-            position: 0,
-            isLoading: controller.isLoading,
-            onFetchMoreData: () => controller.onRefreshPage(reset: false),
-            widget: HomeTopCenterWidget(controller: controller),
-            onRefresh: controller.onRefreshPage,
-          ),
-        ],
+      body: ReelsScreen(
+        isHomePage: true,
+        reels: controller.reels,
+        position: 0,
+        isLoading: controller.isLoading,
+        onFetchMoreData: () => controller.onRefreshPage(reset: false),
+        widget: HomeTopCenterWidget(controller: controller),
+        onRefresh: controller.onRefreshPage,
       ),
     );
   }
@@ -45,6 +41,7 @@ class HomeTopCenterWidget extends StatelessWidget {
         height: 42,
         child: ListView(
           scrollDirection: Axis.horizontal,
+          shrinkWrap: true,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           children: [
             ...TabType.values.map((tabType) => Obx(() {
@@ -74,50 +71,19 @@ class HomeTopCenterWidget extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: isSelected ? themeAccentSolid(context) : Colors.transparent, width: 2)),
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected ? themeAccentSolid(context) : Colors.transparent,
+                width: 2,
+              ),
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(title.toUpperCase(),
-                  style: TextStyleCustom.unboundedBold700(fontSize: 12, color: foreground)),
-            ],
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyleCustom.unboundedBold700(fontSize: 12, color: foreground),
           ),
         ),
       ),
     );
-  }
-}
-
-class TrianglePainter extends CustomPainter {
-  final Color strokeColor;
-  final PaintingStyle paintingStyle;
-  final double strokeWidth;
-
-  TrianglePainter({this.strokeColor = Colors.black, this.strokeWidth = 3, this.paintingStyle = PaintingStyle.stroke});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    Paint paint = Paint()
-      ..color = strokeColor
-      ..strokeWidth = strokeWidth
-      ..style = paintingStyle;
-
-    canvas.drawPath(getTrianglePath(size.width, size.height), paint);
-  }
-
-  Path getTrianglePath(double x, double y) {
-    return Path()
-      ..moveTo(0, y)
-      ..lineTo(x / 2, 0)
-      ..lineTo(x, y)
-      ..lineTo(0, y);
-  }
-
-  @override
-  bool shouldRepaint(TrianglePainter oldDelegate) {
-    return oldDelegate.strokeColor != strokeColor ||
-        oldDelegate.paintingStyle != paintingStyle ||
-        oldDelegate.strokeWidth != strokeWidth;
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
@@ -16,7 +15,6 @@ import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen_controller.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/widget/live_stream_background_blur_image.dart';
 import 'package:nimiro/utilities/asset_res.dart';
-import 'package:nimiro/utilities/color_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -31,86 +29,18 @@ class LiveStreamSearchScreen extends StatelessWidget {
         const LiveStreamBlurBackgroundImage(),
         Column(
           children: [
-            LiveStreamSearchTopView(controller: controller),
-            CustomSearchTextField(
-              onChanged: controller.onSearchChange,
-              backgroundColor: whitePure(context).withValues(alpha: .15),
-              borderSide: BorderSide(color: whitePure(context).withValues(alpha: .18)),
+            SafeArea(
+              bottom: false,
+              child: CustomSearchTextField(
+                onChanged: controller.onSearchChange,
+                backgroundColor: whitePure(context).withValues(alpha: .15),
+                borderSide: BorderSide(color: whitePure(context).withValues(alpha: .18)),
+              ),
             ),
             LiveStreamListView(controller: controller),
           ],
         ),
       ],
-    );
-  }
-}
-
-class LiveStreamSearchTopView extends StatelessWidget {
-  final LiveStreamSearchScreenController controller;
-
-  const LiveStreamSearchTopView({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      minimum: const EdgeInsets.symmetric(vertical: 20),
-      child: Stack(
-        alignment: AlignmentDirectional.centerEnd,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: FittedBox(
-              child: Container(
-                height: 30,
-                margin: const EdgeInsets.only(top: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                alignment: Alignment.center,
-                decoration: ShapeDecoration(
-                  shape: SmoothRectangleBorder(
-                      borderRadius: SmoothBorderRadius(cornerRadius: 30, cornerSmoothing: 0),
-                      side: BorderSide(color: whitePure(context).withValues(alpha: .3), width: 1),
-                      borderAlign: BorderAlign.inside),
-                  color: ColorRes.textStoryBgGradient2,
-                ),
-                child: Row(
-                  children: [
-                    Image.asset(AssetRes.icLive, color: whitePure(context), height: 22, width: 22),
-                    const SizedBox(width: 5),
-                    Text(LKey.livestreams.tr.toUpperCase(),
-                        style: TextStyleCustom.unboundedRegular400(fontSize: 12, color: whitePure(context)))
-                  ],
-                ),
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: controller.onGoLive,
-            child: Container(
-              height: 30,
-              margin: const EdgeInsets.only(top: 10, right: 10, left: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: ShapeDecoration(
-                  color: Colors.white,
-                  shape: SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 30, cornerSmoothing: 1))),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    AssetRes.icLive_1,
-                    color: blackPure(context),
-                    width: 25,
-                    height: 25,
-                  ),
-                  Text(
-                    LKey.goLive.tr,
-                    style: TextStyleCustom.unboundedRegular400(color: blackPure(context), fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
     );
   }
 }
