@@ -98,8 +98,8 @@ class _TextFieldCustomState extends State<TextFieldCustom> {
             // Ensure maxLines is null when expands is true
             minLines: isExpand ? null : 1,
             // Ensure minLines is null when expands is true
-            style: TextStyleCustom.outFitLight300(
-                color: textLightGrey(context), fontSize: 17),
+            style: TextStyleCustom.outFitRegular400(
+                color: textDarkGrey(context), fontSize: 17),
             decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: widget.hintText ?? LKey.enterHere.tr,

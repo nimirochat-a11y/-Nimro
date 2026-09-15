@@ -59,7 +59,7 @@ class ThemeRes {
       dividerColor: ColorRes.bgGrey,
       cardColor: ColorRes.bgMediumGrey,
       primaryColorDark: ColorRes.blackPure,
-      canvasColor: ColorRes.themeColor,
+      canvasColor: ColorRes.whitePure,
       useMaterial3: false,
     );
   }
@@ -154,7 +154,9 @@ Color scaffoldBackgroundColor(BuildContext context) {
 }
 
 Color blueFollow(BuildContext context) {
-  return Theme.of(context).cardTheme.color ?? ColorRes.blueFollow;
+  return Theme.of(context).brightness == Brightness.dark
+      ? ColorRes.themeAccentSolid
+      : ColorRes.blueFollow;
 }
 
 Color bgMediumGrey(BuildContext context) {
@@ -168,8 +170,18 @@ Color blackPure(BuildContext context) {
 Color bgLightGrey(BuildContext context) {
   return Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFF101010)
-      : ColorRes.bgLightGrey;
+      : ColorRes.whitePure;
 }
+
+/// Surface used by cards, dialogs, and bottom sheets in both themes.
+Color surfaceColor(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF151515)
+      : ColorRes.whitePure;
+}
+
+/// Fill used by editable text fields; never use a fixed white surface here.
+Color inputFillColor(BuildContext context) => surfaceColor(context);
 
 Color themeColor(BuildContext context) {
   return Theme.of(context).canvasColor;
