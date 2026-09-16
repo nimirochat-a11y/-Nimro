@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
@@ -8,9 +9,22 @@ import 'package:nimiro/utilities/app_res.dart';
 class SessionManager {
   static var instance = SessionManager();
   var storage = GetStorage('nimiro');
+
+  /// Hardware-backed keystore (Android Keystore / iOS Keychain).
+  /// SECURITY (S3): the user's password used to be written to GetStorage,
+  /// which on Android is a plain SharedPreferences XML file. Any backup, root,
+  /// or adb-accessible copy exposed the password that unlocks every account
+  /// service. Sensitive values now live only in the platform keystore.
+  static const _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+  );
   var conversationId = '';
   RxInt notifyCount = 0.obs;
   RxInt isModerator = 0.obs;
+
+  /// Verification/subscription state, kept separate from [isModerator].
+  RxInt isSubscriptionActive = 0.obs;
 
   SessionManager() {
     listenNotifyCount();
@@ -26,12 +40,28 @@ class SessionManager {
     return getToken()?.authToken ?? 'AUTH TOKEN EMPTY';
   }
 
-  void setPassword(String? password) {
-    storage.write(SessionKeys.password, password);
+  /// SECURITY (S3): stored in the platform keystore, never in GetStorage.
+  Future<void> setPassword(String? password) async {
+    if (password == null || password.isEmpty) {
+      await _secureStorage.delete(key: SessionKeys.password);
+      return;
+    }
+    await _secureStorage.write(key: SessionKeys.password, value: password);
+    // Purge any value left behind by older app versions.
+    storage.remove(SessionKeys.password);
   }
 
-  String? getPassword() {
-    return storage.read(SessionKeys.password);
+  Future<String?> getPassword() async {
+    final secure = await _secureStorage.read(key: SessionKeys.password);
+    if (secure != null) return secure;
+
+    // One-time migration from the legacy plaintext location.
+    final legacy = storage.read(SessionKeys.password);
+    if (legacy is String && legacy.isNotEmpty) {
+      await setPassword(legacy);
+      return legacy;
+    }
+    return null;
   }
 
   Token? getToken() {
@@ -68,11 +98,16 @@ class SessionManager {
     });
   }
 
+  /// QA FIX: this used to write the *isModerator* observable from the user's
+  /// *isVerify* flag while [listenModerator] was already listening on the same
+  /// storage key — the two listeners raced and whichever fired last won, so a
+  /// verified user could be reported as a moderator. Subscription state now has
+  /// its own observable and never clobbers the moderator flag.
   void listenSubscription() {
-    isModerator.value = getUser()?.isVerify ?? 0;
+    isSubscriptionActive.value = getUser()?.isVerify ?? 0;
     storage.listenKey(SessionKeys.user, (value) {
       User? user = value as User?;
-      isModerator.value = user?.isModerator ?? 0;
+      isSubscriptionActive.value = user?.isVerify ?? 0;
     });
   }
 
@@ -199,6 +234,7 @@ class SessionManager {
     storage.remove(SessionKeys.notifyCount);
     storage.remove(SessionKeys.fallbackLang);
     storage.remove(SessionKeys.lang);
+    _secureStorage.delete(key: SessionKeys.password);
   }
 }
 
