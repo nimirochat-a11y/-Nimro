@@ -34,7 +34,17 @@ class ApiService {
 
   final Map<CancelToken, http.Client> _activeClients = {};
 
-  var header = {Params.apikey: apiKey};
+  /// QA/SECURITY FIX: this used to be one mutable map stored on the singleton,
+  /// and `header[Params.authToken] = ...` mutated state shared by every
+  /// in-flight request — two overlapping calls could each send the other's
+  /// auth token. A fresh map is now built for every request instead.
+  Map<String, String> buildHeader({bool includeAuthToken = true}) {
+    final headers = <String, String>{Params.apikey: apiKey};
+    if (includeAuthToken) {
+      headers[Params.authToken] = SessionManager.instance.getAuthToken();
+    }
+    return headers;
+  }
 
   Future<T> call<T>({
     required String url,
@@ -56,15 +66,14 @@ class ApiService {
       params[key] = "$value";
     });
 
-    if (!cancelAuthToken) {
-      header[Params.authToken] = SessionManager.instance.getAuthToken();
-    }
+    // SECURITY: a per-request header map — never the shared instance field.
+    final headers = buildHeader(includeAuthToken: !cancelAuthToken);
     Loggers.info("URL: $url");
-    Loggers.info("header: $header");
+    Loggers.info("header: $headers");
     Loggers.info("Parameters: ${params.isEmpty ? "Empty" : params}");
     try {
       final response = await client
-          .post(Uri.parse(url), headers: header, body: params)
+          .post(Uri.parse(url), headers: headers, body: params)
           .timeout(const Duration(seconds: 30));
       Loggers.success(response.statusCode);
       if (cancelToken?.isCancelled ?? false) {
@@ -186,7 +195,7 @@ class ApiService {
     });
 
     request.fields.addAll(params);
-    request.headers.addAll(header);
+    request.headers.addAll(buildHeader());
 
     filesMap.forEach((keyName, files) {
       for (var xFile in files) {
@@ -219,7 +228,31 @@ class ApiService {
       final responseStr = await responseStream.stream
           .bytesToString()
           .timeout(const Duration(seconds: 45));
-      final decodedResponse = jsonDecode(responseStr) as Map<String, dynamic>;
+
+      // QA FIX: the status code was never inspected, so an error page (500,
+      // 502, gateway HTML) reached jsonDecode and blew up with an opaque
+      // FormatException instead of a useful message. Non-2xx and unparseable
+      // bodies now report what actually happened.
+      if (responseStream.statusCode < 200 ||
+          responseStream.statusCode >= 300) {
+        Loggers.error('Upload failed: HTTP ${responseStream.statusCode}');
+        throw Exception(
+            'Upload failed: ${responseStream.statusCode} - ${responseStream.reasonPhrase}');
+      }
+
+      final dynamic decoded;
+      try {
+        decoded = jsonDecode(responseStr);
+      } on FormatException {
+        Loggers.error(
+            'Invalid JSON from $url: ${responseStr.length > 100 ? '${responseStr.substring(0, 100)}...' : responseStr}');
+        throw Exception('Server returned an invalid response');
+      }
+
+      if (decoded is! Map<String, dynamic>) {
+        throw Exception('Unexpected response shape from $url');
+      }
+      final decodedResponse = decoded;
 
       if (kDebugMode) {
         // Loggers.info(responseStr);

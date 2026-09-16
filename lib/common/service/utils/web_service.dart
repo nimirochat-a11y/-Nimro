@@ -14,7 +14,9 @@ class WebService {
 }
 
 class _Common {
-  String ipApi = "http://ip-api.com/json/";
+  // SECURITY (S1/S2): was plain http:// which leaked the caller's IP in
+  // cleartext and only worked because transport security was disabled.
+  String ipApi = "https://ip-api.com/json/";
 }
 
 class _Moderation {

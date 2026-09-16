@@ -18,6 +18,11 @@ class Params {
   static const String linkId = 'link_id';
   static const String identity = 'identity';
   static const String password = 'password';
+
+  /// SECURITY (S1/1.1): provider-issued identity token (Firebase ID token or
+  /// Supabase access token) sent alongside `identity` so the backend can prove
+  /// the caller really owns that account instead of trusting the string alone.
+  static const String identityToken = 'id_token';
   static const String deviceToken = 'device_token';
   static const String device = 'device';
   static const String loginMethod = 'login_method';
