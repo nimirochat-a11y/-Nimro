@@ -61,7 +61,7 @@ class CustomSearchTextField extends StatelessWidget {
             suffixIcon: suffixIcon),
         cursorHeight: 15,
         style: TextStyleCustom.outFitLight300(
-            fontSize: 15, color: textLightGrey(context)),
+            fontSize: 15, color: textDarkGrey(context)),
         onTapOutside: (event) {
           onTapOutside?.call(event);
           FocusManager.instance.primaryFocus?.unfocus();

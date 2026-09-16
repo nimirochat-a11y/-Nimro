@@ -9,13 +9,13 @@ import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/custom_search_text_field.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
-import 'package:nimiro/common/widget/no_data_widget.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen_controller.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/widget/live_stream_background_blur_image.dart';
 import 'package:nimiro/utilities/asset_res.dart';
+import 'package:nimiro/utilities/color_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -34,8 +34,13 @@ class LiveStreamSearchScreen extends StatelessWidget {
               bottom: false,
               child: CustomSearchTextField(
                 onChanged: controller.onSearchChange,
-                backgroundColor: whitePure(context).withValues(alpha: .15),
-                borderSide: BorderSide(color: whitePure(context).withValues(alpha: .18)),
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: .12)
+                    : ColorRes.bgLightGrey,
+                borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: .22)
+                        : ColorRes.bgGrey),
               ),
             ),
             LiveStreamListView(controller: controller),
@@ -324,11 +329,15 @@ class LiveStreamListView extends StatelessWidget {
         () {
           return controller.isLoading.value && controller.livestreamFilterList.isEmpty
               ? const LoaderWidget()
-              : NoDataView(
-                  showShow: !controller.isLoading.value && controller.livestreamFilterList.isEmpty,
-                  title: LKey.noLivestreamsTitle,
-                  description: LKey.noLivestreamsDescription.tr,
-                  child: GridView.builder(
+              : Stack(
+                  children: [
+                    if (!controller.isLoading.value &&
+                        controller.livestreamFilterList.isEmpty)
+                      LiveStreamEmptyState(
+                        error: controller.liveStreamError.value,
+                        onRetry: controller.fetchLiveStreams,
+                      ),
+                    GridView.builder(
                     itemCount: controller.livestreamFilterList.length,
                     padding: EdgeInsets.only(bottom: AppBar().preferredSize.height),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -337,9 +346,58 @@ class LiveStreamListView extends StatelessWidget {
                       Livestream stream = controller.livestreamFilterList[index];
                       return InkWell(onTap: () => controller.onLiveUserTap(stream), child: _buildGridItem(stream));
                     },
-                  ),
+                    ),
+                  ],
                 );
         },
+      ),
+    );
+  }
+}
+
+class LiveStreamEmptyState extends StatelessWidget {
+  final String error;
+  final Future<void> Function() onRetry;
+
+  const LiveStreamEmptyState({super.key, required this.error, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasError = error.isNotEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(hasError ? Icons.wifi_off_rounded : Icons.videocam_off_rounded,
+                size: 46,
+                color: isDark ? Colors.white70 : ColorRes.textDarkGrey),
+            const SizedBox(height: 14),
+            Text(
+              hasError ? 'Live streams unavailable' : LKey.noLivestreamsTitle.tr,
+              style: TextStyleCustom.unboundedSemiBold600(
+                color: isDark ? Colors.white : ColorRes.textDarkGrey,
+                fontSize: 17,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 7),
+            Text(
+              hasError ? error : LKey.noLivestreamsDescription.tr,
+              style: TextStyleCustom.outFitRegular400(
+                color: isDark ? Colors.white70 : ColorRes.textLightGrey,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (hasError) ...[
+              const SizedBox(height: 16),
+              TextButton(onPressed: () => onRetry(), child: const Text('Retry')),
+            ],
+          ],
+        ),
       ),
     );
   }
