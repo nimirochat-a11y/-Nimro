@@ -267,10 +267,13 @@ class ChatApiRepository {
       final newestId = int.tryParse('${rows.first['id']}');
 
       // Emit everything newer than the last id we surfaced.
-      if (lastSeenId != null) {
+      // `lastSeenId` is a captured local, so Dart will not promote it to a
+      // non-nullable int inside this closure; copy it out first.
+      final seenId = lastSeenId;
+      if (seenId != null) {
         for (final row in rows.reversed) {
           final id = int.tryParse('${row['id']}');
-          if (id != null && id > lastSeenId) onEvent('create', row);
+          if (id != null && id > seenId) onEvent('create', row);
         }
       }
 

@@ -50,7 +50,7 @@ class UserService {
     String? idToken,
   }) async {
     UserModel model = await ApiService.instance.call(
-        url: WebService.user.loginInUser,
+        url: WebService.user.logInUser,
         param: {
           Params.fullname: fullName,
           Params.identity: identity,
