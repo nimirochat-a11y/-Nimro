@@ -137,7 +137,8 @@ class SettingsScreenController extends BaseController {
       auth.User? user = auth.FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        String? password = SessionManager.instance.getPassword();
+        // SECURITY (S3): read from the platform keystore.
+        String? password = await SessionManager.instance.getPassword();
         if (password == null) return;
         auth.AuthCredential credential =
             auth.EmailAuthProvider.credential(email: email, password: password);
