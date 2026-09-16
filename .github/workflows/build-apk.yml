@@ -124,8 +124,11 @@ jobs:
           NIMIRO_API_KEY: ${{ secrets.NIMIRO_API_KEY }}
         run: flutter build apk --release --dart-define=NIMIRO_API_KEY="$NIMIRO_API_KEY"
 
+      # NOTE: `inputs` is empty on push events, so it must be defaulted with
+      # `|| 'true'` before comparing — otherwise this step is skipped on every
+      # push and the AAB is never produced.
       - name: Build release AAB
-        if: ${{ inputs.build_aab != false }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_aab != false }}
         env:
           NIMIRO_API_KEY: ${{ secrets.NIMIRO_API_KEY }}
         run: flutter build appbundle --release --dart-define=NIMIRO_API_KEY="$NIMIRO_API_KEY"
