@@ -30,11 +30,9 @@ import 'package:nimiro/utilities/firebase_const.dart';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {
-  print('NOTIFICATION TAP ON BACKGROUND');
-  notificationResponse.data;
-  if (notificationResponse.payload != null) {
-    FirebaseNotificationManager.instance.handleNotification(notificationResponse.payload!);
-  }
+  // Navigation must happen on the main isolate. The payload is recovered by
+  // getNotificationAppLaunchDetails/onDidReceiveNotificationResponse.
+  Loggers.info('Notification tapped in background isolate');
 }
 
 class FirebaseNotificationManager {
@@ -54,10 +52,11 @@ class FirebaseNotificationManager {
       playSound: true,
       enableLights: true,
       enableVibration: true,
-      showBadge: false,
+      showBadge: true,
       importance: Importance.max);
 
-  String? notificationId;
+  final Set<String> _handledMessageIds = <String>{};
+  final Set<String> _handledPayloads = <String>{};
 
   void init() async {
     if (Platform.isAndroid) {
@@ -76,25 +75,38 @@ class FirebaseNotificationManager {
     var initializationSettingsAndroid = const AndroidInitializationSettings('@mipmap/ic_launcher');
 
     var initializationSettingsIOS = const DarwinInitializationSettings(
-        defaultPresentAlert: true, defaultPresentSound: true, defaultPresentBadge: false);
+        defaultPresentAlert: true, defaultPresentSound: true, defaultPresentBadge: true);
 
     var initializationSettings = InitializationSettings(
         android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
 
     // Handling notification taps
-    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: (NotificationResponse response) {
-      print('onDidReceiveNotificationResponse ${response.payload}');
-      String? payload = response.payload;
-      if (payload != null) {
-        notificationPayload.value = payload;
-      }
+      final payload = response.payload;
+      if (payload == null || payload.isEmpty) return;
+      notificationPayload.value = payload;
+      Future<void>.delayed(const Duration(milliseconds: 300),
+          () => handleNotification(payload));
     }, onDidReceiveBackgroundNotificationResponse: notificationTapBackground);
 
+    final launchDetails = await flutterLocalNotificationsPlugin
+        .getNotificationAppLaunchDetails();
+    final launchPayload = launchDetails?.notificationResponse?.payload;
+    if (launchDetails?.didNotificationLaunchApp == true &&
+        launchPayload != null &&
+        launchPayload.isNotEmpty) {
+      notificationPayload.value = launchPayload;
+      Future<void>.delayed(const Duration(milliseconds: 800),
+          () => handleNotification(launchPayload));
+    }
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      // If Notification has gone twice
-      if (notificationId == message.messageId) return;
-      notificationId = message.messageId;
+      final messageKey = _messageKey(message);
+      if (!_handledMessageIds.add(messageKey)) return;
+      if (_handledMessageIds.length > 100) {
+        _handledMessageIds.remove(_handledMessageIds.first);
+      }
 
       String data = message.data['notification_data'] ?? '';
 
@@ -120,6 +132,24 @@ class FirebaseNotificationManager {
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(channel);
+
+    firebaseMessaging.onTokenRefresh.listen((token) async {
+      final user = SessionManager.instance.getUser();
+      if (user?.id == null || token.isEmpty) return;
+      try {
+        await UserService.instance.updateUserDetails(deviceToken: token);
+        Loggers.info('FCM token updated after refresh');
+      } catch (e) {
+        Loggers.error('Failed to update refreshed FCM token: $e');
+      }
+    });
+  }
+
+  String _messageKey(RemoteMessage message) {
+    final id = message.messageId;
+    if (id != null && id.isNotEmpty) return id;
+    return '${message.data['type']}|${message.data['notification_data']}|'
+        '${message.notification?.title}|${message.notification?.body}';
   }
 
   void unsubscribeToTopic({String? topic}) async {
@@ -155,12 +185,16 @@ class FirebaseNotificationManager {
         (message.data['body'] as String?) ?? message.notification?.body,
         NotificationDetails(
             iOS: const DarwinNotificationDetails(
-                presentSound: true, presentAlert: true, presentBadge: false),
+                presentSound: true, presentAlert: true, presentBadge: true),
             android: AndroidNotificationDetails(channel.id, channel.name)),
         payload: jsonEncode(message.toMap()));
   }
 
   Future<void> handleNotification(String payload) async {
+    if (!_handledPayloads.add(payload)) return;
+    if (_handledPayloads.length > 50) {
+      _handledPayloads.remove(_handledPayloads.first);
+    }
     final RemoteMessage message = RemoteMessage.fromMap(jsonDecode(payload));
     final dataType = message.data['type'];
     final dataString = message.data['notification_data'];

@@ -57,9 +57,6 @@ class FeedTopView extends StatelessWidget {
                   count: SessionManager.instance.notifyCount,
                   onTap: () {
                     Get.to(() => const NotificationScreen());
-                    final count = SessionManager.instance.notifyCount.value;
-                    SessionManager.instance.setNotifyCount(-count);
-                    SessionManager.instance.notifyCount.value = 0;
                   },
                 ),
                 const SizedBox(width: 10),

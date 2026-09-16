@@ -99,7 +99,12 @@ class NotificationService {
                 authorizationToken ?? SessionManager.instance.getAuthToken()
           },
           body: json.encode(inputData));
-      Loggers.success('Notification response : ${response.body}');
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        Loggers.error(
+            'Notification request failed (${response.statusCode}): ${response.body}');
+      } else {
+        Loggers.success('Notification response : ${response.body}');
+      }
     } catch (e) {
       Loggers.error(e);
     }
