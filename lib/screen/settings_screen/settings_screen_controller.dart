@@ -20,7 +20,6 @@ class SettingsScreenController extends BaseController {
   Rx<Setting?> settings = Rx<Setting?>(null);
   Rx<WhoCanSeePost> selectedWhoCanSeePost = WhoCanSeePost.values.first.obs;
   RxBool isUpdateApiCalled = false.obs;
-  RxBool isDarkMode = SessionManager.instance.isDarkMode.obs;
 
   @override
   void onInit() {
@@ -59,12 +58,6 @@ class SettingsScreenController extends BaseController {
     } finally {
       stopLoader();
     }
-  }
-
-  Future<void> toggleDarkMode(bool value) async {
-    isDarkMode.value = value;
-    await SessionManager.instance.setDarkMode(value);
-    Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
   }
 
   onChangedToggle(bool value, SettingToggle settingToggle) async {
