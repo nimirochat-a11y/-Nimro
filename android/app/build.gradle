@@ -39,8 +39,8 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
         targetSdk = 36
-        versionCode = 13
-        versionName = '1.1.3'
+        versionCode = 15
+        versionName = '1.1.5'
     }
 
     signingConfigs {
@@ -56,11 +56,32 @@ android {
 
     buildTypes {
         release {
-            // SECURITY (S9): shipped unshrunk and unobfuscated, so any APK
-            // could be unzipped and its business logic read. R8 now strips
-            // and renames the release build.
-            shrinkResources true
-            minifyEnabled true
+            // CRASH FIX (1.1.5): R8 / ProGuard minification is DISABLED.
+            //
+            // SECURITY (S9) previously turned on `minifyEnabled true` together
+            // with `shrinkResources true`. The result was a release APK that
+            // opened, drew the splash screen, and then died immediately —
+            // exactly the launch crash reported against build 1.1.3 (code 13).
+            //
+            // This failure was ALREADY diagnosed and fixed on branch
+            // `fix/release-crash-v3` (commit 56455b42). That fix was never
+            // merged into this branch, so the regression shipped a second time
+            // with the security hardening work.
+            //
+            // Flutter plus this app's plugin set (ZEGO Express, DeepAR, Google
+            // MLKit, RevenueCat, Supabase/Kotlinx serialization and the
+            // Firebase/Gson models) resolves a large amount of code and
+            // resources reflectively at runtime. R8 full mode stripped and
+            // renamed members that are reachable only through reflection, so
+            // the process died during startup while every backend request still
+            // returned HTTP 200 — which is why the crash did not look like a
+            // network or auth problem.
+            //
+            // Keep this in sync with `fix/release-crash-v3`. R8 may only be
+            // re-enabled once the keep rules in `proguard-rules.pro` have been
+            // validated on a real device.
+            shrinkResources false
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             // SECURITY (S4): never sign a release with the debug key. The
