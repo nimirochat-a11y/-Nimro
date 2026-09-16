@@ -1,0 +1,1 @@
+$(cat /workspace/documents/nimiro-rls-lockdown/rls_policies.sql)
