@@ -9,7 +9,6 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart' show SessionManager;
-import 'package:nimiro/common/service/api/live_room_service.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
@@ -282,9 +281,7 @@ class FirebaseNotificationManager {
   Future<String?> getNotificationToken() async {
     try {
       String? token = await FirebaseMessaging.instance.getToken();
-      // SECURITY: never log the token itself. It is a credential that can be
-      // used to push notifications to this device, and build logs are shared.
-      Loggers.info('DeviceToken resolved: present=${token != null && token.isNotEmpty}');
+      Loggers.info('DeviceToken $token');
       return token;
     } catch (e) {
       Loggers.error('DeviceToken Exception $e');
@@ -346,16 +343,24 @@ class FirebaseNotificationManager {
   Future<void> _handleLivestreamNotification(String dataString) async {
     final incomingStream = Livestream.fromJson(jsonDecode(dataString));
 
-    // The room registry lives in the backend now; Firestore is gone.
-    final room = await LiveRoomService.instance
-        .fetchRoom('${incomingStream.roomID}');
+    // If controller not registered, fetch from Firestore
+    final snapshot = await FirebaseFirestore.instance
+        .collection(FirebaseConst.liveStreams)
+        .withConverter<Livestream>(
+          fromFirestore: (snapshot, _) => Livestream.fromJson(snapshot.data()!),
+          toFirestore: (livestream, _) => livestream.toJson(),
+        )
+        .get();
 
-    if (room == null || (room['is_live'] ?? 0) == 0) {
+    final matchedDoc =
+        snapshot.docs.firstWhereOrNull((doc) => doc.data().roomID == incomingStream.roomID);
+
+    if (matchedDoc == null) {
       BaseController.share.showSnackBar(LKey.livestreamHasEnded.tr);
       return;
     }
 
-    final stream = Livestream.fromJson(room);
+    final stream = matchedDoc.data();
     final myUser = SessionManager.instance.getUser();
 
     if (stream.hostId == myUser?.id) {

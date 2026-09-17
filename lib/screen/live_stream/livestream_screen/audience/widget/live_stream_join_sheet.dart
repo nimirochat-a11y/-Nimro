@@ -33,7 +33,7 @@ class LiveStreamJoinSheet extends StatelessWidget {
               borderRadius: SmoothBorderRadius.vertical(
                   top: SmoothRadius(cornerRadius: 40, cornerSmoothing: 1)),
             ),
-            color: surfaceColor(context),
+            color: scaffoldBackgroundColor(context),
           ),
           child: SafeArea(
             top: false,

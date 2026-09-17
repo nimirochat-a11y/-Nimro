@@ -41,24 +41,22 @@ class MessageScreenController extends BaseController {
     selectedChatCategory.value = index;
   }
 
-  /// Requests pinned first, followed by regular chats below.
-  List<ChatThread> get combinedThreads => [
-        ...requestsUsers,
-        ...chatsUsers,
-      ];
-
   Future<void> _listenToUserChatsAndRequests() async {
     if (myUser?.id == null) return;
     isLoading.value = true;
     try {
-      final rows = await _repo.listConversationsForUser(myUser!.id!);
+      final rows = await _repo
+          .listConversationsForUser(myUser!.id!)
+          .timeout(const Duration(seconds: 15));
       for (var row in rows) {
         _applyRow(row, isDelete: false);
       }
-    } catch (e) {
-      Loggers.error('Failed to load conversations: $e');
+    } catch (error) {
+      Loggers.error('Failed to load conversations: $error');
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
+
     _subscription = _repo.subscribeToUserConversations(
       userId: myUser!.id!,
       onChange: (event, data) {

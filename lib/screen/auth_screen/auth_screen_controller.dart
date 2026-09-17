@@ -66,14 +66,8 @@ class AuthScreenController extends BaseController {
       }
 
       String fullname = credential.user?.displayName ?? email.split('@')[0];
-      // SECURITY (S1): hand the backend a verifiable Firebase ID token.
-      final String? idToken = await credential.user?.getIdToken();
       final user.User? data = await _registration(
-          identity: email,
-          loginMethod: LoginMethod.email,
-          fullname: fullname,
-          loginVia: LoginVia.loginInUser,
-          idToken: idToken);
+          identity: email, loginMethod: LoginMethod.email, fullname: fullname, loginVia: LoginVia.loginInUser);
       stopLoader();
 
       if (data != null) {
@@ -110,14 +104,11 @@ class AuthScreenController extends BaseController {
     showLoader();
     UserCredential? credential = await createUserWithEmailAndPassword();
     if (credential != null) {
-      // SECURITY (S1): a fresh account also gets a verifiable ID token.
-      final String? idToken = await credential.user?.getIdToken();
       await _registration(
           identity: emailController.text.trim(),
           loginMethod: LoginMethod.email,
           fullname: fullNameController.text.trim(),
-          loginVia: LoginVia.loginInUser,
-          idToken: idToken);
+          loginVia: LoginVia.loginInUser);
       credential.user?.updateDisplayName(fullNameController.text.trim());
       credential.user?.sendEmailVerification();
       Get.back();
@@ -133,17 +124,12 @@ class AuthScreenController extends BaseController {
     try {
       final profile = await SupabaseService.instance
           .signInWithOAuth(supabase.OAuthProvider.google);
-      // SECURITY (S1): Supabase access token proves the Google identity.
       final user.User? data = await _registration(
         identity: profile.email,
         loginMethod: LoginMethod.google,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
-        // FIX(v12): never short-circuit the FCM token with a Supabase id.
-        // Storing 'supabase:<uuid>' in device_token made the backend's push
-        // call fail with FCM 400 INVALID_ARGUMENT, so no notification ever
-        // reached the device. Fall through to the real FCM token.
-        idToken: SupabaseService.instance.client.auth.currentSession?.accessToken,
+        deviceTokenOverride: 'supabase:${profile.id}',
       );
       stopLoader();
       if (data != null) _navigateScreen(data);
@@ -161,17 +147,12 @@ class AuthScreenController extends BaseController {
     try {
       final profile = await SupabaseService.instance
           .signInWithOAuth(supabase.OAuthProvider.apple);
-      // SECURITY (S1): Supabase access token proves the Apple identity.
       final user.User? data = await _registration(
         identity: profile.email,
         loginMethod: LoginMethod.apple,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
-        // FIX(v12): never short-circuit the FCM token with a Supabase id.
-        // Storing 'supabase:<uuid>' in device_token made the backend's push
-        // call fail with FCM 400 INVALID_ARGUMENT, so no notification ever
-        // reached the device. Fall through to the real FCM token.
-        idToken: SupabaseService.instance.client.auth.currentSession?.accessToken,
+        deviceTokenOverride: 'supabase:${profile.id}',
       );
       stopLoader();
       if (data != null) _navigateScreen(data);
@@ -187,24 +168,16 @@ class AuthScreenController extends BaseController {
       required LoginMethod loginMethod,
       String? fullname,
       required LoginVia loginVia,
-      String? deviceTokenOverride,
-      String? idToken}) async {
+      String? deviceTokenOverride}) async {
     String? deviceToken = deviceTokenOverride ??
         await FirebaseNotificationManager.instance.getNotificationToken();
-    // FIX(v12): a Supabase/Vendor id is NOT a push target. Only fall back to
-    // the synthetic value when no real FCM token exists at all, so the row is
-    // still identifiable - but the backend's push attempt is skipped by shape.
     deviceToken ??= 'nimiro:$identity';
 
     user.User? userData;
     switch (loginVia) {
       case LoginVia.loginInUser:
-        userData = await UserService.instance.logInUser(
-            identity: identity,
-            loginMethod: loginMethod,
-            deviceToken: deviceToken,
-            fullName: fullname,
-            idToken: idToken);
+        userData = await UserService.instance
+            .logInUser(identity: identity, loginMethod: loginMethod, deviceToken: deviceToken, fullName: fullname);
     }
 
     Setting? setting = SessionManager.instance.getSettings();
@@ -252,8 +225,7 @@ class AuthScreenController extends BaseController {
     try {
       final credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: emailController.text.trim(), password: passwordController.text.trim());
-      // SECURITY (S3): goes to the platform keystore, not GetStorage.
-      await SessionManager.instance.setPassword(passwordController.text.trim());
+      SessionManager.instance.setPassword(passwordController.text.trim());
       return credential;
     } on FirebaseAuthException catch (e) {
       stopLoader();

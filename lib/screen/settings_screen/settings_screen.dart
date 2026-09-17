@@ -137,6 +137,16 @@ class SettingsScreen extends StatelessWidget {
                 },
               ),
               SettingLabel(title: LKey.general.toUpperCase()),
+              Obx(
+                () => SettingIconTextWithArrow(
+                  icon: AssetRes.icEye_1,
+                  title: controller.isDarkMode.value ? LKey.darkMode : LKey.lightMode,
+                  widget: CustomToggle(
+                    isOn: controller.isDarkMode,
+                    onChanged: controller.toggleDarkMode,
+                  ),
+                ),
+              ),
               SettingIconTextWithArrow(
                 icon: AssetRes.icReport,
                 title: LKey.termsOfUse,

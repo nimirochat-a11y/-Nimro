@@ -112,7 +112,7 @@ class _LiveStreamUserInfoSheetState extends State<LiveStreamUserInfoSheet> {
               borderRadius: SmoothBorderRadius.vertical(
                   top: SmoothRadius(cornerRadius: 40, cornerSmoothing: 1)),
             ),
-            color: surfaceColor(context),
+            color: scaffoldBackgroundColor(context),
           ),
           child: SafeArea(
             top: false,
@@ -181,10 +181,7 @@ class _LiveStreamUserInfoSheetState extends State<LiveStreamUserInfoSheet> {
                                         label: item.label,
                                         valueStyle: TextStyleCustom
                                             .unboundedSemiBold600(
-                                          // FIX(v12): this label sits on the
-                                          // always-dark media scrim, so it must
-                                          // not follow the light theme.
-                                          color: onMediaText(context),
+                                          color: textDarkGrey(context),
                                           fontSize: 16,
                                         ),
                                         labelStyle:

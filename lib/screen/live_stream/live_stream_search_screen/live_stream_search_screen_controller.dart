@@ -1,45 +1,32 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/extensions/list_extension.dart';
+import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/service/api/live_room_service.dart';
-import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
+import 'package:nimiro/model/livestream/livestream_user_state.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/live_stream/create_live_stream_screen/create_live_stream_screen.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/audience/live_stream_audience_screen.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/host/livestream_host_screen.dart';
+import 'package:nimiro/utilities/firebase_const.dart';
 
-/// Discovery feed for live rooms.
-///
-/// The room registry used to be a Firestore collection, which went dark when
-/// the Firestore API was disabled. Rooms now come from the Laravel room
-/// registry via [LiveRoomService].
-///
-/// Only room METADATA moved. The live audio and video are ZEGO
-/// (zego_express_engine) and are completely untouched — joining, publishing and
-/// playback still happen through the ZEGO screens exactly as before.
 class LiveStreamSearchScreenController extends BaseController {
-  /// Chat-profile mirror backing host cards in the discovery grid.
-  ///
-  /// Kept as `firebaseFirestoreController` because the grid widget and several
-  /// sheets read it under that name; it now resolves through the Laravel chat
-  /// proxy rather than Firebase.
-  final firebaseFirestoreController = Get.find<FirebaseFirestoreController>();
+  FirebaseFirestore db = FirebaseFirestore.instance;
   RxList<Livestream> livestreamList = <Livestream>[].obs;
   RxList<Livestream> livestreamFilterList = <Livestream>[].obs;
-
-  /// Surfaced by the empty state when the room-registry read fails.
   RxString liveStreamError = ''.obs;
+  StreamSubscription<QuerySnapshot<Livestream>>? livestreamListListener;
 
-  /// Keeps the feed fresh. The registry read replaces the former live listener.
-  Timer? livestreamRefresh;
+  final firebaseFirestoreController = Get.find<FirebaseFirestoreController>();
 
   Setting? get setting => SessionManager.instance.getSettings();
 
@@ -48,74 +35,80 @@ class LiveStreamSearchScreenController extends BaseController {
   @override
   void onReady() {
     super.onReady();
-    fetchLiveStreams();
+    Future.wait({fetchLiveStreams(), addDummyUsers()});
   }
 
   @override
   void onClose() {
     super.onClose();
-    livestreamRefresh?.cancel();
+    livestreamListListener?.cancel();
   }
 
   Future<void> fetchLiveStreams() async {
+    await livestreamListListener?.cancel();
     isLoading.value = true;
+    liveStreamError.value = '';
     await Future.delayed(const Duration(milliseconds: 500));
 
-    await _refreshLiveStreams();
-    isLoading.value = false;
+    // Using a map for faster access and modification
+    final Map<String, Livestream> livestreamMap = {};
 
-    livestreamRefresh?.cancel();
-    livestreamRefresh = Timer.periodic(
-      const Duration(seconds: 8),
-      (_) => _refreshLiveStreams(),
-    );
-  }
+    livestreamListListener = db
+        .collection(FirebaseConst.liveStreams)
+        .withConverter(
+          fromFirestore: (snapshot, options) => Livestream.fromJson(snapshot.data()!),
+          toFirestore: (Livestream livestream, options) => livestream.toJson(),
+        )
+        .snapshots()
+        .listen((snapshot) {
+      for (var change in snapshot.docChanges) {
+        final Livestream? livestream = change.doc.data();
+        String roomId = livestream?.roomID ?? '';
+        if (livestream == null || roomId.isEmpty) continue;
 
-  /// One read of the registry, folded into the same list shape the screen
-  /// already renders.
-  Future<void> _refreshLiveStreams() async {
-    try {
-      final rows = await LiveRoomService.instance.fetchRooms();
+        // Add, modify, or remove based on document change type
+        switch (change.type) {
+          case DocumentChangeType.added:
+            livestreamMap[roomId] = livestream;
+            if (livestream.hostId != null && livestream.hostId != -1) {
+              firebaseFirestoreController.fetchUserIfNeeded(livestream.hostId ?? -1);
+            }
+            break;
 
-      final livestreamMap = <String, Livestream>{};
-      for (final row in rows) {
-        final livestream = Livestream.fromJson(row);
-        final roomId = livestream.roomID ?? '';
-        if (roomId.isEmpty) continue;
+          case DocumentChangeType.modified:
+            // Update only if the livestream has changed
+            livestreamMap[roomId] = livestream;
+            for (var coHostId in (livestream.coHostIds ?? [])) {
+              firebaseFirestoreController.fetchUserIfNeeded(coHostId);
+            }
+            break;
 
-        livestreamMap[roomId] = livestream;
-
-        // The registry sends each room's host card inline, so it is cached
-        // here instead of being fetched one document at a time.
-        final hostId = livestream.hostId;
-        if (hostId != null && hostId != -1) {
-          LivestreamHosts.remember(hostId, row['host_user']);
+          case DocumentChangeType.removed:
+            livestreamMap.remove(roomId);
+            break;
         }
       }
 
+      // Convert map back to lists
       livestreamList.value = List.from(livestreamMap.values);
       livestreamFilterList.value = List.from(livestreamMap.values);
-      livestreamFilterList
-          .sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
-
-      liveStreamError.value = '';
+      livestreamFilterList.sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
+      // Perform any additional cleanup or transformations
       removeDummyLive();
+
       _assignHostUsersToStreams();
-    } catch (e) {
-      Loggers.error('Live stream refresh error: $e');
-      liveStreamError.value =
-          'Unable to load live streams. Please try again.';
-    }
+      isLoading.value = false; // Hide loader after initial fetch
+    }, onError: (Object error) {
+      Loggers.error('Error loading livestreams: $error');
+      liveStreamError.value = 'Unable to load live streams. Please try again.';
+      isLoading.value = false;
+    });
   }
 
   void _assignHostUsersToStreams() {
+    final userMap = _userMapFromList(firebaseFirestoreController.users);
     for (var stream in livestreamList) {
-      final hostId = stream.hostId;
-      if (hostId == null) continue;
-      final cached = LivestreamHosts.of(hostId);
-      if (cached != null) {
-        stream.hostUser = AppUser.fromJson(cached);
-      }
+      stream.hostUser = userMap[stream.hostId];
     }
   }
 
@@ -141,55 +134,166 @@ class LiveStreamSearchScreenController extends BaseController {
     }, (p1) => p1.description ?? '');
   }
 
-  /// Retained for source compatibility.
-  ///
-  /// The dummy-live showcase already ships to the client inside the settings
-  /// payload and is rendered locally, so there is no registry left to reconcile
-  /// against and nothing to write.
   Future<void> addDummyUsers() async {
     await Future.delayed(const Duration(milliseconds: 500));
-    Loggers.info('Dummy lives are served from settings; nothing to sync.');
+    try {
+      // Fetch existing livestreams from Firestore
+      final livestreamList = await db
+          .collection(FirebaseConst.liveStreams)
+          .withConverter<Livestream>(
+            fromFirestore: (snapshot, _) => Livestream.fromJson(snapshot.data()!),
+            toFirestore: (livestream, _) => livestream.toJson(),
+          )
+          .get();
+
+      // Collect existing stream IDs
+      final existingIds = livestreamList.docs.map((doc) => doc.id).toSet();
+
+      for (var dummy in dummyLives) {
+        final dummyId = dummy.userId;
+
+        // Skip invalid IDs
+        if (dummyId == -1) continue;
+
+        final alreadyExists = existingIds.contains('$dummyId');
+        if (!alreadyExists && dummy.status == 1) {
+          // Create new dummy livestream
+          await createLiveStream(dummy);
+          Loggers.info('✅ Created dummy livestream: $dummyId');
+        } else if (alreadyExists && dummy.status == 0) {
+          // Delete if status is inactive
+          await deleteStreamOnFirebase(dummyId);
+          Loggers.info('🗑️ Deleted inactive dummy livestream: $dummyId');
+        } else {
+          Loggers.info('ℹ️ No action for: $dummyId (exists: $alreadyExists, status: ${dummy.status})');
+        }
+      }
+    } catch (e, _) {
+      Loggers.error('❌ Error in addDummyUsers: $e');
+    }
   }
 
   Future<void> createLiveStream(DummyLive? dummyLive) async {
-    Loggers.info('Dummy lives are served from settings; no room to register.');
+    User? dummyUser = dummyLive?.user;
+    if (dummyUser == null) {
+      Loggers.error('Dummy User Not found');
+      return;
+    }
+    int userId = dummyLive?.userId ?? -1;
+
+    DocumentReference livestreamRef = db.collection(FirebaseConst.liveStreams).doc('$userId');
+
+    int time = DateTime.now().millisecondsSinceEpoch;
+
+    // Livestream model
+    Livestream livestream = dummyUser.livestream(
+        type: LivestreamType.dummy,
+        time: time,
+        dummyUserLink: dummyLive?.link,
+        isDummyLive: 1,
+        description: dummyLive?.title);
+
+    // LivestreamUser model
+    AppUser? livestreamUser = dummyUser.appUser;
+
+    // LivestreamUserState model
+    LivestreamUserState livestreamUserState = dummyUser.streamState(time: time, stateType: LivestreamUserType.host);
+
+    try {
+      DocumentReference usersRef = db.collection(FirebaseConst.appUsers).doc('$userId');
+      DocumentReference userStateRef = livestreamRef.collection(FirebaseConst.userState).doc('$userId');
+
+      WriteBatch batch = db.batch();
+
+      bool isExist = (await livestreamRef.get()).exists;
+      bool isUserExist = (await usersRef.get()).exists;
+
+      if (isExist) {
+        // Update existing documents
+        batch.update(livestreamRef, livestream.toJson());
+        batch.update(userStateRef, livestreamUserState.toJson());
+      } else {
+        // Create new documents
+        batch.set(livestreamRef, livestream.toJson());
+        batch.set(userStateRef, livestreamUserState.toJson());
+      }
+      if (isUserExist) {
+        batch.update(usersRef, livestreamUser.toJson());
+      } else {
+        batch.set(usersRef, livestreamUser.toJson());
+      }
+
+      await batch.commit();
+      Loggers.success(isExist ? 'Updated Dummy Live' : 'Created Dummy Live');
+    } catch (e, stackTrace) {
+      Loggers.error('Failed to create/update live stream: $e');
+      Loggers.error('StackTrace: $stackTrace');
+    }
   }
 
-  /// Close a room and drop its participants.
-  ///
-  /// Replaces the former Firestore teardown. The live media itself is ZEGO and
-  /// is ended by its own SDK on the host screen — this only retires the room row
-  /// in the registry.
   Future<void> deleteStreamOnFirebase(int? dummyUserId) async {
     if (dummyUserId == null) return;
+
+    final String roomId = dummyUserId.toString();
+
+    final DocumentReference livestreamRef = db.collection(FirebaseConst.liveStreams).doc(roomId);
+
+    final CollectionReference usersStateRef = livestreamRef.collection(FirebaseConst.userState);
+
+    final CollectionReference commentsRef = livestreamRef.collection(FirebaseConst.comments);
+
     try {
-      await LiveRoomService.instance.leaveRoom('$dummyUserId');
-      Loggers.success('Closed live room $dummyUserId in the registry.');
-    } catch (e) {
-      Loggers.error('Failed to close live room: $e');
+      // Fetch both collections in parallel
+      final results = await Future.wait([
+        usersStateRef.get(),
+        commentsRef.get(),
+      ]);
+
+      final QuerySnapshot usersSnapshot = results[0];
+      final QuerySnapshot commentsSnapshot = results[1];
+
+      final WriteBatch batch = db.batch();
+
+      // Queue deletions for user states
+      for (final doc in usersSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      Loggers.info('Queued ${usersSnapshot.size} user state deletions.');
+
+      // Queue deletions for comments
+      for (final doc in commentsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      Loggers.info('Queued ${commentsSnapshot.size} comment deletions.');
+
+      // Delete the livestream document
+      batch.delete(livestreamRef);
+
+      // Commit all deletions in one batch
+      await batch.commit();
+      Loggers.success('Deleted live stream, user states, and comments from Firestore.');
+      Loggers.error('Live Stream Search Delete The Data');
+    } catch (e, stackTrace) {
+      Loggers.error('Failed to delete live stream: $e');
+      Loggers.error('StackTrace: $stackTrace');
     }
   }
 
-  /// Hide dummy showcase rooms the settings no longer want shown.
-  ///
-  /// Purely local: those rooms are not real registry entries, so they are
-  /// filtered out of the visible list rather than deleted anywhere.
   void removeDummyLive() {
-    final dummyStream =
-        livestreamFilterList.where((e) => e.isDummyLive == 1).toList();
+    final dummyStream = livestreamFilterList.where((e) => e.isDummyLive == 1).toList();
     if (dummyStream.isEmpty) return;
-
-    bool shouldHide(DummyLiveHolder element) {
-      if (setting?.liveDummyShow == 0) return true;
-      return dummyLives.isEmpty ||
-          !dummyLives.any((e) => e.userId == element.hostId);
+    if (setting?.liveDummyShow == 0) {
+      for (var element in dummyStream) {
+        deleteStreamOnFirebase(element.hostId);
+      }
+    } else {
+      for (var element in dummyStream) {
+        final shouldDelete = dummyLives.isEmpty || !dummyLives.any((e) => e.userId == element.hostId);
+        if (shouldDelete) {
+          deleteStreamOnFirebase(element.hostId);
+        }
+      }
     }
-
-    final visible = livestreamFilterList.where((element) {
-      if (element.isDummyLive != 1) return true;
-      return !shouldHide(element);
-    }).toList();
-    livestreamFilterList.value = visible;
   }
 
   Future<void> onGoLive() async {
@@ -208,7 +312,3 @@ class LiveStreamSearchScreenController extends BaseController {
     Get.to(() => const CreateLiveStreamScreen());
   }
 }
-
-/// Minimal shape used by [LiveStreamSearchScreenController.removeDummyLive] so
-/// that helper does not need to depend on the concrete model.
-typedef DummyLiveHolder = Livestream;

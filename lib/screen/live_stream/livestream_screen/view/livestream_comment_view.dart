@@ -24,14 +24,10 @@ class LiveStreamCommentView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ShaderMask(
       shaderCallback: (Rect bounds) {
-        // FIX(v12): the scrim must ALWAYS be dark. blackPure() follows the
-        // theme, so in light mode it resolved to white and this mask punched a
-        // bright wedge straight through the video - the "stuck comment" panel.
-        final scrim = mediaScrim(context);
         return LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [
-          scrim,
-          scrim.withValues(alpha: .6),
-          scrim.withValues(alpha: .1),
+          blackPure(context),
+          blackPure(context).withValues(alpha: .6),
+          blackPure(context).withValues(alpha: .1),
         ], stops: const [
           .0,
           .3,
@@ -41,10 +37,7 @@ class LiveStreamCommentView extends StatelessWidget {
       blendMode: BlendMode.dstOut,
       child: Obx(() {
         return ListView.builder(
-          // FIX(v12): 70px of unconditional top padding pushed the comment list
-          // down inside an already-short box and helped trigger the overflow.
-          // Reserve only the real status-bar height.
-          padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top + 8),
+          padding: const EdgeInsets.only(top: 70),
           itemCount: controller.comments.length,
           reverse: true,
           shrinkWrap: true,
@@ -141,7 +134,7 @@ class LiveStreamCommentView extends StatelessWidget {
                       ),
                       alignment: Alignment.center,
                       child: Text(LKey.accept.tr,
-                          style: TextStyleCustom.outFitRegular400(fontSize: 13, color: onMediaText(context))),
+                          style: TextStyleCustom.outFitRegular400(fontSize: 13, color: textDarkGrey(context))),
                     ),
                   ),
                 ],

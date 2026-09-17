@@ -25,7 +25,7 @@ class LiveStreamBottomView extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: SizedBox(
-        height: Get.height / 3.2,
+        height: Get.height / 2.7,
         child: Stack(
           alignment: Alignment.bottomCenter,
           children: [

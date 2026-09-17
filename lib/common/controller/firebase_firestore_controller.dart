@@ -2,23 +2,21 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/manager/logger.dart';
-import 'package:nimiro/common/service/supabase/chat_repository.dart';
+import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
-/// Chat-profile mirror.
-///
-/// Historically this talked to Firestore, then briefly to Supabase directly.
-/// Both are gone: the chat tables now sit behind row-level security, so a
-/// direct client connection is exactly what is blocked. Every read and write
-/// goes through the Laravel chat proxy instead, which is the only component
-/// holding the service key.
-///
-/// Kept under its original class name so the rest of the app — services,
-/// controllers and `Get.put` call sites — needs no change.
 class FirebaseFirestoreController extends BaseController {
   RxList<AppUser> users = <AppUser>[].obs;
   static final instance = FirebaseFirestoreController();
+
+  SupabaseClient get _db {
+    if (!SupabaseService.instance.isInitialized) {
+      SupabaseService.instance.initialize();
+    }
+    return SupabaseService.instance.client;
+  }
 
   void fetchUserIfNeeded(int userId) {
     Loggers.info('[LOAD_USER] Checking if user $userId already exists in list');
@@ -27,27 +25,31 @@ class FirebaseFirestoreController extends BaseController {
       Loggers.info('[LOAD_USER] User $userId already loaded, skipping fetch');
       return;
     }
-    Loggers.info('[LOAD_USER] Fetching user $userId through the chat proxy');
-    ChatRepository.instance.fetchAppUsers(userIds: [userId]).then((rows) {
-      if (rows.isEmpty) return;
-      for (final row in rows) {
-        final fetchedUser = AppUser.fromJson(row);
-        if (fetchedUser.userId == null) continue;
-        if (users.any((element) => element.userId == fetchedUser.userId)) {
-          continue;
-        }
-        users.add(fetchedUser);
-        Loggers.info('[LOAD_USER] User ${fetchedUser.userId} added to list');
-      }
-    }).catchError((error) {
-      Loggers.error('[LOAD_USER] Failed to fetch user $userId — $error');
-    });
+    Loggers.info('[LOAD_USER] Fetching user $userId from Supabase');
+    _db
+        .from('app_users')
+        .select()
+        .eq('doc_id', '$userId')
+        .maybeSingle()
+        .then((row) {
+          if (row == null) return;
+          final fetchedUser = AppUser.fromJson(row);
+          users.add(fetchedUser);
+          Loggers.info('[LOAD_USER] User ${fetchedUser.userId} added to list');
+        })
+        .catchError((error) {
+          Loggers.error('[LOAD_USER] Failed to fetch user $userId — $error');
+        });
   }
 
-  Future<void> updateUser(User? user) async {
+  void updateUser(User? user) async {
     if (user == null) return;
+    AppUser chatUser = user.appUser;
     try {
-      await ChatRepository.instance.upsertAppUser(user.appUser.toJson());
+      await _db
+          .from('app_users')
+          .update(chatUser.toJson())
+          .eq('doc_id', '${user.id}');
     } catch (e) {
       Loggers.error('[UPDATE_USER] Failed to update user ${user.id} — $e');
     }
@@ -55,20 +57,22 @@ class FirebaseFirestoreController extends BaseController {
 
   void addUser(User? user) async {
     if (user == null) return;
+    AppUser chatUser = user.appUser;
     try {
-      await ChatRepository.instance.upsertAppUser(user.appUser.toJson());
+      final payload = <String, dynamic>{
+        'doc_id': '${user.id}',
+        ...chatUser.toJson(),
+      };
+      await _db.from('app_users').upsert(payload, onConflict: 'doc_id');
     } catch (e) {
       Loggers.error('[ADD_USER] Failed to add user ${user.id} — $e');
     }
   }
 
-  /// Removes the caller's own chat-profile row.
-  ///
-  /// The proxy derives the target from the authenticated token, so the former
-  /// `userId` argument is accepted for source compatibility and not sent.
   Future<void> deleteUser(int? userId) async {
+    if (userId == null) return;
     try {
-      await ChatRepository.instance.deleteAppUser();
+      await _db.from('app_users').delete().eq('doc_id', '$userId');
     } catch (e) {
       Loggers.error('[DELETE_USER] Failed to delete user $userId — $e');
     }

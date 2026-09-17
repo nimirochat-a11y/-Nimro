@@ -38,26 +38,20 @@ class UserService {
 
   static final UserService instance = UserService._();
 
-  /// SECURITY (S1 / item 1.1): [idToken] is the provider-issued proof of
-  /// ownership (Firebase ID token for email/Google/Apple, or the Supabase
-  /// access token). The backend verifies it before minting an app auth token.
-  /// Omitting it makes the backend refuse the login.
   Future<User?> logInUser({
     String? fullName,
     required String identity,
     String? deviceToken,
     required LoginMethod loginMethod,
-    String? idToken,
   }) async {
     UserModel model = await ApiService.instance.call(
-        url: WebService.user.logInUser,
+        url: WebService.user.loginInUser,
         param: {
           Params.fullname: fullName,
           Params.identity: identity,
           Params.deviceToken: deviceToken,
           Params.device: Platform.isAndroid ? 0 : 1,
-          Params.loginMethod: loginMethod.title(),
-          Params.identityToken: idToken,
+          Params.loginMethod: loginMethod.title()
         },
         fromJson: UserModel.fromJson);
 

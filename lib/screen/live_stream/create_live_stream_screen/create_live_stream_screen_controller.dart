@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,12 +14,13 @@ import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/model/livestream/livestream_user_state.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/host/livestream_host_screen.dart';
-import 'package:nimiro/common/service/api/live_room_service.dart';
+import 'package:nimiro/utilities/firebase_const.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
 
 class CreateLiveStreamScreenController extends BaseController {
   RxBool isRestricted = false.obs;
   bool isFrontCamera = true;
+  FirebaseFirestore db = FirebaseFirestore.instance;
   ZegoExpressEngine zegoEngine = ZegoExpressEngine.instance;
 
   Rx<User?> get myUser => SessionManager.instance.getUser().obs;
@@ -180,16 +182,25 @@ class CreateLiveStreamScreenController extends BaseController {
     Loggers.info('Livestream Model: ${livestream.toJson()}');
     Loggers.info('Livestream User Model: ${livestreamUser.toJson()}');
 
+    // Show loader before Firestore operations
     showLoader();
 
     try {
-      // The room registry lives in the backend now; Firestore is gone.
-      await LiveRoomService.instance.createRoom(
-        roomId: '$userId',
-        description: livestream.description,
-        roomType: livestream.type?.value,
-        restrictToJoin: livestream.isRestrictToJoin == 1,
-      );
+      DocumentReference livestreamRef =
+          db.collection(FirebaseConst.liveStreams).doc('$userId');
+      DocumentReference usersRef =
+          db.collection(FirebaseConst.appUsers).doc('$userId');
+      DocumentReference userStateRef =
+          livestreamRef.collection(FirebaseConst.userState).doc('$userId');
+
+      WriteBatch batch = db.batch();
+
+      batch.set(livestreamRef, livestream.toJson());
+      batch.set(usersRef, livestreamUser.toJson());
+      batch.set(userStateRef, livestreamUserState.toJson());
+
+      // Commit batch operation
+      batch.commit();
 
       Loggers.success('Livestream started successfully!');
 

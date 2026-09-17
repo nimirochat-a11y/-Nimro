@@ -8,21 +8,9 @@ class ThemeRes {
   static ThemeData lightTheme(BuildContext context) {
     return ThemeData(
       scaffoldBackgroundColor: ColorRes.whitePure,
-      colorScheme: ColorScheme.light(
-        primary: ColorRes.themeAccentSolid,
-        surface: ColorRes.whitePure,
-        onSurface: ColorRes.textDarkGrey,
-      ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: ColorRes.whitePure,
-        selectedItemColor: ColorRes.themeAccentSolid,
-        unselectedItemColor: ColorRes.textLightGrey,
-      ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: ColorRes.whitePure,
-        foregroundColor: ColorRes.textDarkGrey,
-        iconTheme: IconThemeData(color: ColorRes.textDarkGrey),
-      ),
+          backgroundColor: ColorRes.whitePure),
+      appBarTheme: const AppBarTheme(backgroundColor: ColorRes.bgLightGrey),
       fontFamily: FontRes.outFitRegular400,
       bottomSheetTheme:
           const BottomSheetThemeData(backgroundColor: ColorRes.whitePure),
@@ -32,34 +20,22 @@ class ThemeRes {
           overlayShape: RoundSliderOverlayShape(overlayRadius: 0),
           overlayColor: Colors.transparent),
       textTheme: const TextTheme(
-        titleLarge: TextStyle(color: ColorRes.textDarkGrey),
+        titleLarge: TextStyle(color: ColorRes.whitePure),
         titleMedium: TextStyle(color: ColorRes.textDarkGrey),
         titleSmall: TextStyle(color: ColorRes.textLightGrey),
-        bodyLarge: TextStyle(color: ColorRes.textDarkGrey),
-        bodyMedium: TextStyle(color: ColorRes.textDarkGrey),
-        bodySmall: TextStyle(color: ColorRes.textLightGrey),
         labelSmall: TextStyle(color: ColorRes.themeAccentSolid),
         labelLarge: TextStyle(color: ColorRes.disabledGrey),
-        labelMedium: TextStyle(color: ColorRes.textDarkGrey),
       ),
       textSelectionTheme:
-          const TextSelectionThemeData(
-            cursorColor: Colors.black,
-            selectionColor: ColorRes.disabledGrey,
-            selectionHandleColor: Colors.black,
-          ),
-      cardTheme: const CardThemeData(color: ColorRes.whitePure),
-      dialogTheme: const DialogThemeData(backgroundColor: ColorRes.whitePure),
-      inputDecorationTheme: const InputDecorationTheme(
-        hintStyle: TextStyle(color: ColorRes.textLightGrey),
-      ),
+          const TextSelectionThemeData(selectionColor: ColorRes.disabledGrey),
+      cardTheme: const CardThemeData(color: ColorRes.blueFollow),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       primaryColor: ColorRes.themeAccentSolid,
       dividerColor: ColorRes.bgGrey,
       cardColor: ColorRes.bgMediumGrey,
       primaryColorDark: ColorRes.blackPure,
-      canvasColor: ColorRes.whitePure,
+      canvasColor: ColorRes.themeColor,
       useMaterial3: false,
     );
   }
@@ -170,7 +146,7 @@ Color blackPure(BuildContext context) {
 Color bgLightGrey(BuildContext context) {
   return Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFF101010)
-      : ColorRes.whitePure;
+      : Theme.of(context).appBarTheme.backgroundColor ?? ColorRes.bgLightGrey;
 }
 
 /// Surface used by cards, dialogs, and bottom sheets in both themes.
@@ -179,18 +155,6 @@ Color surfaceColor(BuildContext context) {
       ? const Color(0xFF151515)
       : ColorRes.whitePure;
 }
-
-/// Text/icon colour for content drawn ON TOP of media (video, live stream,
-/// story, reel). Those surfaces are dark in BOTH themes, so this must never
-/// follow the theme brightness - it has to stay light or the text vanishes.
-Color onMediaText(BuildContext context) => ColorRes.whitePure;
-
-/// Secondary variant of [onMediaText] for captions and meta rows.
-Color onMediaTextMuted(BuildContext context) =>
-    ColorRes.whitePure.withValues(alpha: .75);
-
-/// Scrim used for gradients over media. Dark in both themes on purpose.
-Color mediaScrim(BuildContext context) => ColorRes.blackPure;
 
 /// Fill used by editable text fields; never use a fixed white surface here.
 Color inputFillColor(BuildContext context) => surfaceColor(context);

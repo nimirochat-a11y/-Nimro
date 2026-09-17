@@ -16,12 +16,15 @@ import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 
 class NotificationScreenController extends BaseController {
   RxInt selectedTabIndex = RxInt(0);
+
   RxList<AdminNotificationData> adminNotifications =
       <AdminNotificationData>[].obs;
   RxList<ActivityNotification> activityNotifications =
       <ActivityNotification>[].obs;
+
   RxBool isActivityNotification = RxBool(false);
   RxBool isAdminNotification = RxBool(false);
+
   PageController pageController = PageController();
 
   @override
@@ -74,53 +77,19 @@ class NotificationScreenController extends BaseController {
     }
   }
 
-  /// Combined, chronologically sorted list of both notification sources.
-  List<dynamic> get mergedNotifications {
-    final List<dynamic> combined = [
-      ...activityNotifications,
-      ...adminNotifications,
-    ];
-    DateTime? parseDate(dynamic item) {
-      String? raw;
-      if (item is ActivityNotification) raw = item.createdAt;
-      if (item is AdminNotificationData) raw = item.createdAt;
-      if (raw == null) return null;
-      return DateTime.tryParse(raw);
-    }
-
-    combined.sort((a, b) {
-      final da = parseDate(a);
-      final db = parseDate(b);
-      if (da == null && db == null) return 0;
-      if (da == null) return 1;
-      if (db == null) return -1;
-      return db.compareTo(da);
-    });
-    return combined;
-  }
-
-  bool get isMergedLoading =>
-      isActivityNotification.value || isAdminNotification.value;
-
-  bool get isMergedEmpty =>
-      activityNotifications.isEmpty && adminNotifications.isEmpty;
-
-  Future<void> fetchMoreMerged() async {
-    await Future.wait([
-      fetchActivityNotifications(),
-      fetchAdminNotification(),
-    ]);
-  }
 
   void onPostTap(ActivityNotification? data) async {
     Post? post = data?.data?.post;
     int? commentId = data?.data?.comment?.id;
     int? replyCommentId = data?.data?.reply?.id;
+
     if (post?.id == null) return;
+
     showLoader();
     final PostByIdModel result = await PostService.instance.fetchPostById(
         postId: post!.id!, commentId: commentId, replyId: replyCommentId);
     stopLoader();
+
     if (result.status != true || result.data == null) {
       showSnackBar(result.message);
       return;
@@ -128,12 +97,13 @@ class NotificationScreenController extends BaseController {
     final Post? fetchedPost = result.data?.post;
     if (fetchedPost == null) return;
     final postType = post.postType;
+
     if (postType == PostType.reel) {
       Get.to(() => ReelsScreen(
             reels: [fetchedPost].obs,
-            position: 0,
-            postByIdData: result.data,
-          ));
+        position: 0,
+        postByIdData: result.data,
+      ));
     } else if ([PostType.image, PostType.video, PostType.text]
         .contains(postType)) {
       Get.to(() => SinglePostScreen(

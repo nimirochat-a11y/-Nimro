@@ -437,7 +437,7 @@ class PostService {
   Future<List<Music>> searchMusic(
       {required String keyword, int? lastItemId}) async {
     MusicsModel response = await ApiService.instance.call(
-        url: WebService.post.searchMusic,
+        url: WebService.post.serchMusic,
         param: {
           Params.limit: AppRes.paginationLimit,
           Params.keyword: keyword,

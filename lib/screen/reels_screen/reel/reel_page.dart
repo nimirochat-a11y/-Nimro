@@ -34,10 +34,7 @@ class ReelPage extends StatefulWidget {
   const ReelPage(
       {super.key,
       required this.reelData,
-      // FIX(v12): default to autoplay. Reels that defaulted to `false` needed a
-      // second tap before they would start, because the InkWell overlay above
-      // the player swallowed the first one.
-      this.autoPlay = true,
+      this.autoPlay = false,
       this.postByIdData,
       this.isFromChat = false,
       required this.likeKey,
@@ -97,17 +94,14 @@ class _ReelPageState extends State<ReelPage> {
       _controller!.setLooping(true);
       _initialized = true;
 
-      // FIX(v12): removed the early return that bailed out whenever the reels
-      // tab was not index 0. It left the player permanently paused on every
-      // other entry point, so the very first frame needed a manual tap. Only
-      // the view counter is tab-dependent.
-      final bool isVisible = widget.reelsScreenController.isCurrentPageVisible;
-      if (widget.autoPlay && isVisible) {
+      if (dashboardController.selectedPageIndex.value != 0 && widget.isHomePage) {
+        return;
+      }
+      // ✅ Auto play only when visible and autoplay flag true
+      if (widget.autoPlay && widget.reelsScreenController.isCurrentPageVisible) {
         await _controller!.play();
+        _increaseViewsCount(widget.reelData);
         isPlaying = true;
-        if (dashboardController.selectedPageIndex.value == 0) {
-          _increaseViewsCount(widget.reelData);
-        }
       }
 
       setState(() {});
@@ -149,9 +143,6 @@ class _ReelPageState extends State<ReelPage> {
 
   void onPlayPause() {
     if (_controller == null || !_controller!.value.isInitialized) return;
-    // FIX(v12): the first tap on a not-yet-started player used to be a no-op
-    // because both branches toggled state that had not been set yet. Always
-    // end up playing when the user taps a paused or never-started video.
     if (_controller!.value.isPlaying) {
       _controller!.pause();
       isPlaying = false;
