@@ -43,17 +43,28 @@ class ReelsScreenController extends BaseController {
     initFirstPlayers();
   }
 
-  /// Initialize first two players
+  /// Initialize first two players.
+  ///
+  /// FIX(v14): this had no try/finally. Any failure inside `onFetchMoreData`
+  /// (network error, timeout) skipped the `isLoading.value = false` line, so
+  /// `isLoading` stayed true forever and the PageView rendered the spinner in
+  /// place of EVERY reel — the classic "videos never play" report. The flag is
+  /// now cleared on both paths.
   Future<void> initFirstPlayers() async {
     isLoading.value = true;
-    if (reels.length <= 1) {
-      await onFetchMoreData?.call();
-    }
+    try {
+      if (reels.length <= 1) {
+        await onFetchMoreData?.call();
+      }
 
-    if (reels.length - 1 == currentIndex.value) {
-      await onFetchMoreData?.call();
+      if (reels.length - 1 == currentIndex.value) {
+        await onFetchMoreData?.call();
+      }
+    } catch (e) {
+      Loggers.error('Reels: initial fetch failed: $e');
+    } finally {
+      isLoading.value = false;
     }
-    isLoading.value = false;
   }
 
   /// Handle page change

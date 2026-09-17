@@ -133,16 +133,26 @@ class _ReelPageState extends State<ReelPage> {
   void _handleVisibilityChanged(VisibilityInfo info) {
     if (!_initialized || _controller == null || !_controller!.value.isInitialized) return;
 
-    if ((info.visibleFraction * 100) > 90) {
+    final double visible = info.visibleFraction * 100;
+
+    // FIX(v14): the old thresholds were `> 90` to play and `else` (i.e. ANY
+    // fraction below 90) to pause. On first build the detector fires while the
+    // page is still being laid out, so a reel could be played by autoplay and
+    // then immediately paused by a sub-90% callback — the user saw a frozen
+    // first frame and had to tap. Only a genuinely off-screen page pauses now.
+    if (visible > 60) {
       if (!_controller!.value.isPlaying) {
         _controller!.play();
         isPlaying = true;
       }
-    } else {
+    } else if (visible < 20) {
       if (_controller!.value.isPlaying) {
         _controller!.pause();
         isPlaying = false;
       }
+    } else {
+      // Partially visible: keep whatever state the player is already in.
+      return;
     }
     setState(() {});
   }
