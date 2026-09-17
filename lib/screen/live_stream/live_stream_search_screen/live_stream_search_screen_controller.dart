@@ -35,6 +35,9 @@ class LiveStreamSearchScreenController extends BaseController {
   RxList<Livestream> livestreamList = <Livestream>[].obs;
   RxList<Livestream> livestreamFilterList = <Livestream>[].obs;
 
+  /// Surfaced by the empty state when the room-registry read fails.
+  RxString liveStreamError = ''.obs;
+
   /// Keeps the feed fresh. The registry read replaces the former live listener.
   Timer? livestreamRefresh;
 
@@ -95,10 +98,13 @@ class LiveStreamSearchScreenController extends BaseController {
       livestreamFilterList
           .sort((a, b) => (b.createdAt ?? 0).compareTo(a.createdAt ?? 0));
 
+      liveStreamError.value = '';
       removeDummyLive();
       _assignHostUsersToStreams();
     } catch (e) {
       Loggers.error('Live stream refresh error: $e');
+      liveStreamError.value =
+          'Unable to load live streams. Please try again.';
     }
   }
 

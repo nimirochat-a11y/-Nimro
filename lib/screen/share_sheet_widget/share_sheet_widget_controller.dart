@@ -74,7 +74,7 @@ class ShareSheetWidgetController extends BaseController {
 
   @override
   void onClose() {
-    ChatRepository.instance.unsubscribe(_usersChannel);
+    ChatRepository.instance.unsubscribeByName(_usersChannel);
     super.onClose();
   }
 
