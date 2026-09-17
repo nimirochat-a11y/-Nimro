@@ -134,7 +134,7 @@ class StopLiveStreamSheet extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 30),
           width: double.infinity,
           decoration: ShapeDecoration(
-              color: whitePure(context),
+              color: surfaceColor(context),
               shape: const SmoothRectangleBorder(
                   borderRadius: SmoothBorderRadius.vertical(
                       top:

@@ -12,6 +12,21 @@
 .swiftpm/
 migrate_working_dir/
 
+# SECURITY (S4/S5): signing material and provider credentials must never be
+# committed. These files were previously tracked and are still recoverable from
+# git history — treat the leaked keys as compromised and rotate them.
+android/key.properties
+android/*.jks
+android/*.keystore
+android/app/*.jks
+*.keystore
+key.properties
+
+# Local secrets injected at build time (see README)
+.env
+.env.*
+!.env.example
+
 # IntelliJ related
 *.iml
 *.ipr

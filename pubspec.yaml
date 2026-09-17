@@ -28,6 +28,9 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependency_overrides:
+  # objective_c 9.6.1 references Architecture.arm64e, which is unavailable
+  # in the code_assets version supported by the current Flutter stable runner.
+  objective_c: 9.5.0
   permission_handler: ^11.4.0
 
 
@@ -48,6 +51,7 @@ dependencies:
   ### 📦 State Management & Storage
   get: ^4.7.2
   get_storage: ^2.1.1
+  flutter_secure_storage: ^9.0.0
 
   ### 🎨 UI & Design
   figma_squircle_updated: ^1.0.1

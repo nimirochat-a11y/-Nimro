@@ -70,9 +70,18 @@
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-		<key>NSAllowsArbitraryLoadsForMedia</key>
-		<true/>
+		<false/>
+		<!-- SECURITY (S1): arbitrary loads were disabled. Only the app's own
+		     domain is exempted, and it still requires TLS 1.2+ so no
+		     downgrade to plaintext is possible. -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>nimiro.chat</key>
+			<dict>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.2</string>
+			</dict>
+		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We require access to your camera to allow you to capture photos and videos for creating posts, reels, and stories.</string>

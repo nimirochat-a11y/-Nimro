@@ -44,6 +44,10 @@ Future<void> main() async {
 
     await GetStorage.init('nimiro');
 
+    // Initialize notification listeners after local storage is ready and
+    // before the first screen is shown.
+    FirebaseNotificationManager.instance;
+
     // Init RevenueCat (handle errors gracefully)
     try {
       await SubscriptionManager.shared.initPlatformState();
@@ -78,8 +82,9 @@ class MyApp extends StatelessWidget {
       translations: Get.find<DynamicTranslations>(),
       locale: Locale(SessionManager.instance.getLang()),
       fallbackLocale: Locale(SessionManager.instance.getFallbackLang()),
-      themeMode: SessionManager.instance.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      darkTheme: ThemeRes.darkTheme(context),
+      // Light mode only. Dark mode was removed so the app always renders the
+      // original light theme, regardless of any value left in local storage.
+      themeMode: ThemeMode.light,
       theme: ThemeRes.lightTheme(context),
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),

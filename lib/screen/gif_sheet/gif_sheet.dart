@@ -23,7 +23,7 @@ class GifSheet extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(top: AppBar().preferredSize.height * 2),
       decoration: ShapeDecoration(
-          color: whitePure(context),
+          color: surfaceColor(context),
           shape: const SmoothRectangleBorder(
               borderRadius: SmoothBorderRadius.vertical(
                   top: SmoothRadius(cornerRadius: 30, cornerSmoothing: 1)))),

@@ -14,7 +14,9 @@ class WebService {
 }
 
 class _Common {
-  String ipApi = "http://ip-api.com/json/";
+  // SECURITY (S1/S2): was plain http:// which leaked the caller's IP in
+  // cleartext and only worked because transport security was disabled.
+  String ipApi = "https://ip-api.com/json/";
 }
 
 class _Moderation {
@@ -38,7 +40,7 @@ class _GiftWallet {
 }
 
 class _User {
-  String loginInUser = "${apiURL}user/logInUser";
+  String logInUser = "${apiURL}user/logInUser";
   String deleteMyAccount = "${apiURL}user/deleteMyAccount";
   String logOutUser = "${apiURL}user/logOutUser";
   String fetchUserDetails = "${apiURL}user/fetchUserDetails";
@@ -102,7 +104,7 @@ class _Post {
   String fetchMusicExplore = "${apiURL}post/fetchMusicExplore";
   String fetchMusicByCategories = "${apiURL}post/fetchMusicByCategories";
   String fetchSavedMusics = "${apiURL}post/fetchSavedMusics";
-  String serchMusic = "${apiURL}post/serchMusic";
+  String searchMusic = "${apiURL}post/serchMusic";
   String createStory = "${apiURL}post/createStory";
   String viewStory = "${apiURL}post/viewStory";
   String deleteStory = "${apiURL}post/deleteStory";
@@ -114,6 +116,15 @@ class _Post {
 
 class _Setting {
   String fetchSettings = "${apiURL}settings/fetchSettings";
+
+  /// SECURITY: authenticated counterpart of [fetchSettings]. The public
+  /// endpoint also carries the ZEGO app sign, the Google Places token and the
+  /// GIPHY key, and it has to stay reachable before login, so those credentials
+  /// are also served here to signed-in clients only. Prefer this one for
+  /// anything that needs a key; the public endpoint keeps returning them until
+  /// the older installed builds are replaced.
+  String fetchSecureSettings = "${apiURL}settings/fetchSecureSettings";
+
   String uploadFileGivePath = "${apiURL}settings/uploadFileGivePath";
   String deleteFile = "${apiURL}settings/deleteFile";
 }
@@ -124,7 +135,7 @@ class _Google {
   }
 
   String searchNearByPlace(double lat, double lon) {
-    return 'https://places.googleapis.com/v1/places:searchNearby?fields=*';
+    return 'https://places.googleapis.com/v1/places:searchNearBy?fields=*';
   }
 }
 

@@ -9,7 +9,6 @@ import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/custom_search_text_field.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
-import 'package:nimiro/common/widget/no_data_widget.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
@@ -31,86 +30,23 @@ class LiveStreamSearchScreen extends StatelessWidget {
         const LiveStreamBlurBackgroundImage(),
         Column(
           children: [
-            LiveStreamSearchTopView(controller: controller),
-            CustomSearchTextField(
-              onChanged: controller.onSearchChange,
-              backgroundColor: whitePure(context).withValues(alpha: .15),
-              borderSide: BorderSide(color: whitePure(context).withValues(alpha: .18)),
+            SafeArea(
+              bottom: false,
+              child: CustomSearchTextField(
+                onChanged: controller.onSearchChange,
+                backgroundColor: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white.withValues(alpha: .12)
+                    : ColorRes.bgLightGrey,
+                borderSide: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: .22)
+                        : ColorRes.bgGrey),
+              ),
             ),
             LiveStreamListView(controller: controller),
           ],
         ),
       ],
-    );
-  }
-}
-
-class LiveStreamSearchTopView extends StatelessWidget {
-  final LiveStreamSearchScreenController controller;
-
-  const LiveStreamSearchTopView({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      minimum: const EdgeInsets.symmetric(vertical: 20),
-      child: Stack(
-        alignment: AlignmentDirectional.centerEnd,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: FittedBox(
-              child: Container(
-                height: 30,
-                margin: const EdgeInsets.only(top: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                alignment: Alignment.center,
-                decoration: ShapeDecoration(
-                  shape: SmoothRectangleBorder(
-                      borderRadius: SmoothBorderRadius(cornerRadius: 30, cornerSmoothing: 0),
-                      side: BorderSide(color: whitePure(context).withValues(alpha: .3), width: 1),
-                      borderAlign: BorderAlign.inside),
-                  color: ColorRes.textStoryBgGradient2,
-                ),
-                child: Row(
-                  children: [
-                    Image.asset(AssetRes.icLive, color: whitePure(context), height: 22, width: 22),
-                    const SizedBox(width: 5),
-                    Text(LKey.livestreams.tr.toUpperCase(),
-                        style: TextStyleCustom.unboundedRegular400(fontSize: 12, color: whitePure(context)))
-                  ],
-                ),
-              ),
-            ),
-          ),
-          InkWell(
-            onTap: controller.onGoLive,
-            child: Container(
-              height: 30,
-              margin: const EdgeInsets.only(top: 10, right: 10, left: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: ShapeDecoration(
-                  color: Colors.white,
-                  shape: SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 30, cornerSmoothing: 1))),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    AssetRes.icLive_1,
-                    color: blackPure(context),
-                    width: 25,
-                    height: 25,
-                  ),
-                  Text(
-                    LKey.goLive.tr,
-                    style: TextStyleCustom.unboundedRegular400(color: blackPure(context), fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          )
-        ],
-      ),
     );
   }
 }
@@ -393,11 +329,15 @@ class LiveStreamListView extends StatelessWidget {
         () {
           return controller.isLoading.value && controller.livestreamFilterList.isEmpty
               ? const LoaderWidget()
-              : NoDataView(
-                  showShow: !controller.isLoading.value && controller.livestreamFilterList.isEmpty,
-                  title: LKey.noLivestreamsTitle,
-                  description: LKey.noLivestreamsDescription.tr,
-                  child: GridView.builder(
+              : Stack(
+                  children: [
+                    if (!controller.isLoading.value &&
+                        controller.livestreamFilterList.isEmpty)
+                      LiveStreamEmptyState(
+                        error: controller.liveStreamError.value,
+                        onRetry: controller.fetchLiveStreams,
+                      ),
+                    GridView.builder(
                     itemCount: controller.livestreamFilterList.length,
                     padding: EdgeInsets.only(bottom: AppBar().preferredSize.height),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -406,9 +346,58 @@ class LiveStreamListView extends StatelessWidget {
                       Livestream stream = controller.livestreamFilterList[index];
                       return InkWell(onTap: () => controller.onLiveUserTap(stream), child: _buildGridItem(stream));
                     },
-                  ),
+                    ),
+                  ],
                 );
         },
+      ),
+    );
+  }
+}
+
+class LiveStreamEmptyState extends StatelessWidget {
+  final String error;
+  final Future<void> Function() onRetry;
+
+  const LiveStreamEmptyState({super.key, required this.error, required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasError = error.isNotEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(hasError ? Icons.wifi_off_rounded : Icons.videocam_off_rounded,
+                size: 46,
+                color: isDark ? Colors.white70 : ColorRes.textDarkGrey),
+            const SizedBox(height: 14),
+            Text(
+              hasError ? 'Live streams unavailable' : LKey.noLivestreamsTitle.tr,
+              style: TextStyleCustom.unboundedSemiBold600(
+                color: isDark ? Colors.white : ColorRes.textDarkGrey,
+                fontSize: 17,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 7),
+            Text(
+              hasError ? error : LKey.noLivestreamsDescription.tr,
+              style: TextStyleCustom.outFitRegular400(
+                color: isDark ? Colors.white70 : ColorRes.textLightGrey,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (hasError) ...[
+              const SizedBox(height: 16),
+              TextButton(onPressed: () => onRetry(), child: const Text('Retry')),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -83,7 +83,7 @@ class _AudioSheetState extends State<AudioSheet> {
               shape: const SmoothRectangleBorder(
                   borderRadius: SmoothBorderRadius.vertical(
                       top: SmoothRadius(cornerRadius: 40, cornerSmoothing: 1))),
-              color: whitePure(context)),
+              color: surfaceColor(context)),
           alignment: Alignment.center,
           child: SafeArea(
             top: false,

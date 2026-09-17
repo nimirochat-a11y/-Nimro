@@ -58,13 +58,7 @@ class ReelsTopBar extends StatelessWidget {
                   ),
                 if (widget != null) Flexible(child: widget!),
                 if (controller.isHomePage)
-                  InkWell(
-                      onTap: controller.openPostOptionsSheet,
-                      child: Image.asset(
-                        AssetRes.icAdd,
-                        width: 30,
-                        height: 30,
-                      ))
+                  const SizedBox(width: 30, height: 30)
                 else
                   Obx(() {
                     if (controller.reels.isEmpty) {

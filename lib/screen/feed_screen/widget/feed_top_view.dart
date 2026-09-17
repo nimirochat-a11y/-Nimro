@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/widget/custom_popup_menu_button.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen_controller.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen_controller.dart';
+import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen.dart';
 import 'package:nimiro/screen/message_screen/message_screen.dart';
 import 'package:nimiro/screen/notification_screen/notification_screen.dart';
 import 'package:nimiro/utilities/asset_res.dart';
@@ -24,33 +24,32 @@ class FeedTopView extends StatelessWidget {
       child: SafeArea(
         bottom: false,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            CustomPopupMenuButton(
-                items: [
-                  MenuItem(LKey.discover.tr,
-                      () => controller.onChangeCategory(PostCategory.discover)),
-                  MenuItem(LKey.nearby.tr,
-                      () => controller.onChangeCategory(PostCategory.nearby)),
-                  MenuItem(
-                      LKey.following.tr,
-                      () =>
-                          controller.onChangeCategory(PostCategory.following)),
-                ],
-                child: Obx(
-                  () => Row(
-                    children: [
-                      Text(
-                          controller.selectedPostCategory.value.title
-                              .toUpperCase(),
-                          style: TextStyleCustom.unboundedBold700(
-                              color: textDarkGrey(context), fontSize: 15)),
-                      const SizedBox(width: 3),
-                      Image.asset(AssetRes.icDownArrow,
-                          color: textDarkGrey(context), height: 8, width: 8),
-                    ],
-                  ),
-                )),
+            Expanded(
+              child: SizedBox(
+                height: 34,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.zero,
+                  children: [
+                    ...const [PostCategory.discover, PostCategory.following, PostCategory.nearby]
+                        .map((category) => Obx(() {
+                          final isSelected = controller.selectedPostCategory.value == category;
+                          return _CategoryTab(
+                            title: category.title,
+                            isSelected: isSelected,
+                            onTap: () => controller.onChangeCategory(category),
+                          );
+                        })),
+                    _CategoryTab(
+                      title: LKey.livestreams.tr,
+                      onTap: () => Get.to(() => const LiveStreamSearchScreen()),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
             Row(
               children: [
                 _TopActionButton(
@@ -58,9 +57,6 @@ class FeedTopView extends StatelessWidget {
                   count: SessionManager.instance.notifyCount,
                   onTap: () {
                     Get.to(() => const NotificationScreen());
-                    int count = SessionManager.instance.notifyCount.value;
-                    SessionManager.instance.setNotifyCount(-count);
-                    SessionManager.instance.notifyCount.value = 0;
                   },
                 ),
                 const SizedBox(width: 10),
@@ -70,8 +66,43 @@ class FeedTopView extends StatelessWidget {
                   onTap: () => Get.to(() => const MessageScreen()),
                 ),
               ],
-            )
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CategoryTab extends StatelessWidget {
+  final String title;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _CategoryTab({required this.title, required this.onTap, this.isSelected = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? themeAccentSolid(context) : Colors.transparent,
+              width: 2,
+            ),
+          ),
+        ),
+        child: Text(
+          title.toUpperCase(),
+          style: TextStyleCustom.unboundedBold700(
+            color: isSelected ? textDarkGrey(context) : textLightGrey(context),
+            fontSize: 12,
+          ),
         ),
       ),
     );
@@ -98,9 +129,7 @@ class _TopActionButton extends StatelessWidget {
           children: [
             ColorFiltered(
               colorFilter: ColorFilter.mode(
-                Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : textDarkGrey(context),
+                Theme.of(context).brightness == Brightness.dark ? Colors.white : textDarkGrey(context),
                 BlendMode.srcIn,
               ),
               child: Image.asset(icon, width: 24, height: 24),

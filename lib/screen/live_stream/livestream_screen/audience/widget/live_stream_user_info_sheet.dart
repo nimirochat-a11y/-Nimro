@@ -235,7 +235,7 @@ class _LiveStreamUserInfoSheetState extends State<LiveStreamUserInfoSheet> {
                                                   : whitePure(context),
                                               backgroundColor: isFollow
                                                   ? bgGrey(context)
-                                                  : blueFollow(context),
+                                                  : themeAccentSolid(context),
                                               horizontalMargin: 0),
                                     ),
                                   ],

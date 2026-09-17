@@ -77,7 +77,7 @@ class LivestreamEndSheet extends StatelessWidget {
                                   cornerRadius: 10, cornerSmoothing: 1),
                               side: BorderSide.none),
                           color: whitePure(context)),
-                      child: GradientText(
+                    child: GradientText(
                         LKey.getBack.tr,
                         gradient: StyleRes.themeGradient,
                         style: TextStyleCustom.unboundedMedium500(fontSize: 17),

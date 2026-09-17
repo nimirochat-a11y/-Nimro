@@ -20,7 +20,6 @@ class SettingsScreenController extends BaseController {
   Rx<Setting?> settings = Rx<Setting?>(null);
   Rx<WhoCanSeePost> selectedWhoCanSeePost = WhoCanSeePost.values.first.obs;
   RxBool isUpdateApiCalled = false.obs;
-  RxBool isDarkMode = SessionManager.instance.isDarkMode.obs;
 
   @override
   void onInit() {
@@ -59,12 +58,6 @@ class SettingsScreenController extends BaseController {
     } finally {
       stopLoader();
     }
-  }
-
-  Future<void> toggleDarkMode(bool value) async {
-    isDarkMode.value = value;
-    await SessionManager.instance.setDarkMode(value);
-    Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
   }
 
   onChangedToggle(bool value, SettingToggle settingToggle) async {
@@ -137,7 +130,8 @@ class SettingsScreenController extends BaseController {
       auth.User? user = auth.FirebaseAuth.instance.currentUser;
 
       if (user != null) {
-        String? password = SessionManager.instance.getPassword();
+        // SECURITY (S3): read from the platform keystore.
+        String? password = await SessionManager.instance.getPassword();
         if (password == null) return;
         auth.AuthCredential credential =
             auth.EmailAuthProvider.credential(email: email, password: password);

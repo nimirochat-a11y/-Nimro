@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SECURITY (S2): cleartext HTTP is no longer allowed app-wide. If a legacy
+     host still needs plaintext during the migration it must be listed here
+     explicitly, which makes the exception reviewable instead of implicit. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
