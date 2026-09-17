@@ -65,6 +65,7 @@ class LiveRoomService {
     String? description,
     String? roomType,
     String? thumbnail,
+    bool restrictToJoin = false,
   }) async {
     try {
       final data = await _call('createRoom', {
@@ -73,6 +74,7 @@ class LiveRoomService {
         if (description != null) 'description': description,
         if (roomType != null) 'room_type': roomType,
         if (thumbnail != null) 'thumbnail': thumbnail,
+        'restrict_to_join': restrictToJoin,
       });
       return data == null ? null : _asMap(data);
     } catch (e) {

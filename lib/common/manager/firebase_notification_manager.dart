@@ -9,6 +9,7 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart' show SessionManager;
+import 'package:nimiro/common/service/api/live_room_service.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
@@ -309,24 +310,16 @@ class FirebaseNotificationManager {
   Future<void> _handleLivestreamNotification(String dataString) async {
     final incomingStream = Livestream.fromJson(jsonDecode(dataString));
 
-    // If controller not registered, fetch from Firestore
-    final snapshot = await FirebaseFirestore.instance
-        .collection(FirebaseConst.liveStreams)
-        .withConverter<Livestream>(
-          fromFirestore: (snapshot, _) => Livestream.fromJson(snapshot.data()!),
-          toFirestore: (livestream, _) => livestream.toJson(),
-        )
-        .get();
+    // The room registry lives in the backend now; Firestore is gone.
+    final room = await LiveRoomService.instance
+        .fetchRoom('${incomingStream.roomID}');
 
-    final matchedDoc =
-        snapshot.docs.firstWhereOrNull((doc) => doc.data().roomID == incomingStream.roomID);
-
-    if (matchedDoc == null) {
+    if (room == null || (room['is_live'] ?? 0) == 0) {
       BaseController.share.showSnackBar(LKey.livestreamHasEnded.tr);
       return;
     }
 
-    final stream = matchedDoc.data();
+    final stream = Livestream.fromJson(room);
     final myUser = SessionManager.instance.getUser();
 
     if (stream.hostId == myUser?.id) {
