@@ -48,7 +48,13 @@ class LiveStreamSearchScreenController extends BaseController {
   @override
   void onReady() {
     super.onReady();
+    // FIX(v13): the dummy-live showcase must be REGISTERED as real rooms, not
+    // merely rendered. The dashboard switch (`live_dummy_show`) and the
+    // `dummy_live_videos` rows used to build one registry room per dummy host;
+    // when the registry moved to Laravel that step was dropped and replaced
+    // with a no-op, so enabling "dummy live" in the dashboard lit up nothing.
     fetchLiveStreams();
+    _syncDummyLiveRooms();
   }
 
   @override
@@ -119,13 +125,6 @@ class LiveStreamSearchScreenController extends BaseController {
     }
   }
 
-  Map<int, AppUser> _userMapFromList(List<AppUser> list) {
-    return {
-      for (var user in list)
-        if (user.userId != null) user.userId!: user,
-    };
-  }
-
   void onLiveUserTap(Livestream stream) async {
     User? myUser = SessionManager.instance.getUser();
     if (stream.hostId == myUser?.id) {
@@ -141,19 +140,52 @@ class LiveStreamSearchScreenController extends BaseController {
     }, (p1) => p1.description ?? '');
   }
 
-  /// Retained for source compatibility.
+  /// Materialise the dummy-live showcase as ordinary registry rooms.
   ///
-  /// The dummy-live showcase already ships to the client inside the settings
-  /// payload and is rendered locally, so there is no registry left to reconcile
-  /// against and nothing to write.
-  Future<void> addDummyUsers() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    Loggers.info('Dummy lives are served from settings; nothing to sync.');
+  /// FIX(v13): this replaces the two no-ops that were left behind when the room
+  /// registry moved off Firestore. The dashboard toggle and `dummy_live_videos`
+  /// still arrive inside the settings payload as [dummyLives]; each active row
+  /// whose host has no room yet is registered through [LiveRoomService], and a
+  /// row that was switched off has its room closed again. This is exactly what
+  /// the Firestore version did, expressed against the Laravel registry.
+  Future<void> _syncDummyLiveRooms() async {
+    final rows = dummyLives;
+    if (rows.isEmpty) return;
+
+    try {
+      final existing = await LiveRoomService.instance.fetchRooms();
+      final liveRoomIds = existing
+          .map((row) => row['room_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      for (final dummy in rows) {
+        final dummyId = dummy.userId;
+        if (dummyId == null || dummyId == -1) continue;
+
+        final roomId = '$dummyId';
+        final alreadyLive = liveRoomIds.contains(roomId);
+
+        if (!alreadyLive && dummy.status == 1) {
+          await LiveRoomService.instance.createRoom(
+            roomId: roomId,
+            title: dummy.title,
+            roomType: LivestreamType.dummy.value,
+            thumbnail: dummy.link,
+          );
+          Loggers.success('Registered dummy live room $roomId in the registry.');
+        } else if (alreadyLive && dummy.status == 0) {
+          await LiveRoomService.instance.endRoom(roomId);
+          Loggers.success('Closed dummy live room $roomId in the registry.');
+        }
+      }
+    } catch (e) {
+      Loggers.error('Dummy live sync failed: $e');
+    }
   }
 
-  Future<void> createLiveStream(DummyLive? dummyLive) async {
-    Loggers.info('Dummy lives are served from settings; no room to register.');
-  }
+  /// Retained for source compatibility with the old Firestore flow.
+  Future<void> addDummyUsers() async => _syncDummyLiveRooms();
 
   /// Close a room and drop its participants.
   ///

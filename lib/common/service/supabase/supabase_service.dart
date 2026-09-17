@@ -45,7 +45,7 @@ class SupabaseService {
         Uri.parse('${apiURL}chat/fetchMyConversations'),
         headers: {
           Params.apikey: apiKey,
-          Params.authToken: SessionManager.instance.getAuthToken() ?? '',
+          Params.authToken: SessionManager.instance.getAuthToken(),
           'Content-Type': 'application/json',
         },
         body: '{}',

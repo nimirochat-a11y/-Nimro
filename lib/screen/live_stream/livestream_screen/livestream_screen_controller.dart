@@ -600,7 +600,6 @@ class LivestreamScreenController extends BaseController {
       for (final row in rows) {
         final state = LivestreamUserState.fromJson(row);
         final uid = state.userId;
-        if (uid == null) continue;
         current['$uid'] = jsonEncode(row);
         parsed.add(state);
       }

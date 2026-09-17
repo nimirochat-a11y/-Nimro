@@ -82,13 +82,12 @@ class MyApp extends StatelessWidget {
       translations: Get.find<DynamicTranslations>(),
       locale: Locale(SessionManager.instance.getLang()),
       fallbackLocale: Locale(SessionManager.instance.getFallbackLang()),
-      // FIX(v12): support BOTH themes again. The UI is media-heavy (video
-      // feeds, live streams, the dark gradient login backdrop), so forcing
-      // light mode made every theme-aware helper resolve to dark-on-dark and
-      // objects rendered unreadable. Follow the device setting instead.
-      themeMode: ThemeMode.system,
+      // FIX(v13): the app's original and only design is the LIGHT theme. The
+      // dark theme added by the "theme redesign" has been removed from
+      // ThemeRes entirely, so the app renders light regardless of the device
+      // setting and regardless of any dark_mode value left in local storage.
+      themeMode: ThemeMode.light,
       theme: ThemeRes.lightTheme(context),
-      darkTheme: ThemeRes.darkTheme(context),
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
     );

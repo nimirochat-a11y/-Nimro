@@ -20,7 +20,7 @@ class LiveRoomService {
 
   Map<String, String> get _headers => {
         Params.apikey: apiKey,
-        Params.authToken: SessionManager.instance.getAuthToken() ?? '',
+        Params.authToken: SessionManager.instance.getAuthToken(),
       };
 
   Future<dynamic> _call(String endpoint, Map<String, dynamic> body) async {

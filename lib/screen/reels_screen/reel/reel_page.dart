@@ -97,12 +97,12 @@ class _ReelPageState extends State<ReelPage> {
       _controller!.setLooping(true);
       _initialized = true;
 
-      // FIX(v12): removed the early return that bailed out whenever the reels
-      // tab was not index 0. It left the player permanently paused on every
-      // other entry point, so the very first frame needed a manual tap. Only
-      // the view counter is tab-dependent.
-      final bool isVisible = widget.reelsScreenController.isCurrentPageVisible;
-      if (widget.autoPlay && isVisible) {
+      // FIX(v13): autoplay no longer waits for a "page visible" flag.
+      // `isCurrentPageVisible` is only flipped by the reel-page observer, so a
+      // reel opened from a notification, a profile or a shared link hit this
+      // branch with the flag still false and sat paused on its first frame
+      // until the user tapped it. Autoplay is now unconditional.
+      if (widget.autoPlay) {
         await _controller!.play();
         isPlaying = true;
         if (dashboardController.selectedPageIndex.value == 0) {
