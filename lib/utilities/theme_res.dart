@@ -7,10 +7,15 @@ class ThemeRes {
 
   static ThemeData lightTheme(BuildContext context) {
     return ThemeData(
-      scaffoldBackgroundColor: ColorRes.whitePure,
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: ColorRes.bgLightGrey,
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: ColorRes.whitePure),
-      appBarTheme: const AppBarTheme(backgroundColor: ColorRes.bgLightGrey),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: ColorRes.whitePure,
+        foregroundColor: ColorRes.textDarkGrey,
+        iconTheme: IconThemeData(color: ColorRes.textDarkGrey),
+      ),
       fontFamily: FontRes.outFitRegular400,
       bottomSheetTheme:
           const BottomSheetThemeData(backgroundColor: ColorRes.whitePure),
@@ -20,7 +25,7 @@ class ThemeRes {
           overlayShape: RoundSliderOverlayShape(overlayRadius: 0),
           overlayColor: Colors.transparent),
       textTheme: const TextTheme(
-        titleLarge: TextStyle(color: ColorRes.whitePure),
+        titleLarge: TextStyle(color: ColorRes.textDarkGrey),
         titleMedium: TextStyle(color: ColorRes.textDarkGrey),
         titleSmall: TextStyle(color: ColorRes.textLightGrey),
         labelSmall: TextStyle(color: ColorRes.themeAccentSolid),
@@ -28,14 +33,14 @@ class ThemeRes {
       ),
       textSelectionTheme:
           const TextSelectionThemeData(selectionColor: ColorRes.disabledGrey),
-      cardTheme: const CardThemeData(color: ColorRes.blueFollow),
+      cardTheme: const CardThemeData(color: ColorRes.whitePure),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       primaryColor: ColorRes.themeAccentSolid,
       dividerColor: ColorRes.bgGrey,
       cardColor: ColorRes.bgMediumGrey,
       primaryColorDark: ColorRes.blackPure,
-      canvasColor: ColorRes.themeColor,
+      canvasColor: ColorRes.bgLightGrey,
       useMaterial3: false,
     );
   }
