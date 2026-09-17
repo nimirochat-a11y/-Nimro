@@ -132,7 +132,7 @@ class StoryView extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                users[index].username ?? '',
+                users[index].fullname ?? '',
                 style: TextStyleCustom.outFitRegular400(fontSize: 13),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,

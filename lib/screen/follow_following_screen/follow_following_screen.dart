@@ -60,7 +60,7 @@ class FollowFollowingScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             FullNameWithBlueTick(
-                                username: user?.username ?? '', fontSize: 13),
+                                username: user?.fullname ?? '', fontSize: 13),
                             Text(user?.fullname ?? '',
                                 style: TextStyleCustom.outFitLight300(
                                     color: textLightGrey(context),
@@ -230,7 +230,7 @@ class _UserProfileTileState extends State<UserProfileTile> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               FullNameWithBlueTick(
-                                username: widget.user?.username ?? '',
+                                username: widget.user?.fullname ?? '',
                                 isVerify: widget.user?.isVerify,
                                 fontSize: 13,
                                 iconSize: 14,

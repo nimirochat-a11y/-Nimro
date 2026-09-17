@@ -129,7 +129,8 @@ class ChatStoryReplyMessage extends StatelessWidget {
                 if (isEmojiText && isStoryUnAvailable)
                   Text(
                     message.textMessage ?? '',
-                    style: const TextStyle(fontSize: 50, color: Colors.black),
+                    style: TextStyleCustom.outFitRegular400(
+                        fontSize: 50, color: textDarkGrey(context)),
                   )
               ],
             ),
@@ -140,7 +141,8 @@ class ChatStoryReplyMessage extends StatelessWidget {
               left: !isMe ? null : 10,
               right: !isMe ? 10 : null,
               child: Text(message.textMessage ?? '',
-                  style: const TextStyle(fontSize: 50, color: Colors.black)),
+                  style: TextStyleCustom.outFitRegular400(
+                      fontSize: 50, color: whitePure(context))),
             )
         ],
       ),

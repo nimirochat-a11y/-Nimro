@@ -32,7 +32,7 @@ class DashboardScreen extends StatelessWidget {
                 index: controller.contentPageIndex,
                 children: [
                   IndexedStackChild(child: FeedScreen(myUser: myUser), preload: true),
-                  IndexedStackChild(child: const HomeScreen(), preload: true),
+                  IndexedStackChild(child: const HomeScreen(), preload: false),
                   IndexedStackChild(child: const ExploreScreen(), preload: true),
                   IndexedStackChild(
                       child: ProfileScreen(isDashBoard: false, user: myUser,

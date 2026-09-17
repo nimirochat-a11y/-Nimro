@@ -21,6 +21,11 @@ class SupabaseService {
 
   SupabaseClient get client => Supabase.instance.client;
 
+  Future<void> signOut() async {
+    if (!_initialized) return;
+    await client.auth.signOut();
+  }
+
   Future<bool> ping() async {
     if (!_initialized) await initialize();
     try {
@@ -35,6 +40,9 @@ class SupabaseService {
   Future<({String id, String email, String name})> signInWithOAuth(
       OAuthProvider provider) async {
     if (!_initialized) await initialize();
+    if (client.auth.currentSession != null) {
+      await client.auth.signOut();
+    }
     // Start listening BEFORE launching the browser, so we never miss the
     // auth state change event if it fires before we'd otherwise subscribe.
     final sessionFuture = client.auth.onAuthStateChange

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:image_picker/image_picker.dart';
-import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/api_service.dart';
@@ -20,8 +19,7 @@ import 'package:nimiro/utilities/app_res.dart';
 enum LoginMethod {
   email,
   google,
-  apple,
-  guest;
+  apple;
 
   String title() {
     switch (this) {
@@ -31,8 +29,6 @@ enum LoginMethod {
         return 'google';
       case LoginMethod.apple:
         return 'apple';
-      case LoginMethod.guest:
-        return 'guest';
     }
   }
 }
@@ -62,33 +58,6 @@ class UserService {
     if (model.status == true) {
       SessionManager.instance.setUser(model.data);
       SessionManager.instance.setAuthToken(model.data?.token);
-    }
-    return model.data;
-  }
-
-  Future<User?> logInFakeUser({
-    required String identity,
-    required String? password,
-    String? deviceToken,
-    required LoginMethod loginMethod,
-  }) async {
-    UserModel model = await ApiService.instance.call(
-        url: WebService.user.logInFakeUser,
-        param: {
-          Params.identity: identity,
-          Params.password: password,
-          Params.deviceToken: deviceToken,
-          Params.device: Platform.isAndroid ? 0 : 1,
-          Params.loginMethod: loginMethod.title()
-        },
-        fromJson: UserModel.fromJson);
-
-    if (model.status == true) {
-      SessionManager.instance.setUser(model.data);
-      SessionManager.instance.setAuthToken(model.data?.token);
-    } else {
-      BaseController.share.stopLoader();
-      BaseController.share.showSnackBar(model.message);
     }
     return model.data;
   }

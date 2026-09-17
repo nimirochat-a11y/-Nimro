@@ -87,6 +87,7 @@ class EditProfileScreenController extends BaseController {
   }
 
   void onSaveTap() async {
+    if (isLoading.value) return;
     if (fullNameController.text.trim().isEmpty) {
       return showSnackBar(LKey.fullNameEmpty.tr);
     }
@@ -119,6 +120,8 @@ class EditProfileScreenController extends BaseController {
         File(fileProfileImage.value?.path ?? '').delete();
       }
       Get.back();
+    } on TimeoutException {
+      showSnackBar('انتهت مهلة الاتصال، حاول مرة أخرى.');
     } catch (e) {
       showSnackBar('حدث خطأ أثناء الحفظ: $e');
     } finally {

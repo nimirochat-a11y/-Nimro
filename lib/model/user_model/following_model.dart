@@ -44,6 +44,13 @@ class FollowingModel {
 }
 
 class Following {
+  static int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
   Following({
     int? id,
     int? fromUserId,
@@ -61,9 +68,9 @@ class Following {
   }
 
   Following.fromJson(dynamic json) {
-    _id = json['id'];
-    _fromUserId = json['from_user_id'];
-    _toUserId = json['to_user_id'];
+    _id = _toInt(json['id']);
+    _fromUserId = _toInt(json['from_user_id']);
+    _toUserId = _toInt(json['to_user_id']);
     _createdAt = json['created_at'];
     _updatedAt = json['updated_at'];
     _toUser = json['to_user'] != null ? User.fromJson(json['to_user']) : null;

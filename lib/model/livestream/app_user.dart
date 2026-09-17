@@ -1,4 +1,12 @@
 class AppUser {
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
   int? userId;
   String? username;
   String? fullname;
@@ -15,12 +23,12 @@ class AppUser {
       this.identity});
 
   AppUser.fromJson(Map<String, dynamic> json) {
-    userId = json['user_id'];
+    userId = _toInt(json['user_id']);
     identity = json['identity'];
     username = json['username'];
     fullname = json['fullname'];
     profile = json['profile'];
-    isVerify = json['is_verify'];
+    isVerify = _toInt(json['is_verify']);
   }
 
   Map<String, dynamic> toJson() {
@@ -34,5 +42,4 @@ class AppUser {
     return data;
   }
 }
-
 

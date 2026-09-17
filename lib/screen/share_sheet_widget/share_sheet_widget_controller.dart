@@ -28,11 +28,12 @@ import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/chat_screen/chat_screen_controller.dart';
 import 'package:nimiro/screen/share_sheet_widget/share_sheet_widget.dart';
 import 'package:nimiro/screen/share_sheet_widget/widget/more_user_sheet.dart';
+import 'package:nimiro/common/service/supabase/chat_repository.dart';
 import 'package:nimiro/utilities/app_res.dart';
-import 'package:nimiro/utilities/firebase_const.dart';
 
 class ShareSheetWidgetController extends BaseController {
-  FirebaseFirestore db = FirebaseFirestore.instance;
+  static const String _usersChannel = 'share_sheet_users';
+
   User? myUser = SessionManager.instance.getUser();
   RxList<ChatThread> chatsUsers = <ChatThread>[].obs;
   RxList<ChatThread> filterChatsUsers = <ChatThread>[].obs;
@@ -73,38 +74,33 @@ class ShareSheetWidgetController extends BaseController {
 
   @override
   void onClose() {
-    usersListen?.cancel();
+    ChatRepository.instance.unsubscribe(_usersChannel);
     super.onClose();
   }
 
-  void _fetchUsers() {
-    usersListen = db
-        .collection(FirebaseConst.users)
-        .doc(myUser?.id.toString())
-        .collection(FirebaseConst.usersList)
-        .withConverter(
-            fromFirestore: (snapshot, options) =>
-                ChatThread.fromJson(snapshot.data()!),
-            toFirestore: (ChatThread value, options) => value.toJson())
-        .where(FirebaseConst.isDeleted, isEqualTo: false)
-        .orderBy(FirebaseConst.id, descending: true)
-        .snapshots()
-        .listen((event) {
-      for (var change in event.docChanges) {
-        final ChatThread? user = change.doc.data();
-        if (user == null) continue;
-        switch (change.type) {
-          case DocumentChangeType.added:
-            if (user.chatType == ChatType.approved) {
-              chatsUsers.add(user);
-              filterChatsUsers.add(user);
-            }
-            break;
-          case DocumentChangeType.modified:
-          case DocumentChangeType.removed:
-        }
+  /// Loads the people this user is allowed to share to.
+  ///
+  /// This used to be a Firestore listener. It now reads the same conversation
+  /// list the inbox uses, through the chat proxy, so the app holds no direct
+  /// database connection and the chat tables can stay behind row-level
+  /// security.
+  Future<void> _fetchUsers() async {
+    if (myUser?.id == null) return;
+    try {
+      final rows =
+          await ChatRepository.instance.listConversationsForUser(myUser!.id!);
+      chatsUsers.clear();
+      filterChatsUsers.clear();
+      for (final row in rows) {
+        final thread = ChatThread.fromJson(row);
+        if (thread.isDeleted == true) continue;
+        if (thread.chatType != ChatType.approved) continue;
+        chatsUsers.add(thread);
+        filterChatsUsers.add(thread);
       }
-    });
+    } catch (e) {
+      Loggers.error('Share sheet user fetch error: $e');
+    }
   }
 
   void onUserTap(ChatThread conversation) {

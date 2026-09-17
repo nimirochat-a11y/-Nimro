@@ -118,7 +118,7 @@ class AudioDetailsProfile extends StatelessWidget {
                   ),
                   const SizedBox(height: 7),
                   FullNameWithBlueTick(
-                    username: music?.user?.username ?? music?.artist ?? '',
+                    username: music?.user?.fullname ?? music?.artist ?? '',
                     fontSize: 14,
                     mainAxisAlignment: MainAxisAlignment.center,
                     isVerify: music?.user?.isVerify,

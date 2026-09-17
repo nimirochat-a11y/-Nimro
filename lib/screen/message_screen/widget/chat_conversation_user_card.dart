@@ -30,7 +30,7 @@ class ChatConversationUserCard extends StatelessWidget {
       child: Obx(() {
         AppUser? user = chatConversation.chatUserRx.value;
         return Container(
-          color: bgLightGrey(context),
+          color: scaffoldBackgroundColor(context),
           padding: const EdgeInsets.all(10),
           margin: const EdgeInsets.symmetric(vertical: 2),
           child: Row(
@@ -43,13 +43,14 @@ class ChatConversationUserCard extends StatelessWidget {
                   spacing: 2,
                   children: [
                     FullNameWithBlueTick(
-                      username: user?.username,
+                      username: user?.fullname,
                       fontSize: 13,
                       iconSize: 18,
                       isVerify: user?.isVerify,
                     ),
                     Text(chatConversation.lastMsg ?? '',
-                        style: TextStyleCustom.outFitLight300(fontSize: 15, color: textLightGrey(context)),
+                        style: TextStyleCustom.outFitRegular400(
+                            fontSize: 15, color: textDarkGrey(context)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis)
                   ],

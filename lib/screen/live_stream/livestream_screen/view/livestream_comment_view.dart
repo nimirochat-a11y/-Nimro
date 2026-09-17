@@ -68,7 +68,7 @@ class LiveStreamCommentView extends StatelessWidget {
                         spacing: 3,
                         children: [
                           FullNameWithBlueTick(
-                            username: senderUser?.username,
+                            username: senderUser?.fullname,
                             isVerify: senderUser?.isVerify,
                             fontColor: whitePure(context),
                             opacity: 0.7,
@@ -191,7 +191,7 @@ class LiveStreamCommentView extends StatelessWidget {
                 ],
               ),
               if (!isBattleView)
-                Text('To : ${comment.receiverUser?.username ?? ''}',
+                Text('To : ${comment.receiverUser?.fullname ?? ''}',
                     style: TextStyleCustom.outFitLight300(color: Colors.white.withValues(alpha: .7), fontSize: 12))
             ],
           );

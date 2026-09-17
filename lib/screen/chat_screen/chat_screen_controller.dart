@@ -661,7 +661,7 @@ class ChatScreenController extends BlockUserController
             User(
                 id: user?.userId,
                 profilePhoto: user?.profile,
-                username: user?.username,
+                username: user?.fullname,
                 fullname: user?.fullname,
                 isVerify: user?.isVerify),
             () {});
@@ -797,7 +797,7 @@ class ChatScreenController extends BlockUserController
     }
     final user = User(
       id: story.userId,
-      username: story.user?.username ?? '',
+      username: story.user?.fullname ?? '',
       fullname: story.user?.fullname ?? '',
       profilePhoto: story.user?.profilePhoto ?? '',
       isVerify: story.user?.isVerify,

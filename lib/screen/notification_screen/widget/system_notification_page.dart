@@ -16,7 +16,9 @@ class SystemNotificationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      color: bgLightGrey(context),
+      color: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF151515)
+          : bgLightGrey(context),
       margin: const EdgeInsets.symmetric(vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(

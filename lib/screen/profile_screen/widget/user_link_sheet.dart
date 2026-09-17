@@ -19,7 +19,8 @@ class UserLinkSheet extends StatelessWidget {
       children: [
         Container(
           decoration: ShapeDecoration(
-              color: whitePure(context),
+              color: Theme.of(context).bottomSheetTheme.backgroundColor ??
+                  scaffoldBackgroundColor(context),
               shape: const SmoothRectangleBorder(
                 borderRadius: SmoothBorderRadius.vertical(
                     top: SmoothRadius(cornerRadius: 30, cornerSmoothing: 1)),

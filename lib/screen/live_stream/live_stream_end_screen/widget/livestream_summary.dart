@@ -45,7 +45,7 @@ class LiveStreamSummary extends StatelessWidget {
                       strokeWidth: 6),
                   const SizedBox(height: 11),
                   FullNameWithBlueTick(
-                    username: userState?.user?.username,
+                    username: userState?.user?.fullname,
                     fontSize: 14,
                     fontColor: whitePure(context),
                     isVerify: userState?.user?.isVerify,

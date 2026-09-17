@@ -39,7 +39,7 @@ class CommentCard extends StatelessWidget {
     }
     return ContextMenuWidget(
       child: Container(
-        color: whitePure(context),
+        color: bgLightGrey(context),
         padding: const EdgeInsets.all(10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,7 +63,7 @@ class CommentCard extends StatelessWidget {
                         NavigationService.shared
                             .openProfileScreen(comment?.user);
                       },
-                      username: comment?.user?.username ?? '',
+                      username: comment?.user?.fullname ?? '',
                       isVerify: comment?.user?.isVerify,
                       child: Text(
                           '${comment?.createdAt?.timeAgo ?? ''}${comment?.isPinned == 1 ? AppRes.postPinIcon : ''}',

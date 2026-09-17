@@ -4,9 +4,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/service/api/user_service.dart';
-import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/utilities/const_res.dart';
 
 bool isPurchaseConfig = false;
@@ -63,12 +60,7 @@ class SubscriptionManager {
   Future<void> subscriptionListener() async {
     try {
       Purchases.addCustomerInfoUpdateListener((customerInfo) async {
-        int status = checkSubscription(customerInfo) ? 1 : 0;
-        User? user = SessionManager.instance.getUser();
-        if (user?.isVerify == status) {
-          return;
-        }
-        UserService.instance.updateUserDetails(isVerify: status);
+        checkSubscription(customerInfo);
       });
     } on PlatformException catch (e) {
       // Error fetching purchaser info

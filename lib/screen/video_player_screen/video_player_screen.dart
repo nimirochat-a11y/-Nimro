@@ -265,7 +265,7 @@ class UserInfoData extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FullNameWithBlueTick(
-                  username: post?.user?.username,
+                  username: post?.user?.fullname,
                   isVerify: post?.user?.isVerify,
                   fontColor: whitePure(context),
                   fontSize: 14,

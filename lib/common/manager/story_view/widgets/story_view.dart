@@ -902,8 +902,9 @@ class StoryViewState extends State<StoryView> with TickerProviderStateMixin {
                                   alignment: Alignment.center,
                                   child: Text(
                                     AppRes.storyQuickReplyEmojis[index],
-                                    style: const TextStyle(
-                                        fontSize: 40, color: Colors.black),
+                                    style: TextStyleCustom.outFitRegular400(
+                                        fontSize: 40,
+                                        color: whitePure(context)),
                                   ),
                                 ),
                               ),

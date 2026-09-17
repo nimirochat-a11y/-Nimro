@@ -44,7 +44,7 @@ class ActivityNotificationPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 FullNameWithBlueTick(
-                    username: data.fromUser?.username,
+                    username: data.fromUser?.fullname,
                     fontSize: 12,
                     isVerify: data.fromUser?.isVerify,
                     onTap: () => controller.onDescriptionTap(data)),
@@ -91,7 +91,7 @@ class ActivityNotificationPage extends StatelessWidget {
       case ActivityNotifyType.notifyMentionComment:
       case ActivityNotifyType.notifyReplyComment:
         return LKey.activityReplyingToComment.trParams({
-          'username': data.fromUser?.username ?? '',
+          'username': data.fromUser?.fullname ?? data.fromUser?.username ?? '',
           'comment_description': replyCommentDesc,
         });
       case ActivityNotifyType.notifyMentionReply:
@@ -199,7 +199,6 @@ enum ActivityNotifyType {
 
   static ActivityNotifyType fromString(int value) {
     return ActivityNotifyType.values.firstWhere((e) => e.type == value,
-        orElse: () =>
-            throw ArgumentError('Invalid activity notify type : $value'));
+        orElse: () => ActivityNotifyType.none);
   }
 }

@@ -325,7 +325,7 @@ class MemberProfileCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FullNameWithBlueTick(
-                      username: user?.username,
+                      username: user?.fullname,
                       isVerify: user?.isVerify,
                       fontSize: 13,
                       iconSize: 18,

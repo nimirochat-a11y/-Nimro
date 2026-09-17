@@ -51,7 +51,7 @@ class ChatMediaMessage extends StatelessWidget {
                         user: User(
                           profilePhoto: message.chatUser?.profile,
                           id: message.chatUser?.userId,
-                          username: message.chatUser?.username,
+                          username: message.chatUser?.fullname,
                           fullname: message.chatUser?.fullname,
                           isVerify: message.chatUser?.isVerify,
                         ))));

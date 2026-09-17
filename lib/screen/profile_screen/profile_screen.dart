@@ -169,7 +169,7 @@ class _TopViewForOtherUser extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Text(
-                    user?.username ?? '',
+                    user?.fullname ?? '',
                     style: TextStyleCustom.unboundedMedium500(
                         color: textDarkGrey(context)),
                     overflow: TextOverflow.ellipsis,

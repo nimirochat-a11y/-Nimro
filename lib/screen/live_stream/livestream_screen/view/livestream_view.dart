@@ -307,7 +307,7 @@ class LiveStreamUserView extends StatelessWidget {
                 onTap: () => controller.toggleStreamAudio(liveUser?.userId),
               ),
             FullNameWithBlueTick(
-              username: liveUser?.username,
+              username: liveUser?.fullname,
               fontColor: whitePure(context),
               fontSize: 12,
               isVerify: liveUser?.isVerify,
