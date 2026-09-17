@@ -282,7 +282,9 @@ class FirebaseNotificationManager {
   Future<String?> getNotificationToken() async {
     try {
       String? token = await FirebaseMessaging.instance.getToken();
-      Loggers.info('DeviceToken $token');
+      // SECURITY: never log the token itself. It is a credential that can be
+      // used to push notifications to this device, and build logs are shared.
+      Loggers.info('DeviceToken resolved: present=${token != null && token.isNotEmpty}');
       return token;
     } catch (e) {
       Loggers.error('DeviceToken Exception $e');

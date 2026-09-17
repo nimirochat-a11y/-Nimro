@@ -139,7 +139,10 @@ class AuthScreenController extends BaseController {
         loginMethod: LoginMethod.google,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
-        deviceTokenOverride: 'supabase:${profile.id}',
+        // FIX(v12): never short-circuit the FCM token with a Supabase id.
+        // Storing 'supabase:<uuid>' in device_token made the backend's push
+        // call fail with FCM 400 INVALID_ARGUMENT, so no notification ever
+        // reached the device. Fall through to the real FCM token.
         idToken: SupabaseService.instance.client.auth.currentSession?.accessToken,
       );
       stopLoader();
@@ -164,7 +167,10 @@ class AuthScreenController extends BaseController {
         loginMethod: LoginMethod.apple,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
-        deviceTokenOverride: 'supabase:${profile.id}',
+        // FIX(v12): never short-circuit the FCM token with a Supabase id.
+        // Storing 'supabase:<uuid>' in device_token made the backend's push
+        // call fail with FCM 400 INVALID_ARGUMENT, so no notification ever
+        // reached the device. Fall through to the real FCM token.
         idToken: SupabaseService.instance.client.auth.currentSession?.accessToken,
       );
       stopLoader();
@@ -185,6 +191,9 @@ class AuthScreenController extends BaseController {
       String? idToken}) async {
     String? deviceToken = deviceTokenOverride ??
         await FirebaseNotificationManager.instance.getNotificationToken();
+    // FIX(v12): a Supabase/Vendor id is NOT a push target. Only fall back to
+    // the synthetic value when no real FCM token exists at all, so the row is
+    // still identifiable - but the backend's push attempt is skipped by shape.
     deviceToken ??= 'nimiro:$identity';
 
     user.User? userData;
