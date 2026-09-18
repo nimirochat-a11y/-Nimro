@@ -101,6 +101,69 @@ class EditProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Text(LKey.coverImage.tr,
+                        style: TextStyleCustom.outFitRegular400(
+                            fontSize: 17, color: textDarkGrey(context))),
+                  ),
+                  Container(
+                    height: 100,
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(top: 8, bottom: 12),
+                    decoration: BoxDecoration(color: bgLightGrey(context)),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    alignment: AlignmentDirectional.centerStart,
+                    child: InkWell(
+                      onTap: controller.onChangeCoverImage,
+                      child: Stack(
+                        children: [
+                          Obx(
+                            () => controller.fileCoverImage.value != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.file(
+                                        File(controller
+                                            .fileCoverImage.value?.path ??
+                                            ''),
+                                        height: 86,
+                                        width: 150,
+                                        fit: BoxFit.cover))
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: CustomImage(
+                                      size: const Size(150, 86),
+                                      radius: 8,
+                                      fit: BoxFit.cover,
+                                      image: controller
+                                          .userData.value?.coverPhoto
+                                          ?.addBaseURL(),
+                                      fullName:
+                                          controller.userData.value?.fullname,
+                                    ),
+                                  ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: Container(
+                              height: 26,
+                              width: 26,
+                              decoration: BoxDecoration(
+                                  color: textDarkGrey(context),
+                                  shape: BoxShape.circle),
+                              child: Center(
+                                child: Image.asset(AssetRes.icEdit_1,
+                                    width: 22,
+                                    height: 22,
+                                    color: whitePure(context)),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                  ),
                   TextFieldCustom(
                     controller: controller.fullNameController,
                     title: LKey.fullName.tr,

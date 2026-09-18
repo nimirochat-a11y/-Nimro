@@ -131,6 +131,7 @@ class LKey {
       "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.";
   static const String userId = "User ID";
   static const String profileImage = "Profile Image";
+  static const String coverImage = "Cover Photo";
   static const String username = "Username";
   static const String bio = "Bio";
   static const String phoneNumber = "Phone Number";

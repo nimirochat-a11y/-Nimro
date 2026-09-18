@@ -24,6 +24,7 @@ class EditProfileScreenController extends BaseController {
   RxList<Link> links = <Link>[].obs;
   Rx<User?> userData = Rx(null);
   Rx<XFile?> fileProfileImage = Rx(null);
+  Rx<XFile?> fileCoverImage = Rx(null);
   Map<String, bool> usernameCache = {}; // Cache for username availability
   Timer? _debounce;
   RxBool isValidUserName = true.obs;
@@ -86,6 +87,27 @@ class EditProfileScreenController extends BaseController {
     }
   }
 
+  void onChangeCoverImage() async {
+    // Pick a cover image.
+    try {
+      final XFile? image =
+          await MediaPickerHelper.shared.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+      if (fileCoverImage.value != null) {
+        File(fileCoverImage.value?.path ?? '').delete();
+      }
+      XFile? compressed =
+          await MediaPickerHelper.shared.compressProfileImage(image.path);
+      if (compressed != null) {
+        Loggers.info(
+            "Compressed cover size: ${(await compressed.length()) / 1024} KB");
+        fileCoverImage.value = compressed;
+      }
+    } on PlatformException catch (e) {
+      Loggers.error(e.message);
+    }
+  }
+
   void onSaveTap() async {
     if (isLoading.value) return;
     if (fullNameController.text.trim().isEmpty) {
@@ -105,6 +127,7 @@ class EditProfileScreenController extends BaseController {
           bio: bioController.text.trim(),
           email: emailController.text.trim(),
           profilePhoto: fileProfileImage.value,
+          coverPhoto: fileCoverImage.value,
           phoneNumber: phoneNumberController.text.trim(),
           mobileCountryCode: int.parse(
               phoneController.selectedCode.value!.phoneCode.replaceAll('+', '')),
@@ -118,6 +141,9 @@ class EditProfileScreenController extends BaseController {
       }
       if (fileProfileImage.value != null) {
         File(fileProfileImage.value?.path ?? '').delete();
+      }
+      if (fileCoverImage.value != null) {
+        File(fileCoverImage.value?.path ?? '').delete();
       }
       Get.back();
     } on TimeoutException {

@@ -5,6 +5,7 @@ class Params {
   static const String userEmail = 'user_email';
   static const String userMobileNo = 'user_mobile_no';
   static const String profilePhoto = 'profile_photo';
+  static const String coverPhoto = 'cover_photo';
   static const String bio = 'bio';
   static const String country = 'country';
   static const String countryCode = 'countryCode';

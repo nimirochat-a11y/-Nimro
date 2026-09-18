@@ -75,6 +75,7 @@ class User {
       this.mobileCountryCode,
       this.userMobileNo,
       this.profilePhoto,
+      this.coverPhoto,
       this.loginMethod,
       this.device,
       this.deviceToken,
@@ -129,6 +130,7 @@ class User {
     int? mobileCountryCode,
     String? userMobileNo,
     String? profilePhoto,
+    String? coverPhoto,
     String? loginMethod,
     int? device,
     String? deviceToken,
@@ -184,6 +186,7 @@ class User {
         mobileCountryCode: mobileCountryCode ?? this.mobileCountryCode,
         userMobileNo: userMobileNo ?? this.userMobileNo,
         profilePhoto: profilePhoto ?? this.profilePhoto,
+        coverPhoto: coverPhoto ?? this.coverPhoto,
         loginMethod: loginMethod ?? this.loginMethod,
         device: device ?? this.device,
         deviceToken: deviceToken ?? this.deviceToken,
@@ -239,6 +242,7 @@ class User {
     mobileCountryCode = _toInt(json['mobile_country_code']);
     userMobileNo = json['user_mobile_no'];
     profilePhoto = json['profile_photo'];
+    coverPhoto = json['cover_photo'];
     loginMethod = json['login_method'];
     device = _toInt(json['device']);
     deviceToken = json['device_token'];
@@ -310,6 +314,7 @@ class User {
   int? mobileCountryCode;
   String? userMobileNo;
   String? profilePhoto;
+  String? coverPhoto;
   String? loginMethod;
   int? device;
   String? deviceToken;
@@ -366,6 +371,7 @@ class User {
     map['mobile_country_code'] = mobileCountryCode;
     map['user_mobile_no'] = userMobileNo;
     map['profile_photo'] = profilePhoto;
+    map['cover_photo'] = coverPhoto;
     map['login_method'] = loginMethod;
     map['device'] = device;
     map['device_token'] = deviceToken;
