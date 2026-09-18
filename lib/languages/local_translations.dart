@@ -472,6 +472,8 @@ class LocalTranslations {
       "Hey, @name is now live": "Hey, @name is now live",
       "Hurry up and join before it ends.": "Hurry up and join before it ends.",
       "Livestream has ended.": "Livestream has ended.",
+      "Edit Cover": "Edit Cover",
+      "Share Profile": "Share Profile",
     },
     'ar': {
       "Language": "لغة",
@@ -945,6 +947,8 @@ class LocalTranslations {
       "Hey, @name is now live": "مرحبًا، @name الآن على الهواء",
       "Hurry up and join before it ends.": "أسرع وانضم قبل أن ينتهي.",
       "Livestream has ended.": "انتهى البث المباشر.",
+      "Edit Cover": "تعديل الغلاف",
+      "Share Profile": "مشاركة الملف الشخصي",
     },
   };
 }

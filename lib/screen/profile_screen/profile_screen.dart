@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/widget/custom_back_button.dart';
 import 'package:nimiro/common/widget/my_refresh_indicator.dart';
 import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -44,141 +43,98 @@ class ProfileScreen extends StatelessWidget {
         },
         child: SafeArea(
           bottom: false,
-          child: Column(
+          child: Stack(
             children: [
-              Obx(() => _TopViewForOtherUser(
-                  user: controller.userData.value,
-                  isTopBarVisible: isTopBarVisible,
-                  controller: controller)),
-              Expanded(
-                child: Stack(
-                  children: [
-                    DefaultTabController(
-                      length: 2,
-                      child: MyRefreshIndicator(
-                        depth: 2,
-                        onRefresh: controller.onRefresh,
-                        child: NestedScrollView(
-                          headerSliverBuilder: (context, _) {
-                            return [
-                              SliverList(
-                                delegate: SliverChildListDelegate([
-                                  ProfileUserHeader(controller: controller)
-                                ]),
+              DefaultTabController(
+                length: 2,
+                child: MyRefreshIndicator(
+                  depth: 2,
+                  onRefresh: controller.onRefresh,
+                  child: NestedScrollView(
+                    headerSliverBuilder: (context, _) {
+                      return [
+                        SliverList(
+                          delegate: SliverChildListDelegate([
+                            // The cover and everything under it. The back
+                            // control now floats ON the cover instead of
+                            // occupying its own bar above it, so the cover can
+                            // run to the top edge.
+                            ProfileUserHeader(
+                              controller: controller,
+                              isTopBarVisible: isTopBarVisible,
+                            )
+                          ]),
+                        ),
+                      ];
+                    },
+                    body: Column(
+                      children: [
+                        ProfileTabs(controller: controller),
+                        ProfilePageView(controller: controller)
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Frozen-account veil. Sits above the whole profile.
+              Obx(() {
+                User? user = controller.userData.value;
+                if (user?.isFreez != 1) {
+                  return const SizedBox();
+                }
+                return Positioned.fill(
+                  child: Container(
+                    color: scaffoldBackgroundColor(context).withValues(alpha: 0.4),
+                    child: ClipRRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.lock_person_rounded,
+                                size: 80, color: textLightGrey(context)),
+                            const SizedBox(height: 20),
+                            Text(
+                              LKey.profileUnavailable.tr,
+                              style: TextStyleCustom.unboundedSemiBold600(
+                                  color: textLightGrey(context), fontSize: 18),
+                            ),
+                            const SizedBox(height: 10),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 30.0),
+                              child: Text(
+                                LKey.profileTemporarilyFrozen.tr,
+                                textAlign: TextAlign.center,
+                                style: TextStyleCustom.outFitMedium500(
+                                    color: textLightGrey(context), fontSize: 16),
                               ),
-                            ];
-                          },
-                          body: Column(
-                            children: [
-                              ProfileTabs(controller: controller),
-                              ProfilePageView(controller: controller)
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 20),
+                            Obx(() {
+                              bool isModerator =
+                                  SessionManager.instance.isModerator.value == 1;
+                              if (!isModerator) {
+                                return const SizedBox();
+                              }
+                              return TextButtonCustom(
+                                onTap: () => controller.freezeUnfreezeUser(true),
+                                title: LKey.unFreeze.tr,
+                                titleColor: whitePure(context),
+                                backgroundColor: textDarkGrey(context),
+                              );
+                            })
+                          ],
                         ),
                       ),
                     ),
-                    Obx(() {
-                      User? user = controller.userData.value;
-                      if (user?.isFreez != 1) {
-                        return const SizedBox();
-                      }
-                      return Container(
-                        color: scaffoldBackgroundColor(context)
-                            .withValues(alpha: 0.4),
-                        child: ClipRRect(
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.lock_person_rounded,
-                                    size: 80, color: textLightGrey(context)),
-                                const SizedBox(height: 20),
-                                Text(
-                                  LKey.profileUnavailable.tr,
-                                  style: TextStyleCustom.unboundedSemiBold600(
-                                      color: textLightGrey(context),
-                                      fontSize: 18),
-                                ),
-                                const SizedBox(height: 10),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 30.0),
-                                  child: Text(
-                                    LKey.profileTemporarilyFrozen.tr,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyleCustom.outFitMedium500(
-                                        color: textLightGrey(context),
-                                        fontSize: 16),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Obx(() {
-                                  bool isModerator = SessionManager
-                                          .instance.isModerator.value ==
-                                      1;
-                                  if (!isModerator) {
-                                    return const SizedBox();
-                                  }
-                                  return TextButtonCustom(
-                                    onTap: () =>
-                                        controller.freezeUnfreezeUser(true),
-                                    title: LKey.unFreeze.tr,
-                                    titleColor: whitePure(context),
-                                    backgroundColor: textDarkGrey(context),
-                                  );
-                                })
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    })
-                  ],
-                ),
-              ),
+                  ),
+                );
+              })
             ],
           ),
         ),
       ),
     );
-  }
-}
-
-class _TopViewForOtherUser extends StatelessWidget {
-  final User? user;
-  final bool isTopBarVisible;
-  final ProfileScreenController controller;
-
-  const _TopViewForOtherUser(
-      {this.user, required this.isTopBarVisible, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return isTopBarVisible
-        ? Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              CustomBackButton(
-                onTap: () {
-                  controller.adsController.showInterstitialAdIfAvailable();
-                },
-                padding: const EdgeInsets.all(15),
-              ),
-              Flexible(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                  child: Text(
-                    user?.fullname ?? '',
-                    style: TextStyleCustom.unboundedMedium500(
-                        color: textDarkGrey(context)),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 18 + 30),
-            ],
-          )
-        : const SizedBox();
   }
 }
