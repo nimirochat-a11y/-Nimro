@@ -45,9 +45,9 @@ class ProfileUserHeader extends StatelessWidget {
               isMe: isMe,
               controller: controller,
               stats: [
-                StatItem(value: user?.totalPostLikesCount ?? 0, label: LKey.likes.tr),
                 StatItem(value: user?.followerCount ?? 0, label: LKey.followers.tr),
                 StatItem(value: user?.followingCount ?? 0, label: LKey.following.tr),
+                StatItem(value: user?.totalPostLikesCount ?? 0, label: LKey.likes.tr),
               ],
               onStatsTap: (value) {
                 if (isUserNotFound) {
@@ -55,18 +55,18 @@ class ProfileUserHeader extends StatelessWidget {
                 }
                 switch (value) {
                   case 0:
-                    break;
-                  case 1:
                     user?.checkIsBlocked(() {
                       Get.to(() => FollowFollowingScreen(
                           type: FollowFollowingType.follower, user: user));
                     });
                     break;
-                  case 2:
+                  case 1:
                     user?.checkIsBlocked(() {
                       Get.to(() => FollowFollowingScreen(
                           type: FollowFollowingType.following, user: user));
                     });
+                    break;
+                  case 2:
                     break;
                 }
               },
@@ -310,7 +310,8 @@ class StatColumn extends StatelessWidget {
 required this.label, this.labelStyle, this.valueStyle});
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value.toInt().numberFormat,
@@ -320,6 +321,7 @@ required this.label, this.labelStyle, this.valueStyle});
                 fontSize: 15,
               ),
         ),
+        const SizedBox(width: 4),
         Text(label.capitalize ?? '',
             style: labelStyle ??
                 TextStyleCustom.outFitLight300(
@@ -378,8 +380,16 @@ class UserNameView extends StatelessWidget {
                   ),
                 ),
         ),
-        Text(user?.fullname ?? '', style: TextStyleCustom.outFitLight300(color: textLightGrey(context),
-fontSize: 16))
+        GestureDetector(
+          onTap: () {
+            final String? uname = user?.username;
+            if (uname != null && uname.isNotEmpty) {
+              uname.copyText;
+            }
+          },
+          child: Text('@${user?.username ?? ''}',
+              style: TextStyleCustom.outFitLight300(color: textLightGrey(context), fontSize: 16)),
+        )
       ],
     );
   }

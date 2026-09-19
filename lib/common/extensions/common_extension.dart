@@ -9,7 +9,9 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 
 extension Number on num {
-  String get numberFormat => NumberFormat.compact().format(this);
+  String get numberFormat => NumberFormat.compact(
+          locale: SessionManager.instance.getLang() == 'ar' ? 'ar' : 'en')
+      .format(this);
 
   String get currencyFormat =>
       '${SessionManager.instance.getCurrency()}${NumberFormat.compact().format(this)}';
