@@ -9,9 +9,17 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 
 extension Number on num {
-  String get numberFormat => NumberFormat.compact(
-          locale: SessionManager.instance.getLang() == 'ar' ? 'ar' : 'en')
-      .format(this);
+  String get numberFormat {
+    String formatted = NumberFormat.compact().format(this);
+    if (SessionManager.instance.getLang() == 'ar') {
+      const List<String> western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+      const List<String> eastern = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+      for (int i = 0; i < western.length; i++) {
+        formatted = formatted.replaceAll(western[i], eastern[i]);
+      }
+    }
+    return formatted;
+  }
 
   String get currencyFormat =>
       '${SessionManager.instance.getCurrency()}${NumberFormat.compact().format(this)}';

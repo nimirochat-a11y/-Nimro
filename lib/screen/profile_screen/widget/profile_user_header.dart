@@ -316,7 +316,7 @@ required this.label, this.labelStyle, this.valueStyle});
         Text(
           value.toInt().numberFormat,
           style: valueStyle ??
-              TextStyleCustom.unboundedMedium500(
+              TextStyleCustom.outFitSemiBold600(
                 color: textDarkGrey(context),
                 fontSize: 15,
               ),
