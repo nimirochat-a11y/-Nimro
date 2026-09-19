@@ -34,44 +34,54 @@ class HomeTopCenterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 38,
-      width: 250,
-      child: Obx(
-        () => ListView.separated(
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        margin: const EdgeInsets.only(top: 8),
+        height: 42,
+        child: ListView(
           scrollDirection: Axis.horizontal,
           shrinkWrap: true,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          itemCount: TabType.values.length,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (context, index) {
-            final tabType = TabType.values[index];
-            final isSelected = controller.selectedReelCategory.value == tabType;
-            return InkWell(
-              borderRadius: BorderRadius.circular(22),
-              onTap: () => controller.onTabTypeChanged(tabType),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? whitePure(context).withValues(alpha: .22) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(
-                    color: whitePure(context).withValues(alpha: isSelected ? .65 : .28),
-                  ),
-                ),
-                child: Text(
-                  tabType.title.toUpperCase(),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyleCustom.unboundedBold700(
-                    fontSize: 11,
-                    color: whitePure(context),
-                  ),
-                ),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          children: [
+            ...TabType.values.map((tabType) => Obx(() {
+                  final isSelected = controller.selectedReelCategory.value == tabType;
+                  return _buildTab(
+                    context,
+                    title: tabType.title,
+                    isSelected: isSelected,
+                    onTap: () => controller.onTabTypeChanged(tabType),
+                  );
+                })),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTab(BuildContext context,
+      {required String title, required VoidCallback onTap, bool isSelected = false}) {
+    final foreground = isSelected ? whitePure(context) : whitePure(context).withValues(alpha: .72);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected ? themeAccentSolid(context) : Colors.transparent,
+                width: 2,
               ),
-            );
-          },
+            ),
+          ),
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyleCustom.unboundedBold700(fontSize: 12, color: foreground),
+          ),
         ),
       ),
     );

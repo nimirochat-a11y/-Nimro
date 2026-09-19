@@ -57,7 +57,9 @@ class ReelsTopBar extends StatelessWidget {
                         image: AssetRes.icBackArrow_1),
                   ),
                 if (widget != null) Flexible(child: widget!),
-                if (!controller.isHomePage)
+                if (controller.isHomePage)
+                  const SizedBox(width: 30, height: 30)
+                else
                   Obx(() {
                     if (controller.reels.isEmpty) {
                       return const SizedBox(width: 30, height: 30);

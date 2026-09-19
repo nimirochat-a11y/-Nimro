@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/languages/languages_keys.dart';
+import 'package:nimiro/utilities/color_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -41,17 +42,19 @@ class NoDataView extends StatelessWidget {
                       child: Text(
                         (title ?? LKey.noData).tr,
                         style: TextStyleCustom.unboundedSemiBold600(
-                          color: textLightGrey(context),
+                          color: textDarkGrey(context),
                           fontSize: 17,
-                        ),
+                        ).copyWith(decoration: TextDecoration.none),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     Text(
                       (description ?? LKey.noContentMessage).tr,
                       style: TextStyleCustom.outFitLight300(
-                        color: textLightGrey(context),
-                      ),
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? textLightGrey(context)
+                            : ColorRes.textDarkGrey,
+                      ).copyWith(decoration: TextDecoration.none),
                       textAlign: TextAlign.center,
                     ),
                   ],

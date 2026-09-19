@@ -23,6 +23,7 @@ class LiveStreamSearchScreenController extends BaseController {
   FirebaseFirestore db = FirebaseFirestore.instance;
   RxList<Livestream> livestreamList = <Livestream>[].obs;
   RxList<Livestream> livestreamFilterList = <Livestream>[].obs;
+  RxString liveStreamError = ''.obs;
   StreamSubscription<QuerySnapshot<Livestream>>? livestreamListListener;
 
   final firebaseFirestoreController = Get.find<FirebaseFirestoreController>();
@@ -44,7 +45,9 @@ class LiveStreamSearchScreenController extends BaseController {
   }
 
   Future<void> fetchLiveStreams() async {
+    await livestreamListListener?.cancel();
     isLoading.value = true;
+    liveStreamError.value = '';
     await Future.delayed(const Duration(milliseconds: 500));
 
     // Using a map for faster access and modification
@@ -95,6 +98,10 @@ class LiveStreamSearchScreenController extends BaseController {
 
       _assignHostUsersToStreams();
       isLoading.value = false; // Hide loader after initial fetch
+    }, onError: (Object error) {
+      Loggers.error('Error loading livestreams: $error');
+      liveStreamError.value = 'Unable to load live streams. Please try again.';
+      isLoading.value = false;
     });
   }
 

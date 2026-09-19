@@ -114,6 +114,7 @@ class UserService {
       String? region,
       String? regionName,
       String? timezone,
+      String? deviceToken,
       int? isVerify}) async {
     UserModel userModel = await ApiService.instance.multiPartCallApi(
         url: WebService.user.updateUserDetails,
@@ -153,7 +154,8 @@ class UserService {
           if (appLastUsed != null) Params.appLastUsedAt: appLastUsed,
           if (region != null) Params.region: region,
           if (regionName != null) Params.regionName: regionName,
-          if (timezone != null) Params.timezone: timezone
+          if (timezone != null) Params.timezone: timezone,
+          if (deviceToken != null) Params.deviceToken: deviceToken,
         },
         fromJson: UserModel.fromJson);
     if (userModel.status == true) {

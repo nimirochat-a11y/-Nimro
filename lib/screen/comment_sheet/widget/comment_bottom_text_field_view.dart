@@ -97,9 +97,7 @@ class CommentBottomTextFieldView extends StatelessWidget {
                                   decoration: InputDecoration(
                                     border: InputBorder.none,
                                     filled: true,
-                                    fillColor: Theme.of(context).brightness == Brightness.dark
-                                        ? const Color(0xFF151515)
-                                        : Colors.white,
+                                    fillColor: inputFillColor(context),
                                     contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 15, vertical: 8),
                                     suffixIconConstraints:

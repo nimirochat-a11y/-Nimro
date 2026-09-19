@@ -7,17 +7,10 @@ class ThemeRes {
 
   static ThemeData lightTheme(BuildContext context) {
     return ThemeData(
-      scaffoldBackgroundColor: ColorRes.whitePure,
-      colorScheme: ColorScheme.light(
-        primary: ColorRes.themeAccentSolid,
-        surface: ColorRes.whitePure,
-        onSurface: ColorRes.textDarkGrey,
-      ),
+      brightness: Brightness.light,
+      scaffoldBackgroundColor: ColorRes.bgLightGrey,
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: ColorRes.whitePure,
-        selectedItemColor: ColorRes.themeAccentSolid,
-        unselectedItemColor: ColorRes.textLightGrey,
-      ),
+          backgroundColor: ColorRes.whitePure),
       appBarTheme: const AppBarTheme(
         backgroundColor: ColorRes.whitePure,
         foregroundColor: ColorRes.textDarkGrey,
@@ -35,31 +28,19 @@ class ThemeRes {
         titleLarge: TextStyle(color: ColorRes.textDarkGrey),
         titleMedium: TextStyle(color: ColorRes.textDarkGrey),
         titleSmall: TextStyle(color: ColorRes.textLightGrey),
-        bodyLarge: TextStyle(color: ColorRes.textDarkGrey),
-        bodyMedium: TextStyle(color: ColorRes.textDarkGrey),
-        bodySmall: TextStyle(color: ColorRes.textLightGrey),
         labelSmall: TextStyle(color: ColorRes.themeAccentSolid),
         labelLarge: TextStyle(color: ColorRes.disabledGrey),
-        labelMedium: TextStyle(color: ColorRes.textDarkGrey),
       ),
       textSelectionTheme:
-          const TextSelectionThemeData(
-            cursorColor: Colors.black,
-            selectionColor: ColorRes.disabledGrey,
-            selectionHandleColor: Colors.black,
-          ),
+          const TextSelectionThemeData(selectionColor: ColorRes.disabledGrey),
       cardTheme: const CardThemeData(color: ColorRes.whitePure),
-      dialogTheme: const DialogThemeData(backgroundColor: ColorRes.whitePure),
-      inputDecorationTheme: const InputDecorationTheme(
-        hintStyle: TextStyle(color: ColorRes.textLightGrey),
-      ),
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
       primaryColor: ColorRes.themeAccentSolid,
       dividerColor: ColorRes.bgGrey,
       cardColor: ColorRes.bgMediumGrey,
-      primaryColorDark: Colors.black,
-      canvasColor: ColorRes.whitePure,
+      primaryColorDark: ColorRes.blackPure,
+      canvasColor: ColorRes.bgLightGrey,
       useMaterial3: false,
     );
   }
@@ -154,7 +135,9 @@ Color scaffoldBackgroundColor(BuildContext context) {
 }
 
 Color blueFollow(BuildContext context) {
-  return Theme.of(context).cardTheme.color ?? ColorRes.blueFollow;
+  return Theme.of(context).brightness == Brightness.dark
+      ? ColorRes.themeAccentSolid
+      : ColorRes.blueFollow;
 }
 
 Color bgMediumGrey(BuildContext context) {
@@ -168,8 +151,18 @@ Color blackPure(BuildContext context) {
 Color bgLightGrey(BuildContext context) {
   return Theme.of(context).brightness == Brightness.dark
       ? const Color(0xFF101010)
+      : Theme.of(context).appBarTheme.backgroundColor ?? ColorRes.bgLightGrey;
+}
+
+/// Surface used by cards, dialogs, and bottom sheets in both themes.
+Color surfaceColor(BuildContext context) {
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF151515)
       : ColorRes.whitePure;
 }
+
+/// Fill used by editable text fields; never use a fixed white surface here.
+Color inputFillColor(BuildContext context) => surfaceColor(context);
 
 Color themeColor(BuildContext context) {
   return Theme.of(context).canvasColor;

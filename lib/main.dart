@@ -44,6 +44,10 @@ Future<void> main() async {
 
     await GetStorage.init('nimiro');
 
+    // Initialize notification listeners after local storage is ready and
+    // before the first screen is shown.
+    FirebaseNotificationManager.instance;
+
     // Init RevenueCat (handle errors gracefully)
     try {
       await SubscriptionManager.shared.initPlatformState();
