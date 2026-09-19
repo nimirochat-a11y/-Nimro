@@ -11,6 +11,7 @@ import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/livestream/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
+import 'package:nimiro/model/livestream/livestream_user_state.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/host/livestream_host_screen.dart';
 import 'package:nimiro/utilities/firebase_const.dart';
@@ -177,6 +178,15 @@ class CreateLiveStreamScreenController extends BaseController {
     Loggers.info('Starting live stream...');
     Loggers.info('Livestream Model: ${livestream.toJson()}');
     Loggers.info('Livestream User Model: ${livestreamUser.toJson()}');
+    LivestreamUserState livestreamUserState = LivestreamUserState(
+        type: LivestreamUserType.host,
+        userId: userId,
+        liveCoin: 0,
+        currentBattleCoin: 0,
+        totalBattleCoin: 0,
+        followersGained: [],
+        joinStreamTime: time,
+        user: livestreamUser);
 
     // Show loader before Firestore operations
     showLoader();

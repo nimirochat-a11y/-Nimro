@@ -112,6 +112,13 @@ class LiveStreamSearchScreenController extends BaseController {
     });
   }
 
+  Map<int, AppUser> _userMapFromList(List<AppUser> users) {
+    return {
+      for (var u in users)
+        if (u.userId != null) u.userId!: u
+    };
+  }
+
   void _assignHostUsersToStreams() {
     final userMap = _userMapFromList(firebaseFirestoreController.users);
     for (var stream in livestreamList) {
