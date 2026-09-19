@@ -20,7 +20,6 @@ class SettingsScreenController extends BaseController {
   Rx<Setting?> settings = Rx<Setting?>(null);
   Rx<WhoCanSeePost> selectedWhoCanSeePost = WhoCanSeePost.values.first.obs;
   RxBool isUpdateApiCalled = false.obs;
-  RxBool isDarkMode = SessionManager.instance.isDarkMode.obs;
 
   @override
   void onInit() {
@@ -47,24 +46,6 @@ class SettingsScreenController extends BaseController {
     selectedWhoCanSeePost.value = value ?? WhoCanSeePost.values.first;
     await UserService.instance.updateUserDetails(whoCanSeePost: value?.value);
     isUpdateApiCalled.value = false;
-  }
-
-  Future<void> checkAppwriteConnection() async {
-    showLoader(barrierDismissible: false);
-    try {
-      final isConnected = await SupabaseService.instance.ping();
-      showSnackBar(isConnected
-          ? 'Appwrite connection is working.'
-          : 'Appwrite connection failed. Check the endpoint and platform settings.');
-    } finally {
-      stopLoader();
-    }
-  }
-
-  Future<void> toggleDarkMode(bool value) async {
-    isDarkMode.value = value;
-    await SessionManager.instance.setDarkMode(value);
-    Get.changeThemeMode(value ? ThemeMode.dark : ThemeMode.light);
   }
 
   onChangedToggle(bool value, SettingToggle settingToggle) async {

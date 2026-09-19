@@ -181,12 +181,6 @@ class SessionManager {
     return storage.read(key) ?? false;
   }
 
-  bool get isDarkMode => storage.read(SessionKeys.darkMode) ?? false;
-
-  Future<void> setDarkMode(bool value) async {
-    await storage.write(SessionKeys.darkMode, value);
-  }
-
   void clear() {
     storage.erase();
   }
@@ -214,5 +208,4 @@ class SessionKeys {
   static const notifyCount = "notify_count";
   static const isLanguageScreenSelect = "is_language_screen_select";
   static const isOnBoardingScreenSelect = "is_on_boarding_screen_select";
-  static const darkMode = "dark_mode";
 }
