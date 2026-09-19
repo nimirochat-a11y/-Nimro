@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/color_res.dart';
-import 'package:nimiro/utilities/theme_res.dart';
 
 class LiveStreamBlurBackgroundImage extends StatelessWidget {
   const LiveStreamBlurBackgroundImage({super.key});

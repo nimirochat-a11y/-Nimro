@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -26,7 +25,6 @@ import 'package:nimiro/screen/live_stream/livestream_screen/host/livestream_host
 import 'package:nimiro/screen/post_screen/single_post_screen.dart';
 import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 import 'package:nimiro/utilities/const_res.dart';
-import 'package:nimiro/utilities/firebase_const.dart';
 
 @pragma('vm:entry-point')
 void notificationTapBackground(NotificationResponse notificationResponse) {

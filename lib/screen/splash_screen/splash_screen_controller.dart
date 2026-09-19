@@ -12,12 +12,10 @@ import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/service/network_helper/network_helper.dart';
 import 'package:nimiro/common/widget/no_internet_sheet.dart';
-import 'package:nimiro/languages/dynamic_translations.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/screen/auth_screen/login_screen.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen.dart';
 import 'package:nimiro/screen/on_boarding_screen/on_boarding_screen.dart';
-import 'package:nimiro/utilities/app_res.dart';
 
 class SplashScreenController extends BaseController {
   late StreamSubscription _subscription;

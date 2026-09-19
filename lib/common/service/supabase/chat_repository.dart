@@ -1,5 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/supabase/supabase_service.dart';
+import 'package:nimiro/common/service/utils/params.dart';
+import 'package:nimiro/utilities/const_res.dart';
 
 /// Small wrapper types mirroring the previous Appwrite row/document shape,
 /// so the calling code (chat_screen_controller.dart) stays unchanged.
@@ -25,6 +28,11 @@ class ChatRepository {
   static final ChatRepository instance = ChatRepository._();
 
   SupabaseClient get _db => SupabaseService.instance.client;
+
+  Map<String, String> get _headers => {
+        Params.apikey: apiKey,
+        Params.authToken: SessionManager.instance.getAuthToken(),
+      };
 
   String conversationDocId(int ownerUserId, int otherUserId) =>
       '${ownerUserId}_$otherUserId';

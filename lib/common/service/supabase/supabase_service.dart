@@ -1,4 +1,8 @@
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:nimiro/common/manager/session_manager.dart';
+import 'package:nimiro/common/service/utils/params.dart';
+import 'package:nimiro/utilities/const_res.dart';
 
 /// Central Supabase client configuration for Nimiro.
 class SupabaseService {
@@ -29,8 +33,16 @@ class SupabaseService {
   Future<bool> ping() async {
     if (!_initialized) await initialize();
     try {
-      await client.from('app_users').select('user_id').limit(1);
-      return true;
+      final res = await http.post(
+        Uri.parse('${apiURL}chat/fetchMyConversations'),
+        headers: {
+          Params.apikey: apiKey,
+          Params.authToken: SessionManager.instance.getAuthToken(),
+          'Content-Type': 'application/json',
+        },
+        body: '{}',
+      ).timeout(const Duration(seconds: 10));
+      return res.statusCode > 0;
     } catch (_) {
       return false;
     }

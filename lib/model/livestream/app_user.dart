@@ -13,6 +13,7 @@ class AppUser {
   String? profile;
   int? isVerify;
   String? identity;
+  String? country;
 
   AppUser(
       {this.userId,
@@ -20,15 +21,23 @@ class AppUser {
       this.fullname,
       this.profile,
       this.isVerify,
-      this.identity});
+      this.identity,
+      this.country});
 
   AppUser.fromJson(Map<String, dynamic> json) {
-    userId = _toInt(json['user_id']);
+    // FIX(v13): the Laravel room registry and the chat proxy emit the camelCase
+    // chat contract (`userId` / `image` / `isVerified`), while this parser only
+    // read the snake_case names. Every AppUser therefore came back with a null
+    // id and a null photo: host cards were blank, and `getAllUsers()` matched
+    // nothing so the live screen fell through to its empty view. Both spellings
+    // are now accepted.
+    userId = _toInt(json['user_id'] ?? json['userId'] ?? json['id']);
     identity = json['identity'];
     username = json['username'];
     fullname = json['fullname'];
-    profile = json['profile'];
-    isVerify = _toInt(json['is_verify']);
+    profile = json['profile'] ?? json['image'] ?? json['profile_photo'];
+    isVerify = _toInt(json['is_verify'] ?? json['isVerified']);
+    country = json['country'] ?? json['country_code'];
   }
 
   Map<String, dynamic> toJson() {
@@ -39,7 +48,7 @@ class AppUser {
     data['fullname'] = fullname;
     data['profile'] = profile;
     data['is_verify'] = isVerify;
+    data['country'] = country;
     return data;
   }
 }
-

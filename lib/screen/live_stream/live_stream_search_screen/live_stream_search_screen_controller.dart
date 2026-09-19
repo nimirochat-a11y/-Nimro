@@ -6,6 +6,7 @@ import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/extensions/list_extension.dart';
 import 'package:nimiro/common/extensions/user_extension.dart';
+import 'package:nimiro/common/service/api/live_room_service.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -35,7 +36,13 @@ class LiveStreamSearchScreenController extends BaseController {
   @override
   void onReady() {
     super.onReady();
-    Future.wait({fetchLiveStreams(), addDummyUsers()});
+    // FIX(v13): the dummy-live showcase must be REGISTERED as real rooms, not
+    // merely rendered. The dashboard switch (`live_dummy_show`) and the
+    // `dummy_live_videos` rows used to build one registry room per dummy host;
+    // when the registry moved to Laravel that step was dropped and replaced
+    // with a no-op, so enabling "dummy live" in the dashboard lit up nothing.
+    fetchLiveStreams();
+    _syncDummyLiveRooms();
   }
 
   @override
@@ -112,13 +119,6 @@ class LiveStreamSearchScreenController extends BaseController {
     }
   }
 
-  Map<int, AppUser> _userMapFromList(List<AppUser> list) {
-    return {
-      for (var user in list)
-        if (user.userId != null) user.userId!: user,
-    };
-  }
-
   void onLiveUserTap(Livestream stream) async {
     User? myUser = SessionManager.instance.getUser();
     if (stream.hostId == myUser?.id) {
@@ -134,102 +134,52 @@ class LiveStreamSearchScreenController extends BaseController {
     }, (p1) => p1.description ?? '');
   }
 
-  Future<void> addDummyUsers() async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  /// Materialise the dummy-live showcase as ordinary registry rooms.
+  ///
+  /// FIX(v13): this replaces the two no-ops that were left behind when the room
+  /// registry moved off Firestore. The dashboard toggle and `dummy_live_videos`
+  /// still arrive inside the settings payload as [dummyLives]; each active row
+  /// whose host has no room yet is registered through [LiveRoomService], and a
+  /// row that was switched off has its room closed again. This is exactly what
+  /// the Firestore version did, expressed against the Laravel registry.
+  Future<void> _syncDummyLiveRooms() async {
+    final rows = dummyLives;
+    if (rows.isEmpty) return;
+
     try {
-      // Fetch existing livestreams from Firestore
-      final livestreamList = await db
-          .collection(FirebaseConst.liveStreams)
-          .withConverter<Livestream>(
-            fromFirestore: (snapshot, _) => Livestream.fromJson(snapshot.data()!),
-            toFirestore: (livestream, _) => livestream.toJson(),
-          )
-          .get();
+      final existing = await LiveRoomService.instance.fetchRooms();
+      final liveRoomIds = existing
+          .map((row) => row['room_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet();
 
-      // Collect existing stream IDs
-      final existingIds = livestreamList.docs.map((doc) => doc.id).toSet();
-
-      for (var dummy in dummyLives) {
+      for (final dummy in rows) {
         final dummyId = dummy.userId;
+        if (dummyId == null || dummyId == -1) continue;
 
-        // Skip invalid IDs
-        if (dummyId == -1) continue;
+        final roomId = '$dummyId';
+        final alreadyLive = liveRoomIds.contains(roomId);
 
-        final alreadyExists = existingIds.contains('$dummyId');
-        if (!alreadyExists && dummy.status == 1) {
-          // Create new dummy livestream
-          await createLiveStream(dummy);
-          Loggers.info('✅ Created dummy livestream: $dummyId');
-        } else if (alreadyExists && dummy.status == 0) {
-          // Delete if status is inactive
-          await deleteStreamOnFirebase(dummyId);
-          Loggers.info('🗑️ Deleted inactive dummy livestream: $dummyId');
-        } else {
-          Loggers.info('ℹ️ No action for: $dummyId (exists: $alreadyExists, status: ${dummy.status})');
+        if (!alreadyLive && dummy.status == 1) {
+          await LiveRoomService.instance.createRoom(
+            roomId: roomId,
+            title: dummy.title,
+            roomType: LivestreamType.dummy.value,
+            thumbnail: dummy.link,
+          );
+          Loggers.success('Registered dummy live room $roomId in the registry.');
+        } else if (alreadyLive && dummy.status == 0) {
+          await LiveRoomService.instance.endRoom(roomId);
+          Loggers.success('Closed dummy live room $roomId in the registry.');
         }
       }
-    } catch (e, _) {
-      Loggers.error('❌ Error in addDummyUsers: $e');
+    } catch (e) {
+      Loggers.error('Dummy live sync failed: $e');
     }
   }
 
-  Future<void> createLiveStream(DummyLive? dummyLive) async {
-    User? dummyUser = dummyLive?.user;
-    if (dummyUser == null) {
-      Loggers.error('Dummy User Not found');
-      return;
-    }
-    int userId = dummyLive?.userId ?? -1;
-
-    DocumentReference livestreamRef = db.collection(FirebaseConst.liveStreams).doc('$userId');
-
-    int time = DateTime.now().millisecondsSinceEpoch;
-
-    // Livestream model
-    Livestream livestream = dummyUser.livestream(
-        type: LivestreamType.dummy,
-        time: time,
-        dummyUserLink: dummyLive?.link,
-        isDummyLive: 1,
-        description: dummyLive?.title);
-
-    // LivestreamUser model
-    AppUser? livestreamUser = dummyUser.appUser;
-
-    // LivestreamUserState model
-    LivestreamUserState livestreamUserState = dummyUser.streamState(time: time, stateType: LivestreamUserType.host);
-
-    try {
-      DocumentReference usersRef = db.collection(FirebaseConst.appUsers).doc('$userId');
-      DocumentReference userStateRef = livestreamRef.collection(FirebaseConst.userState).doc('$userId');
-
-      WriteBatch batch = db.batch();
-
-      bool isExist = (await livestreamRef.get()).exists;
-      bool isUserExist = (await usersRef.get()).exists;
-
-      if (isExist) {
-        // Update existing documents
-        batch.update(livestreamRef, livestream.toJson());
-        batch.update(userStateRef, livestreamUserState.toJson());
-      } else {
-        // Create new documents
-        batch.set(livestreamRef, livestream.toJson());
-        batch.set(userStateRef, livestreamUserState.toJson());
-      }
-      if (isUserExist) {
-        batch.update(usersRef, livestreamUser.toJson());
-      } else {
-        batch.set(usersRef, livestreamUser.toJson());
-      }
-
-      await batch.commit();
-      Loggers.success(isExist ? 'Updated Dummy Live' : 'Created Dummy Live');
-    } catch (e, stackTrace) {
-      Loggers.error('Failed to create/update live stream: $e');
-      Loggers.error('StackTrace: $stackTrace');
-    }
-  }
+  /// Retained for source compatibility with the old Firestore flow.
+  Future<void> addDummyUsers() async => _syncDummyLiveRooms();
 
   Future<void> deleteStreamOnFirebase(int? dummyUserId) async {
     if (dummyUserId == null) return;

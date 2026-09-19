@@ -13,6 +13,7 @@ import 'package:nimiro/common/widget/gradient_border.dart';
 import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
+import 'package:nimiro/screen/edit_profile_screen/edit_profile_screen.dart';
 import 'package:nimiro/screen/follow_following_screen/follow_following_screen.dart';
 import 'package:nimiro/screen/level_screen/level_screen.dart';
 import 'package:nimiro/screen/profile_screen/profile_screen_controller.dart';
@@ -26,61 +27,168 @@ import 'package:nimiro/utilities/theme_res.dart';
 
 class ProfileUserHeader extends StatelessWidget {
   final ProfileScreenController controller;
-
   const ProfileUserHeader({super.key, required this.controller});
-
   @override
   Widget build(BuildContext context) {
     return Obx(
       () {
         User? user = controller.userData.value;
         bool isUserNotFound = controller.isUserNotFound.value;
-
-        return Padding(
-          padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 5,
-            children: [
-              ProfileStatsRow(
-                userNotFound: isUserNotFound,
-                controller: controller,
-                user: user,
-                stats: [
-                  StatItem(value: user?.totalPostLikesCount ?? 0, label: LKey.likes.tr),
-                  StatItem(value: user?.followerCount ?? 0, label: LKey.followers.tr),
-                  StatItem(value: user?.followingCount ?? 0, label: LKey.following.tr),
+        bool isMe = !isUserNotFound &&
+            user?.id?.toInt() == SessionManager.instance.getUserID();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ProfileCoverView(
+                user: user, isUserNotFound: isUserNotFound, controller: controller),
+            Padding(
+              padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 5,
+                children: [
+                  ProfileStatsRow(
+                    userNotFound: isUserNotFound,
+                    controller: controller,
+                    user: user,
+                    stats: [
+                      StatItem(value: user?.totalPostLikesCount ?? 0, label: LKey.likes.tr),
+                      StatItem(value: user?.followerCount ?? 0, label: LKey.followers.tr),
+                      StatItem(value: user?.followingCount ?? 0, label: LKey.following.tr),
+                    ],
+                    onTap: (value) {
+                      if (isUserNotFound) {
+                        return;
+                      }
+                      switch (value) {
+                        case 0:
+                          break;
+                        case 1:
+                          user?.checkIsBlocked(() {
+                            Get.to(() => FollowFollowingScreen(
+                                type: FollowFollowingType.follower, user: user));
+                          });
+                          break;
+                        case 2:
+                          user?.checkIsBlocked(() {
+                            Get.to(() => FollowFollowingScreen(
+                                type: FollowFollowingType.following, user: user));
+                          });
+                          break;
+                      }
+                    },
+                  ),
+                  if (!isUserNotFound) UserNameView(user: user),
+                  if (!isUserNotFound) UserLinkView(user: user),
+                  if (!isUserNotFound) UserBioView(user: user),
+                  isUserNotFound
+                      ? const NoUserFoundButton()
+                      : UserButtonView(user: user, controller: controller, isMe: isMe)
                 ],
-                onTap: (value) {
-                  if (isUserNotFound) {
-                    return;
-                  }
-                  switch (value) {
-                    case 0:
-                      break;
-                    case 1:
-                      user?.checkIsBlocked(() {
-                        // Followers
-                        Get.to(() => FollowFollowingScreen(type: FollowFollowingType.follower, user: user));
-                      });
-                      break;
-                    case 2:
-                      user?.checkIsBlocked(() {
-                        // Following
-                        Get.to(() => FollowFollowingScreen(type: FollowFollowingType.following, user: user));
-                      });
-                      break;
-                  }
-                },
               ),
-              if (!isUserNotFound) UserNameView(user: user),
-              if (!isUserNotFound) UserLinkView(user: user),
-              if (!isUserNotFound) UserBioView(user: user),
-              isUserNotFound ? const NoUserFoundButton() : UserButtonView(user: user, controller: controller)
-            ],
-          ),
+            ),
+          ],
         );
       },
+    );
+  }
+}
+
+class ProfileCoverView extends StatelessWidget {
+  final User? user;
+  final bool isUserNotFound;
+  final ProfileScreenController controller;
+  const ProfileCoverView(
+      {super.key, required this.user, required this.isUserNotFound, required this.controller});
+
+  static const double coverHeight = 130;
+  static const double avatarSize = 90;
+
+  @override
+  Widget build(BuildContext context) {
+    bool isStoryAvailable = (user?.stories ?? []).isNotEmpty;
+    bool isWatch = isStoryAvailable &&
+        (user?.stories ?? []).every((element) => element.isWatchedByMe());
+    GlobalKey previewKey = GlobalKey();
+    RxBool isHeroEnable = false.obs;
+    return SizedBox(
+      height: coverHeight + (avatarSize / 2) + 10,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CustomImage(
+            size: Size(MediaQuery.of(context).size.width, coverHeight),
+            image: isUserNotFound ? '' : user?.coverPhoto?.addBaseURL(),
+            radius: 0,
+            fit: BoxFit.cover,
+          ),
+          Positioned(
+            left: 15,
+            top: coverHeight - (avatarSize / 2),
+            child: isUserNotFound
+                ? Image.asset(AssetRes.icUserPlaceholder,
+                    width: avatarSize, height: avatarSize, fit: BoxFit.cover)
+                : GestureDetector(
+                    onTap: () => controller.onStoryTap(isStoryAvailable),
+                    onLongPressStart: (details) => isHeroEnable.value = true,
+                    onLongPressEnd: (details) => isHeroEnable.value = false,
+                    onLongPress: () {
+                      user?.checkIsBlocked(() {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                              opaque: false,
+                              barrierColor: Colors.transparent,
+                              transitionDuration: const Duration(milliseconds: 300),
+                              pageBuilder: (_, __, ___) =>
+                                  ProfilePreviewInteractiveScreen(user: user)),
+                        );
+                      });
+                    },
+                    child: Container(
+                      key: previewKey,
+                      width: avatarSize,
+                      height: avatarSize,
+                      alignment: Alignment.center,
+                      decoration: ShapeDecoration(
+                        shape: SmoothRectangleBorder(
+                          borderRadius: SmoothBorderRadius(cornerRadius: avatarSize),
+                        ),
+                        gradient: isStoryAvailable
+                            ? (isWatch
+                                ? StyleRes.disabledGreyGradient(opacity: .5)
+                                : StyleRes.themeGradient)
+                            : null,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: whitePure(context),
+                        ),
+                        child: Obx(
+                          () => HeroMode(
+                            enabled: isHeroEnable.value,
+                            child: Hero(
+                              tag: 'profile-${user?.id}',
+                              child: CustomImage(
+                                size: !isStoryAvailable
+                                    ? Size(avatarSize - 6, avatarSize - 6)
+                                    : Size(avatarSize - 16, avatarSize - 16),
+                                image: user?.isBlock == true
+                                    ? ''
+                                    : user?.profilePhoto?.addBaseURL(),
+                                fullName: user?.fullname,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -91,7 +199,6 @@ class ProfileStatsRow extends StatelessWidget {
   final Function(int value) onTap;
   final ProfileScreenController controller;
   final bool userNotFound;
-
   const ProfileStatsRow({
     super.key,
     required this.user,
@@ -100,100 +207,26 @@ class ProfileStatsRow extends StatelessWidget {
     required this.controller,
     required this.userNotFound,
   });
-
   @override
   Widget build(BuildContext context) {
-    bool isStoryAvailable = (user?.stories ?? []).isNotEmpty;
-    GlobalKey previewKey = GlobalKey();
-    bool isWatch = isStoryAvailable && (user?.stories ?? []).every((element) => element.isWatchedByMe());
-    RxBool isHeroEnable = false.obs;
     return Row(
-      children: [
-        // Profile Picture
-        if (userNotFound)
-          Image.asset(AssetRes.icUserPlaceholder, width: 80, height: 80, fit: BoxFit.cover)
-        else
-          GestureDetector(
-            onTap: () => controller.onStoryTap(isStoryAvailable),
-            onLongPressStart: (details) {
-              isHeroEnable.value = true;
-            },
-            onLongPressEnd: (details) {
-              isHeroEnable.value = false;
-            },
-            onLongPress: () {
-              user?.checkIsBlocked(() {
-                // _showProfilePreview(context, previewKey, user);
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                      opaque: false,
-                      barrierColor: Colors.transparent,
-                      transitionDuration: const Duration(milliseconds: 300),
-                      pageBuilder: (_, __, ___) => ProfilePreviewInteractiveScreen(user: user)),
-                );
-              });
-            },
-            child: Container(
-              key: previewKey,
-              width: 80,
-              height: 80,
-              alignment: Alignment.center,
-              decoration: ShapeDecoration(
-                shape: SmoothRectangleBorder(
-                  borderRadius: SmoothBorderRadius(cornerRadius: 90),
-                ),
-                gradient: isStoryAvailable
-                    ? (isWatch ? StyleRes.disabledGreyGradient(opacity: .5) : StyleRes.themeGradient)
-                    : null,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(2.5),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: whitePure(context),
-                ),
-                child: Obx(
-                  () => HeroMode(
-                    enabled: isHeroEnable.value,
-                    child: Hero(
-                      tag: 'profile-${user?.id}',
-                      // must match the original tag
-                      child: CustomImage(
-                        size: !isStoryAvailable ? const Size(80, 80) : const Size(70, 70),
-                        // 80 - 10 (padding accounted)
-                        image: user?.isBlock == true ? '' : user?.profilePhoto?.addBaseURL(),
-                        // if user is block then don't show the image
-                        fullName: user?.fullname,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        // Stats Columns
-        Expanded(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: List.generate(
+        stats.length,
+        (index) => Expanded(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: List.generate(
-              stats.length,
-              (index) => Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    InkWell(
-                      onTap: () => onTap(index),
-                      child: StatColumn(value: stats[index].value, label: stats[index].label),
-                    ),
-                    if (index != stats.length - 1) Container(height: 20, width: .5, color: textLightGrey(context)),
-                  ],
-                ),
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              InkWell(
+                onTap: () => onTap(index),
+                child: StatColumn(value: stats[index].value, label: stats[index].label),
               ),
-            ),
+              if (index != stats.length - 1)
+                Container(height: 20, width: .5, color: textLightGrey(context)),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -204,9 +237,8 @@ class StatColumn extends StatelessWidget {
   final String label;
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
-
-  const StatColumn({super.key, required this.value, required this.label, this.labelStyle, this.valueStyle});
-
+  const StatColumn({super.key, required this.value,
+required this.label, this.labelStyle, this.valueStyle});
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -229,12 +261,9 @@ class StatColumn extends StatelessWidget {
     );
   }
 }
-
 class UserNameView extends StatelessWidget {
   final User? user;
-
   const UserNameView({super.key, required this.user});
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -280,17 +309,15 @@ class UserNameView extends StatelessWidget {
                   ),
                 ),
         ),
-        Text(user?.fullname ?? '', style: TextStyleCustom.outFitLight300(color: textLightGrey(context), fontSize: 16))
+        Text(user?.fullname ?? '', style: TextStyleCustom.outFitLight300(color: textLightGrey(context),
+fontSize: 16))
       ],
     );
   }
 }
-
 class UserLinkView extends StatelessWidget {
   final User? user;
-
   const UserLinkView({super.key, required this.user});
-
   @override
   Widget build(BuildContext context) {
     List<Link> links = user?.links ?? [];
@@ -323,7 +350,6 @@ class UserLinkView extends StatelessWidget {
       return const SizedBox();
     }
   }
-
   String get shortUrl {
     List<Link> links = user?.links ?? [];
     String firstLink = links.first.url ?? '';
@@ -338,12 +364,9 @@ class UserLinkView extends StatelessWidget {
     return '$firstLink$andMore';
   }
 }
-
 class UserBioView extends StatelessWidget {
   final User? user;
-
   const UserBioView({super.key, required this.user});
-
   @override
   Widget build(BuildContext context) {
     if ((user?.bio ?? '').isEmpty) {
@@ -355,30 +378,45 @@ class UserBioView extends StatelessWidget {
     );
   }
 }
-
 class UserButtonView extends StatelessWidget {
   final User? user;
   final ProfileScreenController controller;
-
-  const UserButtonView({super.key, required this.user, required this.controller});
-
+  final bool isMe;
+  const UserButtonView({super.key, required this.user, required this.controller, required this.isMe});
   @override
   Widget build(BuildContext context) {
     User? user = controller.profileController.user;
-
-    bool isMe = user?.id?.toInt() == SessionManager.instance.getUserID();
     bool isBlock = (user?.isBlock == true && user?.id != SessionManager.instance.getUserID());
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0, top: 10),
-      child: Row(
-        children: [
-          Expanded(
-            child: isBlock
-                ? UnblockButton(onTap: () => controller.toggleBlockUnblock(true))
-                : RowButton(controller: controller, isMe: isMe, user: user),
-          ),
-          const SizedBox(width: 8),
-          if (isMe)
+    if (isMe) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 20.0, top: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextButtonCustom(
+                onTap: () => Get.to(() => EditProfileScreen(onUpdateUser: controller.onUpdateUser)),
+                title: LKey.editProfile.tr,
+                fontSize: 16,
+                backgroundColor: blueFollow(context),
+                titleColor: whitePure(context),
+                horizontalMargin: 0,
+                btnHeight: 45,
+              ),
+            ),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () => Get.to(() => SettingsScreen(onUpdateUser: controller.onUpdateUser)),
+              child: Container(
+                  height: 45,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: ShapeDecoration(
+                    shape:
+                        SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1)),
+                    color: bgGrey(context),
+                  ),
+                  child: Icon(Icons.settings_outlined, color: textDarkGrey(context))),
+            ),
+            const SizedBox(width: 8),
             InkWell(
               onTap: () {
                 ShareManager.shared.showCustomShareSheet(user: user, keys: ShareKeys.user);
@@ -391,40 +429,52 @@ class UserButtonView extends StatelessWidget {
                         SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1)),
                     color: bgGrey(context),
                   ),
-                  child: Image.asset(isMe ? AssetRes.icShare1 : AssetRes.icMore, height: 21, width: 21)),
+                  child: Image.asset(AssetRes.icShare1, height: 21, width: 21)),
             )
-          else
-            Obx(
-              () => CustomPopupMenuButton(
-                  items: [
-                    MenuItem(user?.isBlock == true ? LKey.unBlock.tr : LKey.block.tr, () {
-                      controller.toggleBlockUnblock(user?.isBlock ?? false);
-                    }),
-                    MenuItem(LKey.report.tr, () => controller.reportUser(user)),
-                    if (SessionManager.instance.isModerator.value == 1)
-                      MenuItem(user?.isFreez == 1 ? LKey.unFreeze.tr : LKey.freeze.tr,
-                          () => controller.freezeUnfreezeUser(user?.isFreez == 1))
-                  ],
-                  child: Container(
-                    height: 45,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: ShapeDecoration(
-                      shape:
-                          SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1)),
-                      color: bgGrey(context),
-                    ),
-                    child: Image.asset(AssetRes.icMore, height: 21, width: 21),
-                  )),
-            )
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0, top: 10),
+      child: Row(
+        children: [
+          Expanded(
+            child: isBlock
+                ? UnblockButton(onTap: () => controller.toggleBlockUnblock(true))
+                : RowButton(controller: controller, isMe: isMe, user: user),
+          ),
+          const SizedBox(width: 8),
+          Obx(
+            () => CustomPopupMenuButton(
+                items: [
+                  MenuItem(user?.isBlock == true ? LKey.unBlock.tr : LKey.block.tr, () {
+                    controller.toggleBlockUnblock(user?.isBlock ?? false);
+                  }),
+                  MenuItem(LKey.report.tr, () => controller.reportUser(user)),
+                  if (SessionManager.instance.isModerator.value == 1)
+                    MenuItem(user?.isFreez == 1 ?
+LKey.unFreeze.tr : LKey.freeze.tr,
+                        () => controller.freezeUnfreezeUser(user?.isFreez == 1))
+                ],
+                child: Container(
+                  height: 45,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: ShapeDecoration(
+                    shape:
+                        SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1)),
+                    color: bgGrey(context),
+                  ),
+                  child: Image.asset(AssetRes.icMore, height: 21, width: 21),
+                )),
+          )
         ],
       ),
     );
   }
 }
-
 class NoUserFoundButton extends StatelessWidget {
   const NoUserFoundButton({super.key});
-
   @override
   Widget build(BuildContext context) {
     return TextButtonCustom(
@@ -439,12 +489,9 @@ class NoUserFoundButton extends StatelessWidget {
     );
   }
 }
-
 class UnblockButton extends StatelessWidget {
   final VoidCallback onTap;
-
   const UnblockButton({super.key, required this.onTap});
-
   @override
   Widget build(BuildContext context) {
     return TextButtonCustom(
@@ -458,19 +505,16 @@ class UnblockButton extends StatelessWidget {
     );
   }
 }
-
 class RowButton extends StatelessWidget {
   final bool isMe;
   final ProfileScreenController controller;
   final User? user;
-
   const RowButton({
     super.key,
     required this.isMe,
     required this.controller,
     this.user,
   });
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -479,39 +523,32 @@ class RowButton extends StatelessWidget {
           child: Obx(
             () {
               bool isFollowProgress = controller.isFollowUnFollowInProcess.value;
-              Color textColor = user?.isFollowing == true ? textLightGrey(context) : whitePure(context);
-              return TextButtonCustom(
+              Color textColor = user?.isFollowing == true ? textLightGrey(context) : whitePure(context);              return TextButtonCustom(
                 onTap: () async {
-                  if (isMe) {
-                    Get.to(() => SettingsScreen(onUpdateUser: controller.onUpdateUser));
-                  } else {
-                    if (!isFollowProgress) {
-                      controller.followUnFollowUser();
-                    }
+                  if (!isFollowProgress) {
+                    controller.followUnFollowUser();
                   }
                 },
-                title: isMe ? LKey.settings.tr : (user?.isFollowing == true ? LKey.unFollow.tr : LKey.follow.tr),
+                title: user?.isFollowing == true ? LKey.unFollow.tr : LKey.follow.tr,
                 fontSize: 16,
                 backgroundColor:
-                    isMe ? bgGrey(context) : (user?.isFollowing == true ? bgGrey(context) : blueFollow(context)),
-                titleColor: isMe ? textLightGrey(context) : textColor,
+                    (user?.isFollowing == true ? bgGrey(context) : blueFollow(context)),
+                titleColor: textColor,
                 horizontalMargin: 0,
                 btnHeight: 45,
-                child: isMe
-                    ? null
-                    : isFollowProgress
-                        ? CupertinoActivityIndicator(radius: 10, color: textColor)
-                        : null,
+                child: isFollowProgress
+                    ? CupertinoActivityIndicator(radius: 10, color: textColor)
+                    : null,
               );
             },
           ),
         ),
         const SizedBox(width: 8),
-        if (isMe || user?.receiveMessage == 1)
+        if (user?.receiveMessage == 1)
           Expanded(
             child: TextButtonCustom(
                 onTap: () => controller.handlePublishOrMessageBtn(isMe),
-                title: isMe ? LKey.publish.tr : LKey.message.tr,
+                title: LKey.message.tr,
                 fontSize: 16,
                 backgroundColor: bgGrey(context),
                 titleColor: textLightGrey(context),
@@ -522,11 +559,9 @@ class RowButton extends StatelessWidget {
     );
   }
 }
-
 // Stat Item Model
 class StatItem {
   final num value;
   final String label;
-
   StatItem({required this.value, required this.label});
 }

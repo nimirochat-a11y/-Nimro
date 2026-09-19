@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:nimiro/common/enum/chat_enum.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
-import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/functions/media_picker_helper.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
@@ -318,8 +317,6 @@ class ChatScreenController extends BlockUserController
         return '$sentPrefix@${post.user?.username ?? ''}\'s post';
       case MessageType.storyReply:
         return '${sentPrefix}a Story Reply';
-      case null:
-        return '';
     }
   }
   void onTextFieldChanged(String value) {

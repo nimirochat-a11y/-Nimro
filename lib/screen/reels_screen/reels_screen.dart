@@ -101,7 +101,11 @@ class _ReelsScreenState extends State<ReelsScreen> {
                                     ? Center(child: CupertinoActivityIndicator(color: textLightGrey(context)))
                                     : ReelPage(
                                         reelData: reels[index],
-                                        autoPlay: index == controller.currentIndex.value,
+                                        // FIX(v14): autoplay is granted to the reel the user is actually on,
+                                        // and the first reel always autoplays so a feed opened from a
+                                        // notification or shared link never waits for a tap.
+                                        autoPlay: index == controller.currentIndex.value ||
+                                            (index == 0 && !controller.isLoading.value),
                                         likeKey: GlobalKey(),
                                         reelsScreenController: controller,
                                         onUpdateReelData: controller.onUpdateReelData,

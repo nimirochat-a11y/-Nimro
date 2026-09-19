@@ -11,6 +11,7 @@ import 'package:nimiro/model/misc/activity_notification_model.dart';
 import 'package:nimiro/screen/comment_sheet/helper/comment_helper.dart';
 import 'package:nimiro/screen/notification_screen/notification_screen_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
+import 'package:nimiro/utilities/color_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -45,10 +46,14 @@ class ActivityNotificationPage extends StatelessWidget {
               children: [
                 FullNameWithBlueTick(
                     username: data.fromUser?.fullname,
-                    fontSize: 12,
+                    fontColor: ColorRes.textDarkGrey,
+                    fontSize: 13,
                     isVerify: data.fromUser?.isVerify,
                     onTap: () => controller.onDescriptionTap(data)),
                 if (data.type != ActivityNotifyType.none)
+                  // FIX(v14): `textLightGrey` was low-contrast on the light
+                  // card, so notification lines read as dark unreadable text.
+                  // The body now uses the palette's readable dark grey.
                   InkWell(
                       onTap: () => controller.onDescriptionTap(data),
                       child: SizedBox(
@@ -57,7 +62,7 @@ class ActivityNotificationPage extends StatelessWidget {
                           _getNotificationText(),
                           style: TextStyleCustom.outFitRegular400(
                             fontSize: 15,
-                            color: textLightGrey(context),
+                            color: ColorRes.textDarkGrey,
                           ),
                         ),
                       )),
@@ -155,7 +160,7 @@ class NotificationGiftIcon extends StatelessWidget {
         height: 35,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: textDarkGrey(context),
+          color: ColorRes.textDarkGrey,
           borderRadius: BorderRadius.circular(30),
         ),
         child: Row(

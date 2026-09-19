@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
@@ -117,6 +118,8 @@ class AuthScreenController extends BaseController {
     }
   }
 
+  static const String _accountKey = 'nimiro_fcm_account';
+
   void onGoogleTap() async {
     if (_isLoggingIn) return;
     _isLoggingIn = true;
@@ -171,6 +174,24 @@ class AuthScreenController extends BaseController {
       String? deviceTokenOverride}) async {
     String? deviceToken = deviceTokenOverride ??
         await FirebaseNotificationManager.instance.getNotificationToken();
+    // FIX(v13): the FCM token must survive a re-login. The plugin can return
+    // null (Play Services not ready yet, permission not yet granted, first
+    // launch) even when the device ALREADY has a valid token cached from an
+    // earlier session. Falling back to 'nimiro:<identity>' in that case is what
+    // left rows in `device_token` holding a value Firebase answers with 400
+    // INVALID_ARGUMENT, so no push could ever reach the device. When this
+    // account already registered a real token, reuse it instead of
+    // overwriting it with the synthetic placeholder. The placeholder is now
+    // only used for a genuinely first-ever login that has no token yet.
+    if ((deviceToken ?? '').isEmpty) {
+      final stored = GetStorage().read<String>(_accountKey);
+      if (stored != null && stored.isNotEmpty) {
+        deviceToken = stored;
+        Loggers.info('DeviceToken reused from storage for this account.');
+      }
+    } else {
+      GetStorage().write(_accountKey, deviceToken);
+    }
     deviceToken ??= 'nimiro:$identity';
 
     user.User? userData;

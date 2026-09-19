@@ -80,10 +80,19 @@ class LiveStreamListView extends StatelessWidget {
     Widget _buildImageContain({List<AppUser> allUsers = const [], int userCount = 0, bool isBattleOn = false}) {
       if (allUsers.isEmpty) return const SizedBox();
 
+      // FIX(v13): `userCount` is derived from the room's participant rows while
+      // `allUsers` is built from the host + co-host ids. When those disagree -
+      // a co-host id with no matching user, a stale participant row, a room
+      // whose co-host list never resolved - the branches below indexed past the
+      // end of the list. That threw a RangeError which took down the entire live
+      // grid, so live rooms appeared not to work at all. Never index past the
+      // list: render the branch that matches what we actually have.
+      final safeUserCount = userCount > allUsers.length ? allUsers.length : userCount;
+
       return Container(
           height: 310 / 2.4,
           alignment: Alignment.center,
-          child: switch (userCount) {
+          child: switch (safeUserCount) {
             2 => SizedBox(
                 width: double.infinity,
                 child: LayoutBuilder(builder: (context, constraints) {

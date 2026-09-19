@@ -82,8 +82,11 @@ class MyApp extends StatelessWidget {
       translations: Get.find<DynamicTranslations>(),
       locale: Locale(SessionManager.instance.getLang()),
       fallbackLocale: Locale(SessionManager.instance.getFallbackLang()),
-      themeMode: SessionManager.instance.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      darkTheme: ThemeRes.darkTheme(context),
+      // FIX(v13): the app's original and only design is the LIGHT theme. The
+      // dark theme added by the "theme redesign" has been removed from
+      // ThemeRes entirely, so the app renders light regardless of the device
+      // setting and regardless of any dark_mode value left in local storage.
+      themeMode: ThemeMode.light,
       theme: ThemeRes.lightTheme(context),
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),

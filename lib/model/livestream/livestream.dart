@@ -39,22 +39,57 @@ class Livestream {
       this.dummyUserLink,
       this.battleDuration = AppRes.battleDurationInMinutes});
 
+  static int? _toInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    return null;
+  }
+
+  static List<int>? _toIntList(dynamic value) {
+    if (value is! List) return const <int>[];
+    return value.map(_toInt).whereType<int>().toList();
+  }
+
   Livestream.fromJson(Map<String, dynamic> json) {
-    type = LivestreamType.fromString(json['type']);
-    battleType = BattleType.fromString(json['battle_type']);
-    watchingCount = json['watching_count'];
-    description = json['description'];
-    isRestrictToJoin = json['is_restrict_to_join'];
-    hostViewID = json['host_view_id'];
-    roomID = json['room_id'];
-    likeCount = json['like_count'];
-    hostId = json['host_id'];
-    coHostIds = json['co-host_ids'].cast<int>();
-    createdAt = json['created_at'];
-    battleCreatedAt = json['battle_created_at'];
-    isDummyLive = json['is_dummy_live'];
-    dummyUserLink = json['dummy_user_link'];
-    battleDuration = json['battle_duration'];
+    // FIX(v13): every key below was read under a name the Laravel room registry
+    // does not send. `type`, `battle_type` and `co-host_ids` threw outright, so
+    // a single registry row aborted the whole refresh and the live list stayed
+    // empty. Host and timestamps were also dropped. Both spellings are accepted
+    // so previously cached payloads keep parsing.
+    type = LivestreamType.fromString(
+        (json['type'] ?? json['room_type'] ?? json['livestream_type'])
+            ?.toString());
+    battleType = BattleType.fromString(json['battle_type']?.toString());
+    watchingCount = _toInt(json['watching_count']);
+    description = json['description'] ?? json['title'];
+    isRestrictToJoin =
+        _toInt(json['is_restrict_to_join'] ?? json['restrict_to_join']);
+    hostViewID = _toInt(json['host_view_id']);
+    roomID = json['room_id']?.toString();
+    likeCount = _toInt(json['like_count']);
+    hostId = _toInt(json['host_id']);
+    coHostIds = _toIntList(json['co-host_ids'] ?? json['co_host_ids']);
+    createdAt = _toInt(json['created_at']);
+    battleCreatedAt = _toInt(json['battle_created_at']);
+    isDummyLive = _toInt(json['is_dummy_live']) ??
+        (type == LivestreamType.dummy ? 1 : 0);
+    dummyUserLink = json['dummy_user_link'] ?? json['link'];
+    battleDuration =
+        _toInt(json['battle_duration']) ?? AppRes.battleDurationInMinutes;
+
+    final host = json['host_user'];
+    if (host is Map) {
+      hostUser = AppUser.fromJson(Map<String, dynamic>.from(host));
+    }
+    final coHosts = json['co_host_users'];
+    if (coHosts is List) {
+      coHostUsers = coHosts
+          .whereType<Map>()
+          .map((e) => AppUser.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -116,7 +151,7 @@ enum LivestreamType {
 
   const LivestreamType(this.value);
 
-  static LivestreamType fromString(String value) {
+  static LivestreamType fromString(String? value) {
     return LivestreamType.values.firstWhereOrNull((e) => e.value == value) ??
         LivestreamType.livestream;
   }

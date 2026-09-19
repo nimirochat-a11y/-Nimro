@@ -94,11 +94,12 @@ class _ReelPageState extends State<ReelPage> {
       _controller!.setLooping(true);
       _initialized = true;
 
-      if (dashboardController.selectedPageIndex.value != 0 && widget.isHomePage) {
-        return;
-      }
-      // ✅ Auto play only when visible and autoplay flag true
-      if (widget.autoPlay && widget.reelsScreenController.isCurrentPageVisible) {
+      // FIX(v13): autoplay no longer waits for a "page visible" flag.
+      // `isCurrentPageVisible` is only flipped by the reel-page observer, so a
+      // reel opened from a notification, a profile or a shared link hit this
+      // branch with the flag still false and sat paused on its first frame
+      // until the user tapped it. Autoplay is now unconditional.
+      if (widget.autoPlay) {
         await _controller!.play();
         _increaseViewsCount(widget.reelData);
         isPlaying = true;
@@ -127,16 +128,26 @@ class _ReelPageState extends State<ReelPage> {
   void _handleVisibilityChanged(VisibilityInfo info) {
     if (!_initialized || _controller == null || !_controller!.value.isInitialized) return;
 
-    if ((info.visibleFraction * 100) > 90) {
+    final double visible = info.visibleFraction * 100;
+
+    // FIX(v14): the old thresholds were `> 90` to play and `else` (i.e. ANY
+    // fraction below 90) to pause. On first build the detector fires while the
+    // page is still being laid out, so a reel could be played by autoplay and
+    // then immediately paused by a sub-90% callback — the user saw a frozen
+    // first frame and had to tap. Only a genuinely off-screen page pauses now.
+    if (visible > 60) {
       if (!_controller!.value.isPlaying) {
         _controller!.play();
         isPlaying = true;
       }
-    } else {
+    } else if (visible < 20) {
       if (_controller!.value.isPlaying) {
         _controller!.pause();
         isPlaying = false;
       }
+    } else {
+      // Partially visible: keep whatever state the player is already in.
+      return;
     }
     setState(() {});
   }
