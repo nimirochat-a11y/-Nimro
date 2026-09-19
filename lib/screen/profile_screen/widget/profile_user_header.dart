@@ -40,45 +40,43 @@ class ProfileUserHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ProfileCoverView(
-                user: user, isUserNotFound: isUserNotFound, isMe: isMe, controller: controller),
+              user: user,
+              isUserNotFound: isUserNotFound,
+              isMe: isMe,
+              controller: controller,
+              stats: [
+                StatItem(value: user?.totalPostLikesCount ?? 0, label: LKey.likes.tr),
+                StatItem(value: user?.followerCount ?? 0, label: LKey.followers.tr),
+                StatItem(value: user?.followingCount ?? 0, label: LKey.following.tr),
+              ],
+              onStatsTap: (value) {
+                if (isUserNotFound) {
+                  return;
+                }
+                switch (value) {
+                  case 0:
+                    break;
+                  case 1:
+                    user?.checkIsBlocked(() {
+                      Get.to(() => FollowFollowingScreen(
+                          type: FollowFollowingType.follower, user: user));
+                    });
+                    break;
+                  case 2:
+                    user?.checkIsBlocked(() {
+                      Get.to(() => FollowFollowingScreen(
+                          type: FollowFollowingType.following, user: user));
+                    });
+                    break;
+                }
+              },
+            ),
             Padding(
               padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 5,
                 children: [
-                  ProfileStatsRow(
-                    userNotFound: isUserNotFound,
-                    controller: controller,
-                    user: user,
-                    stats: [
-                      StatItem(value: user?.totalPostLikesCount ?? 0, label: LKey.likes.tr),
-                      StatItem(value: user?.followerCount ?? 0, label: LKey.followers.tr),
-                      StatItem(value: user?.followingCount ?? 0, label: LKey.following.tr),
-                    ],
-                    onTap: (value) {
-                      if (isUserNotFound) {
-                        return;
-                      }
-                      switch (value) {
-                        case 0:
-                          break;
-                        case 1:
-                          user?.checkIsBlocked(() {
-                            Get.to(() => FollowFollowingScreen(
-                                type: FollowFollowingType.follower, user: user));
-                          });
-                          break;
-                        case 2:
-                          user?.checkIsBlocked(() {
-                            Get.to(() => FollowFollowingScreen(
-                                type: FollowFollowingType.following, user: user));
-                          });
-                          break;
-                      }
-                    },
-                  ),
-                  if (!isUserNotFound) UserNameView(user: user),
                   if (!isUserNotFound) UserLinkView(user: user),
                   if (!isUserNotFound) UserBioView(user: user),
                   isUserNotFound
@@ -99,11 +97,20 @@ class ProfileCoverView extends StatelessWidget {
   final bool isUserNotFound;
   final bool isMe;
   final ProfileScreenController controller;
+  final List<StatItem> stats;
+  final Function(int value) onStatsTap;
   const ProfileCoverView(
-      {super.key, required this.user, required this.isUserNotFound, required this.isMe, required this.controller});
+      {super.key,
+      required this.user,
+      required this.isUserNotFound,
+      required this.isMe,
+      required this.controller,
+      required this.stats,
+      required this.onStatsTap});
 
   static const double coverHeight = 130;
   static const double avatarSize = 90;
+  static const double infoBlockExtra = 68;
 
   void _goEdit() => Get.to(() => EditProfileScreen(onUpdateUser: controller.onUpdateUser));
 
@@ -115,7 +122,7 @@ class ProfileCoverView extends StatelessWidget {
     GlobalKey previewKey = GlobalKey();
     RxBool isHeroEnable = false.obs;
     return SizedBox(
-      height: coverHeight + (avatarSize / 2) + 10,
+      height: coverHeight + (avatarSize / 2) + infoBlockExtra,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -228,6 +235,27 @@ class ProfileCoverView extends StatelessWidget {
               ],
             ),
           ),
+          if (!isUserNotFound)
+            Positioned(
+              left: 15,
+              right: avatarSize + 30,
+              top: coverHeight + 6,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  UserNameView(user: user),
+                  const SizedBox(height: 6),
+                  ProfileStatsRow(
+                    userNotFound: false,
+                    controller: controller,
+                    user: user,
+                    stats: stats,
+                    onTap: onStatsTap,
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
