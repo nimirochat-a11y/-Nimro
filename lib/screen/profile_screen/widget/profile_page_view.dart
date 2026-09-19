@@ -34,6 +34,13 @@ class ProfilePageView extends StatelessWidget {
                       controller: controller.pageController,
                       onPageChanged: controller.onTabChanged,
                       children: [
+                        PostList(
+                          posts: controller.posts,
+                          onFetchMoreData: controller.fetchPost,
+                          isLoading: controller.isPostLoading,
+                          shouldShowPinOption: true,
+                          isMe: isMe,
+                        ),
                         ReelList(
                             reels: controller.reels,
                             isLoading: controller.isReelLoading,
@@ -58,13 +65,6 @@ class ProfilePageView extends StatelessWidget {
                                                   isModerator: true))
                                   ],
                             isPinShow: true),
-                        PostList(
-                          posts: controller.posts,
-                          onFetchMoreData: controller.fetchPost,
-                          isLoading: controller.isPostLoading,
-                          shouldShowPinOption: true,
-                          isMe: isMe,
-                        )
                       ],
                     );
     }));

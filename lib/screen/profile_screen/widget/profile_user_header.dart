@@ -132,22 +132,6 @@ class ProfileCoverView extends StatelessWidget {
             radius: 0,
             fit: BoxFit.cover,
           ),
-          if (isMe && !isUserNotFound)
-            Positioned(
-              left: 12,
-              top: 12,
-              child: InkWell(
-                onTap: _goEdit,
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: blackPure(context).withValues(alpha: .45),
-                  ),
-                  child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 18),
-                ),
-              ),
-            ),
           Positioned(
             right: 15,
             top: coverHeight - (avatarSize / 2),
@@ -190,10 +174,10 @@ class ProfileCoverView extends StatelessWidget {
                                 : null,
                           ),
                           child: Container(
-                            padding: const EdgeInsets.all(3),
+                            padding: EdgeInsets.all(isStoryAvailable ? 3 : 0),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: whitePure(context),
+                              color: isStoryAvailable ? whitePure(context) : Colors.transparent,
                             ),
                             child: Obx(
                               () => HeroMode(
@@ -202,7 +186,7 @@ class ProfileCoverView extends StatelessWidget {
                                   tag: 'profile-${user?.id}',
                                   child: CustomImage(
                                     size: !isStoryAvailable
-                                        ? Size(avatarSize - 6, avatarSize - 6)
+                                        ? Size(avatarSize, avatarSize)
                                         : Size(avatarSize - 16, avatarSize - 16),
                                     image: user?.isBlock == true
                                         ? ''
@@ -215,23 +199,6 @@ class ProfileCoverView extends StatelessWidget {
                           ),
                         ),
                       ),
-                if (isMe && !isUserNotFound)
-                  Positioned(
-                    right: 0,
-                    bottom: 4,
-                    child: InkWell(
-                      onTap: _goEdit,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: bgGrey(context),
-                          border: Border.all(color: whitePure(context), width: 2),
-                        ),
-                        child: Icon(Icons.camera_alt_outlined, color: textDarkGrey(context), size: 15),
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),

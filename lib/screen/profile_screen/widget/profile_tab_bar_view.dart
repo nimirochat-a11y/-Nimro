@@ -42,7 +42,7 @@ class ProfileTabs extends StatelessWidget {
             },
             indicatorColor: Colors.transparent,
             tabs: List.generate(2, (index) {
-              final icon = index == 0 ? AssetRes.icReel : AssetRes.icPost;
+              final icon = index == 0 ? AssetRes.icPost : AssetRes.icReel;
               return Obx(() {
                 final color = controller.selectedTabIndex.value == index
                     ? themeAccentSolid(context)
