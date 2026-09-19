@@ -1,3 +1,4 @@
+import 'package:dismissible_page/dismissible_page.dart';
 import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,11 @@ import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/gradient_border.dart';
 import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/languages/languages_keys.dart';
+import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/edit_profile_screen/edit_profile_screen.dart';
 import 'package:nimiro/screen/follow_following_screen/follow_following_screen.dart';
+import 'package:nimiro/screen/image_view_screen/image_view_screen.dart';
 import 'package:nimiro/screen/level_screen/level_screen.dart';
 import 'package:nimiro/screen/profile_screen/profile_screen_controller.dart';
 import 'package:nimiro/screen/profile_screen/widget/profile_preview_interactive_screen.dart';
@@ -126,11 +129,22 @@ class ProfileCoverView extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          CustomImage(
-            size: Size(MediaQuery.of(context).size.width, coverHeight),
-            image: isUserNotFound ? '' : user?.coverPhoto?.addBaseURL(),
-            radius: 0,
-            fit: BoxFit.cover,
+          GestureDetector(
+            onTap: () {
+              final String? cover = user?.coverPhoto;
+              if (!isUserNotFound && cover != null && cover.isNotEmpty) {
+                context.pushTransparentRoute(ImageViewScreen(
+                  images: [Images(image: cover)],
+                  tag: 'profile-cover-${user?.id}',
+                ));
+              }
+            },
+            child: CustomImage(
+              size: Size(MediaQuery.of(context).size.width, coverHeight),
+              image: isUserNotFound ? '' : user?.coverPhoto?.addBaseURL(),
+              radius: 0,
+              fit: BoxFit.cover,
+            ),
           ),
           Positioned(
             right: 15,
@@ -142,7 +156,19 @@ class ProfileCoverView extends StatelessWidget {
                     ? Image.asset(AssetRes.icUserPlaceholder,
                         width: avatarSize, height: avatarSize, fit: BoxFit.cover)
                     : GestureDetector(
-                        onTap: () => controller.onStoryTap(isStoryAvailable),
+                        onTap: () {
+                      if (isStoryAvailable) {
+                        controller.onStoryTap(isStoryAvailable);
+                        return;
+                      }
+                      final String? photo = user?.profilePhoto;
+                      if (user?.isBlock != true && photo != null && photo.isNotEmpty) {
+                        context.pushTransparentRoute(ImageViewScreen(
+                          images: [Images(image: photo)],
+                          tag: 'profile-avatar-${user?.id}',
+                        ));
+                      }
+                    },
                         onLongPressStart: (details) => isHeroEnable.value = true,
                         onLongPressEnd: (details) => isHeroEnable.value = false,
                         onLongPress: () {
