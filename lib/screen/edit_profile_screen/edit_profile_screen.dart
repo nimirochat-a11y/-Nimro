@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
@@ -174,6 +176,9 @@ class EditProfileScreen extends StatelessWidget {
                       title: LKey.username.tr,
                       onChanged: controller.checkUsernameAvailability,
                       isError: !controller.isValidUserName.value,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_.]')),
+                      ],
                     );
                   }),
                   TextFieldCustom(

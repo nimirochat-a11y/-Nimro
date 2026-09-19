@@ -8,21 +8,50 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 
+String _toArabicDigits(String input) {
+  const List<String> western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const List<String> eastern = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  String out = input;
+  for (int i = 0; i < western.length; i++) {
+    out = out.replaceAll(western[i], eastern[i]);
+  }
+  return out;
+}
+
+String _arabicCompactFormat(num n) {
+  double absN = n.abs().toDouble();
+  String sign = n < 0 ? '-' : '';
+  double value;
+  String suffix;
+  if (absN >= 1000000000) {
+    value = absN / 1000000000;
+    suffix = ' مليار';
+  } else if (absN >= 1000000) {
+    value = absN / 1000000;
+    suffix = ' مليون';
+  } else if (absN >= 1000) {
+    value = absN / 1000;
+    suffix = ' ألف';
+  } else {
+    return '$sign${_toArabicDigits(absN.toInt().toString())}';
+  }
+  String valueStr = value == value.roundToDouble()
+      ? value.toInt().toString()
+      : value.toStringAsFixed(1);
+  valueStr = valueStr.replaceAll('.', ',');
+  return '$sign${_toArabicDigits(valueStr)}$suffix';
+}
+
 extension Number on num {
   String get numberFormat {
-    String formatted = NumberFormat.compact().format(this);
     if (SessionManager.instance.getLang() == 'ar') {
-      const List<String> western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-      const List<String> eastern = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-      for (int i = 0; i < western.length; i++) {
-        formatted = formatted.replaceAll(western[i], eastern[i]);
-      }
+      return _arabicCompactFormat(this);
     }
-    return formatted;
+    return NumberFormat.compact().format(this);
   }
 
   String get currencyFormat =>
-      '${SessionManager.instance.getCurrency()}${NumberFormat.compact().format(this)}';
+      '${SessionManager.instance.getCurrency()}$numberFormat';
 
   int get convertInt => toInt();
 
