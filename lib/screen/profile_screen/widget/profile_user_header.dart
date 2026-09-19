@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/manager/share_manager.dart';
+import 'package:nimiro/screen/qr_code_screen/qr_code_screen.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/custom_popup_menu_button.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
@@ -257,8 +257,6 @@ class ProfileStatsRow extends StatelessWidget {
                 onTap: () => onTap(index),
                 child: StatColumn(value: stats[index].value, label: stats[index].label),
               ),
-              if (index != stats.length - 1)
-                Container(height: 20, width: .5, color: textLightGrey(context)),
             ],
           ),
         ),
@@ -465,7 +463,7 @@ class UserButtonView extends StatelessWidget {
             const SizedBox(width: 8),
             InkWell(
               onTap: () {
-                ShareManager.shared.showCustomShareSheet(user: user, keys: ShareKeys.user);
+                Get.to(() => const QrCodeScreen());
               },
               child: Container(
                   height: 45,
@@ -475,7 +473,7 @@ class UserButtonView extends StatelessWidget {
                         SmoothRectangleBorder(borderRadius: SmoothBorderRadius(cornerRadius: 10, cornerSmoothing: 1)),
                     color: bgGrey(context),
                   ),
-                  child: Image.asset(AssetRes.icShare1, height: 21, width: 21)),
+                  child: Image.asset(AssetRes.icQrCode_1, height: 21, width: 21)),
             )
           ],
         ),
