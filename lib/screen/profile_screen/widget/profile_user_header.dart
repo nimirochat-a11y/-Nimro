@@ -40,7 +40,7 @@ class ProfileUserHeader extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ProfileCoverView(
-                user: user, isUserNotFound: isUserNotFound, controller: controller),
+                user: user, isUserNotFound: isUserNotFound, isMe: isMe, controller: controller),
             Padding(
               padding: const EdgeInsets.only(left: 15.0, right: 15.0, top: 10),
               child: Column(
@@ -97,12 +97,15 @@ class ProfileUserHeader extends StatelessWidget {
 class ProfileCoverView extends StatelessWidget {
   final User? user;
   final bool isUserNotFound;
+  final bool isMe;
   final ProfileScreenController controller;
   const ProfileCoverView(
-      {super.key, required this.user, required this.isUserNotFound, required this.controller});
+      {super.key, required this.user, required this.isUserNotFound, required this.isMe, required this.controller});
 
   static const double coverHeight = 130;
   static const double avatarSize = 90;
+
+  void _goEdit() => Get.to(() => EditProfileScreen(onUpdateUser: controller.onUpdateUser));
 
   @override
   Widget build(BuildContext context) {
@@ -122,70 +125,108 @@ class ProfileCoverView extends StatelessWidget {
             radius: 0,
             fit: BoxFit.cover,
           ),
+          if (isMe && !isUserNotFound)
+            Positioned(
+              left: 12,
+              top: 12,
+              child: InkWell(
+                onTap: _goEdit,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: blackPure(context).withValues(alpha: .45),
+                  ),
+                  child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 18),
+                ),
+              ),
+            ),
           Positioned(
-            left: 15,
+            right: 15,
             top: coverHeight - (avatarSize / 2),
-            child: isUserNotFound
-                ? Image.asset(AssetRes.icUserPlaceholder,
-                    width: avatarSize, height: avatarSize, fit: BoxFit.cover)
-                : GestureDetector(
-                    onTap: () => controller.onStoryTap(isStoryAvailable),
-                    onLongPressStart: (details) => isHeroEnable.value = true,
-                    onLongPressEnd: (details) => isHeroEnable.value = false,
-                    onLongPress: () {
-                      user?.checkIsBlocked(() {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                              opaque: false,
-                              barrierColor: Colors.transparent,
-                              transitionDuration: const Duration(milliseconds: 300),
-                              pageBuilder: (_, __, ___) =>
-                                  ProfilePreviewInteractiveScreen(user: user)),
-                        );
-                      });
-                    },
-                    child: Container(
-                      key: previewKey,
-                      width: avatarSize,
-                      height: avatarSize,
-                      alignment: Alignment.center,
-                      decoration: ShapeDecoration(
-                        shape: SmoothRectangleBorder(
-                          borderRadius: SmoothBorderRadius(cornerRadius: avatarSize),
-                        ),
-                        gradient: isStoryAvailable
-                            ? (isWatch
-                                ? StyleRes.disabledGreyGradient(opacity: .5)
-                                : StyleRes.themeGradient)
-                            : null,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: whitePure(context),
-                        ),
-                        child: Obx(
-                          () => HeroMode(
-                            enabled: isHeroEnable.value,
-                            child: Hero(
-                              tag: 'profile-${user?.id}',
-                              child: CustomImage(
-                                size: !isStoryAvailable
-                                    ? Size(avatarSize - 6, avatarSize - 6)
-                                    : Size(avatarSize - 16, avatarSize - 16),
-                                image: user?.isBlock == true
-                                    ? ''
-                                    : user?.profilePhoto?.addBaseURL(),
-                                fullName: user?.fullname,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                isUserNotFound
+                    ? Image.asset(AssetRes.icUserPlaceholder,
+                        width: avatarSize, height: avatarSize, fit: BoxFit.cover)
+                    : GestureDetector(
+                        onTap: () => controller.onStoryTap(isStoryAvailable),
+                        onLongPressStart: (details) => isHeroEnable.value = true,
+                        onLongPressEnd: (details) => isHeroEnable.value = false,
+                        onLongPress: () {
+                          user?.checkIsBlocked(() {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                  opaque: false,
+                                  barrierColor: Colors.transparent,
+                                  transitionDuration: const Duration(milliseconds: 300),
+                                  pageBuilder: (_, __, ___) =>
+                                      ProfilePreviewInteractiveScreen(user: user)),
+                            );
+                          });
+                        },
+                        child: Container(
+                          key: previewKey,
+                          width: avatarSize,
+                          height: avatarSize,
+                          alignment: Alignment.center,
+                          decoration: ShapeDecoration(
+                            shape: SmoothRectangleBorder(
+                              borderRadius: SmoothBorderRadius(cornerRadius: avatarSize),
+                            ),
+                            gradient: isStoryAvailable
+                                ? (isWatch
+                                    ? StyleRes.disabledGreyGradient(opacity: .5)
+                                    : StyleRes.themeGradient)
+                                : null,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: whitePure(context),
+                            ),
+                            child: Obx(
+                              () => HeroMode(
+                                enabled: isHeroEnable.value,
+                                child: Hero(
+                                  tag: 'profile-${user?.id}',
+                                  child: CustomImage(
+                                    size: !isStoryAvailable
+                                        ? Size(avatarSize - 6, avatarSize - 6)
+                                        : Size(avatarSize - 16, avatarSize - 16),
+                                    image: user?.isBlock == true
+                                        ? ''
+                                        : user?.profilePhoto?.addBaseURL(),
+                                    fullName: user?.fullname,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
+                if (isMe && !isUserNotFound)
+                  Positioned(
+                    right: 0,
+                    bottom: 4,
+                    child: InkWell(
+                      onTap: _goEdit,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: bgGrey(context),
+                          border: Border.all(color: whitePure(context), width: 2),
+                        ),
+                        child: Icon(Icons.camera_alt_outlined, color: textDarkGrey(context), size: 15),
+                      ),
                     ),
                   ),
+              ],
+            ),
           ),
         ],
       ),
