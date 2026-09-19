@@ -5,8 +5,6 @@ import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/blocked_user_screen/blocked_user_screen.dart';
 import 'package:nimiro/screen/coin_wallet_screen/coin_wallet_screen.dart';
-import 'package:nimiro/screen/edit_profile_screen/edit_profile_screen.dart';
-import 'package:nimiro/screen/qr_code_screen/qr_code_screen.dart';
 import 'package:nimiro/screen/saved_post_screen/saved_post_screen.dart';
 import 'package:nimiro/screen/select_language_screen/select_language_screen.dart';
 import 'package:nimiro/screen/settings_screen/widget/setting_icon_text_with_arrow.dart';
@@ -27,14 +25,7 @@ class PersonalSettingsScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SettingIconTextWithArrow(
-                icon: AssetRes.icEdit,
-                title: LKey.editProfile,
-                onTap: () {
-                  Get.to(() => EditProfileScreen(onUpdateUser: onUpdateUser));
-                },
-              ),
-              SettingIconTextWithArrow(
+SettingIconTextWithArrow(
                 icon: AssetRes.icPostBookmark,
                 title: LKey.savedPosts,
                 onTap: () {
@@ -57,14 +48,7 @@ class PersonalSettingsScreen extends StatelessWidget {
                   Get.to(() => const BlockedUserScreen());
                 },
               ),
-              SettingIconTextWithArrow(
-                icon: AssetRes.icQrCode_1,
-                title: LKey.myQrCode,
-                onTap: () {
-                  Get.to(() => const QrCodeScreen());
-                },
-              ),
-              SettingIconTextWithArrow(
+SettingIconTextWithArrow(
                 icon: AssetRes.icWallet,
                 title: LKey.coinWallet,
                 onTap: () {
