@@ -24,6 +24,12 @@ import 'common/service/network_helper/network_helper.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   Loggers.success("Handling a background message: ${message.data}");
   await Firebase.initializeApp();
+  // The background handler runs in its own isolate, so local storage must be
+  // (re)initialized here before it can read/write the persisted unread count.
+  await GetStorage.init('nimiro');
+  if (message.data['type'] != NotificationType.chat.type) {
+    SessionManager.instance.setNotifyCount(1);
+  }
   if (Platform.isIOS) {
     FirebaseNotificationManager.instance.showNotification(message);
   }
