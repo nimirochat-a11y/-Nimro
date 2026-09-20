@@ -67,8 +67,13 @@ class AuthScreenController extends BaseController {
       }
 
       String fullname = credential.user?.displayName ?? email.split('@')[0];
+      final firebaseIdToken = await credential.user?.getIdToken();
       final user.User? data = await _registration(
-          identity: email, loginMethod: LoginMethod.email, fullname: fullname, loginVia: LoginVia.loginInUser);
+          identity: email,
+          loginMethod: LoginMethod.email,
+          fullname: fullname,
+          loginVia: LoginVia.loginInUser,
+          idToken: firebaseIdToken);
       stopLoader();
 
       if (data != null) {
@@ -105,11 +110,13 @@ class AuthScreenController extends BaseController {
     showLoader();
     UserCredential? credential = await createUserWithEmailAndPassword();
     if (credential != null) {
+      final firebaseIdToken = await credential.user?.getIdToken();
       await _registration(
           identity: emailController.text.trim(),
           loginMethod: LoginMethod.email,
           fullname: fullNameController.text.trim(),
-          loginVia: LoginVia.loginInUser);
+          loginVia: LoginVia.loginInUser,
+          idToken: firebaseIdToken);
       credential.user?.updateDisplayName(fullNameController.text.trim());
       credential.user?.sendEmailVerification();
       Get.back();
@@ -132,6 +139,7 @@ class AuthScreenController extends BaseController {
         loginMethod: LoginMethod.google,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
+        idToken: profile.accessToken,
         deviceTokenOverride: 'supabase:${profile.id}',
       );
       stopLoader();
@@ -155,6 +163,7 @@ class AuthScreenController extends BaseController {
         loginMethod: LoginMethod.apple,
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
+        idToken: profile.accessToken,
         deviceTokenOverride: 'supabase:${profile.id}',
       );
       stopLoader();
@@ -171,6 +180,7 @@ class AuthScreenController extends BaseController {
       required LoginMethod loginMethod,
       String? fullname,
       required LoginVia loginVia,
+      String? idToken,
       String? deviceTokenOverride}) async {
     String? deviceToken = deviceTokenOverride ??
         await FirebaseNotificationManager.instance.getNotificationToken();
@@ -197,8 +207,12 @@ class AuthScreenController extends BaseController {
     user.User? userData;
     switch (loginVia) {
       case LoginVia.loginInUser:
-        userData = await UserService.instance
-            .logInUser(identity: identity, loginMethod: loginMethod, deviceToken: deviceToken, fullName: fullname);
+        userData = await UserService.instance.logInUser(
+            identity: identity,
+            loginMethod: loginMethod,
+            deviceToken: deviceToken,
+            fullName: fullname,
+            idToken: idToken);
     }
 
     Setting? setting = SessionManager.instance.getSettings();

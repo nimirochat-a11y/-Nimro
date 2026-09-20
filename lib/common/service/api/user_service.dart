@@ -43,6 +43,7 @@ class UserService {
     required String identity,
     String? deviceToken,
     required LoginMethod loginMethod,
+    String? idToken,
   }) async {
     UserModel model = await ApiService.instance.call(
         url: WebService.user.loginInUser,
@@ -51,7 +52,8 @@ class UserService {
           Params.identity: identity,
           Params.deviceToken: deviceToken,
           Params.device: Platform.isAndroid ? 0 : 1,
-          Params.loginMethod: loginMethod.title()
+          Params.loginMethod: loginMethod.title(),
+          Params.idToken: idToken,
         },
         fromJson: UserModel.fromJson);
 

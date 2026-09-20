@@ -49,7 +49,7 @@ class SupabaseService {
   }
 
   /// Launches native OAuth, waits for the session, and returns a profile.
-  Future<({String id, String email, String name})> signInWithOAuth(
+  Future<({String id, String email, String name, String? accessToken})> signInWithOAuth(
       OAuthProvider provider) async {
     if (!_initialized) await initialize();
     if (client.auth.currentSession != null) {
@@ -78,6 +78,7 @@ class SupabaseService {
             authUser.userMetadata?['name'] ??
             (email.isNotEmpty ? email.split('@')[0] : 'User'))
         .toString();
-    return (id: authUser.id, email: email, name: name);
+    final accessToken = client.auth.currentSession?.accessToken;
+    return (id: authUser.id, email: email, name: name, accessToken: accessToken);
   }
 }

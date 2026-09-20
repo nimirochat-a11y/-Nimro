@@ -22,6 +22,7 @@ class Params {
   static const String deviceToken = 'device_token';
   static const String device = 'device';
   static const String loginMethod = 'login_method';
+  static const String idToken = 'id_token';
   static const String userId = 'user_id';
   static const String postId = 'post_id';
   static const String commentId = 'comment_id';
