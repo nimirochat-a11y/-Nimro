@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
@@ -18,7 +17,7 @@ import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
-import 'package:nimiro/common/service/supabase/chat_repository.dart';
+import 'package:nimiro/common/service/supabase/chat_api_repository.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
@@ -62,11 +61,11 @@ class ChatScreenController extends BlockUserController
   late int otherUserId;
   late AnimationController audioAnimationController;
   Animation<double>? audioWidthAnimation;
-  final ChatRepository _repo = ChatRepository.instance;
+  final ChatApiRepository _repo = ChatApiRepository.instance;
   MessageType chatType = MessageType.text;
   RxList<MessageData> chatList = <MessageData>[].obs;
-  List<RealtimeChannel> chatListeners = [];
-  List<RealtimeChannel> usersStreams = [];
+  List<ChatSubscription> chatListeners = [];
+  List<ChatSubscription> usersStreams = [];
   StreamSubscription<PlayerState>? playerControllerListen;
   String? lastMessageDocumentId;
   RecorderController recorderController = RecorderController();
@@ -344,7 +343,9 @@ class ChatScreenController extends BlockUserController
     } catch (e) {
       Loggers.error('Initial chat fetch error: $e');
     }
-    final sub = _repo.subscribeToMessages(onEvent: (event, payload) {
+    final sub = _repo.subscribeToMessages(
+      conversationId: chatId,
+      onEvent: (event, payload) {
       if (payload['conversation_id'] != chatId) return;
       final message = MessageData.fromJson(payload);
       switch (event) {

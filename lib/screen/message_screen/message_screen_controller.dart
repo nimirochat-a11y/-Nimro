@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/service/supabase/chat_repository.dart';
+import 'package:nimiro/common/service/supabase/chat_api_repository.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
@@ -21,8 +20,8 @@ class MessageScreenController extends BaseController {
   RxList<ChatThread> requestsUsers = <ChatThread>[].obs;
   final dashboardController = Get.find<DashboardScreenController>();
   final firebaseFirestoreController = Get.find<FirebaseFirestoreController>();
-  final ChatRepository _repo = ChatRepository.instance;
-  RealtimeChannel? _subscription;
+  final ChatApiRepository _repo = ChatApiRepository.instance;
+  ChatSubscription? _subscription;
 
   @override
   void onInit() {

@@ -6,8 +6,7 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/controller/ads_controller.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
-import 'package:nimiro/common/service/supabase/chat_repository.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'package:nimiro/common/service/supabase/chat_api_repository.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
@@ -45,7 +44,7 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   RxInt unReadCount = 0.obs;
   RxInt requestUnReadCount = 0.obs;
 
-  RealtimeChannel? _conversationsChannel;
+  ChatSubscription? _conversationsChannel;
   late Animation<double> scaleAnimation;
   User? user = SessionManager.instance.getUser();
 
@@ -94,7 +93,7 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   void onClose() {
     animationController.dispose();
     if (_conversationsChannel != null) {
-      ChatRepository.instance.unsubscribe(_conversationsChannel!);
+      ChatApiRepository.instance.unsubscribe(_conversationsChannel!);
     }
     super.onClose();
   }
@@ -140,7 +139,7 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   void _fetchUnReadCount() async {
     if (user?.id == null) return;
     await _recalculateUnread();
-    _conversationsChannel = ChatRepository.instance.subscribeToUserConversations(
+    _conversationsChannel = ChatApiRepository.instance.subscribeToUserConversations(
       userId: user!.id!,
       onChange: (event, data) => _recalculateUnread(),
     );
@@ -149,7 +148,7 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   Future<void> _recalculateUnread() async {
     if (user?.id == null) return;
     try {
-      final rows = await ChatRepository.instance.listConversationsForUser(user!.id!);
+      final rows = await ChatApiRepository.instance.listConversationsForUser(user!.id!);
       final docs = rows.map((r) => ChatThread.fromJson(r)).toList();
       final totalUnread = docs.where((e) => (e.msgCount ?? 0) > 0).length;
       final requestUnread = docs.where((e) => (e.msgCount ?? 0) > 0 && e.chatType == ChatType.request).length;
