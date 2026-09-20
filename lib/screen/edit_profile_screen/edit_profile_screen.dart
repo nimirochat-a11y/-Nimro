@@ -1,27 +1,23 @@
 import 'dart:io';
-
 import 'package:flutter/services.dart';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/custom_app_bar.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/text_button_custom.dart';
-import 'package:nimiro/common/widget/text_field_custom.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/edit_profile_screen/edit_profile_screen_controller.dart';
 import 'package:nimiro/screen/edit_profile_screen/widget/build_link_view.dart';
+import 'package:nimiro/screen/edit_profile_screen/widget/profile_field_card.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
 class EditProfileScreen extends StatelessWidget {
   final Function(User? user)? onUpdateUser;
-
   const EditProfileScreen({super.key, this.onUpdateUser});
-
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(EditProfileScreenController(onUpdateUser));
@@ -31,33 +27,38 @@ class EditProfileScreen extends StatelessWidget {
           CustomAppBar(title: LKey.editProfile.tr),
           Expanded(
             child: SingleChildScrollView(
+              padding: const EdgeInsets.only(top: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    height: 49,
-                    margin: const EdgeInsets.symmetric(vertical: 3),
-                    alignment: AlignmentDirectional.centerStart,
-                    color: bgLightGrey(context),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: bgLightGrey(context),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     child: Text(
                       '${LKey.userId.tr} : ${controller.userData.value?.id}',
                       style: TextStyleCustom.outFitLight300(
-                          fontSize: 17, color: textLightGrey(context)),
+                          fontSize: 15, color: textLightGrey(context)),
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    padding: const EdgeInsets.only(left: 20, right: 20, bottom: 8),
                     child: Text(LKey.profileImage.tr,
                         style: TextStyleCustom.outFitRegular400(
-                            fontSize: 17, color: textDarkGrey(context))),
+                            fontSize: 15, color: textLightGrey(context))),
                   ),
                   Container(
                     height: 100,
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 8, bottom: 12),
-                    decoration: BoxDecoration(color: bgLightGrey(context)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: bgLightGrey(context),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     alignment: AlignmentDirectional.centerStart,
                     child: InkWell(
                       onTap: controller.onChangeProfileImage,
@@ -70,11 +71,11 @@ class EditProfileScreen extends StatelessWidget {
                                         File(controller
                                                 .fileProfileImage.value?.path ??
                                             ''),
-                                        height: 86,
-                                        width: 86,
+                                        height: 78,
+                                        width: 78,
                                         fit: BoxFit.cover))
                                 : CustomImage(
-                                    size: const Size(86, 86),
+                                    size: const Size(78, 78),
                                     image: controller
                                         .userData.value?.profilePhoto
                                         ?.addBaseURL(),
@@ -90,11 +91,13 @@ class EditProfileScreen extends StatelessWidget {
                               width: 26,
                               decoration: BoxDecoration(
                                   color: textDarkGrey(context),
-                                  shape: BoxShape.circle),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: bgLightGrey(context), width: 2)),
                               child: Center(
                                 child: Image.asset(AssetRes.icEdit_1,
-                                    width: 22,
-                                    height: 22,
+                                    width: 20,
+                                    height: 20,
                                     color: whitePure(context)),
                               ),
                             ),
@@ -104,17 +107,19 @@ class EditProfileScreen extends StatelessWidget {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    padding: const EdgeInsets.only(left: 20, right: 20, bottom: 8),
                     child: Text(LKey.coverImage.tr,
                         style: TextStyleCustom.outFitRegular400(
-                            fontSize: 17, color: textDarkGrey(context))),
+                            fontSize: 15, color: textLightGrey(context))),
                   ),
                   Container(
                     height: 100,
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 8, bottom: 12),
-                    decoration: BoxDecoration(color: bgLightGrey(context)),
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: bgLightGrey(context),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     alignment: AlignmentDirectional.centerStart,
                     child: InkWell(
                       onTap: controller.onChangeCoverImage,
@@ -123,19 +128,19 @@ class EditProfileScreen extends StatelessWidget {
                           Obx(
                             () => controller.fileCoverImage.value != null
                                 ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(10),
                                     child: Image.file(
                                         File(controller
                                             .fileCoverImage.value?.path ??
                                             ''),
-                                        height: 86,
-                                        width: 150,
+                                        height: 78,
+                                        width: 140,
                                         fit: BoxFit.cover))
                                 : ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(10),
                                     child: CustomImage(
-                                      size: const Size(150, 86),
-                                      radius: 8,
+                                      size: const Size(140, 78),
+                                      radius: 10,
                                       fit: BoxFit.cover,
                                       image: controller
                                           .userData.value?.coverPhoto
@@ -153,11 +158,13 @@ class EditProfileScreen extends StatelessWidget {
                               width: 26,
                               decoration: BoxDecoration(
                                   color: textDarkGrey(context),
-                                  shape: BoxShape.circle),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                      color: bgLightGrey(context), width: 2)),
                               child: Center(
                                 child: Image.asset(AssetRes.icEdit_1,
-                                    width: 22,
-                                    height: 22,
+                                    width: 20,
+                                    height: 20,
                                     color: whitePure(context)),
                               ),
                             ),
@@ -166,12 +173,15 @@ class EditProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  TextFieldCustom(
+                  const SizedBox(height: 4),
+                  ProfileFieldCard(
+                    icon: Icons.person_outline,
                     controller: controller.fullNameController,
                     title: LKey.fullName.tr,
                   ),
                   Obx(() {
-                    return TextFieldCustom(
+                    return ProfileFieldCard(
+                      icon: Icons.alternate_email,
                       controller: controller.usernameController,
                       title: LKey.username.tr,
                       onChanged: controller.checkUsernameAvailability,
@@ -181,19 +191,12 @@ class EditProfileScreen extends StatelessWidget {
                       ],
                     );
                   }),
-                  TextFieldCustom(
-                      controller: controller.bioController,
-                      title: LKey.bio.tr,
-                      height: 100),
-                  TextFieldCustom(
-                    controller: controller.emailController,
-                    title: LKey.email.tr,
-                    keyboardType: TextInputType.emailAddress,
+                  ProfileFieldCard(
+                    icon: Icons.info_outline,
+                    controller: controller.bioController,
+                    title: LKey.bio.tr,
+                    maxLines: 4,
                   ),
-                  TextFieldCustom(
-                      controller: controller.phoneNumberController,
-                      title: LKey.phoneNumber.tr,
-                      isPrefixIconShow: true),
                   BuildLinkView(controller: controller)
                 ],
               ),
