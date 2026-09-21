@@ -127,6 +127,22 @@ class AuthScreenController extends BaseController {
 
   static const String _accountKey = 'nimiro_fcm_account';
 
+  // Guards against a duplicate login completing behind the app's back.
+  // The OAuth (Google/Apple) flow opens an external browser tab that
+  // Android/iOS never force-closes; if that stale tab is still alive and
+  // later fires its own redirect a second time (observed ~20-40s after
+  // the first, successful login), it silently re-authenticates and
+  // completes a second real login for the same account. Since this app
+  // only allows one active session per account, that phantom second
+  // login would invalidate the first one and boot the user straight back
+  // to the session-expired screen seconds after they signed in. Ignoring
+  // a repeat login for the same identity within a short window fixes the
+  // symptom without weakening the one-session-per-account guarantee for
+  // a genuine second device.
+  static String? _lastRegisteredIdentity;
+  static DateTime? _lastRegisteredAt;
+  static const Duration _duplicateLoginWindow = Duration(seconds: 45);
+
   void onGoogleTap() async {
     if (_isLoggingIn) return;
     _isLoggingIn = true;
@@ -182,6 +198,15 @@ class AuthScreenController extends BaseController {
       required LoginVia loginVia,
       String? idToken,
       String? deviceTokenOverride}) async {
+    final normalisedIdentity = identity.trim().toLowerCase();
+    final now = DateTime.now();
+    if (_lastRegisteredIdentity == normalisedIdentity &&
+        _lastRegisteredAt != null &&
+        now.difference(_lastRegisteredAt!) < _duplicateLoginWindow) {
+      Loggers.info(
+          'Ignoring duplicate login completion for this account (${now.difference(_lastRegisteredAt!).inSeconds}s after the first).');
+      return SessionManager.instance.getUser();
+    }
     String? deviceToken = deviceTokenOverride ??
         await FirebaseNotificationManager.instance.getNotificationToken();
     // FIX(v13): the FCM token must survive a re-login. The plugin can return
@@ -220,6 +245,8 @@ class AuthScreenController extends BaseController {
       _sendRegistrationBonusSafely(userData);
     }
     if (userData != null) {
+      _lastRegisteredIdentity = normalisedIdentity;
+      _lastRegisteredAt = now;
       _loginToSubscriptionsSafely(userData.id);
       // Subscribe My Following Ids For Live streaming notification
       return userData;
