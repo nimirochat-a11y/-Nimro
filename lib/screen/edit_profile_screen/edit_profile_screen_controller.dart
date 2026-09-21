@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/functions/media_picker_helper.dart';
@@ -67,16 +68,33 @@ class EditProfileScreenController extends BaseController {
   }
 
   void onChangeProfileImage() async {
-    // Pick an profile image.
+    // Pick a profile image, then let the user crop it to a square before
+    // it's compressed and uploaded - matches the circular avatar it's
+    // displayed in everywhere else in the app.
     try {
       final XFile? image =
           await MediaPickerHelper.shared.pickImage(source: ImageSource.gallery);
       if (image == null) return;
+      final CroppedFile? cropped = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            cropStyle: CropStyle.circle,
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            cropStyle: CropStyle.circle,
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+      if (cropped == null) return;
       if (fileProfileImage.value != null) {
         File(fileProfileImage.value?.path ?? '').delete();
       }
       XFile? compressed =
-          await MediaPickerHelper.shared.compressProfileImage(image.path);
+          await MediaPickerHelper.shared.compressProfileImage(cropped.path);
       if (compressed != null) {
         Loggers.info(
             "Compressed size: ${(await compressed.length()) / 1024} KB");
@@ -88,16 +106,31 @@ class EditProfileScreenController extends BaseController {
   }
 
   void onChangeCoverImage() async {
-    // Pick a cover image.
+    // Pick a cover image, then let the user crop it to the same wide
+    // banner ratio it's displayed in on the profile screen (full width,
+    // fixed height - a ~3:1 ratio) before it's compressed and uploaded.
     try {
       final XFile? image =
           await MediaPickerHelper.shared.pickImage(source: ImageSource.gallery);
       if (image == null) return;
+      final CroppedFile? cropped = await ImageCropper().cropImage(
+        sourcePath: image.path,
+        aspectRatio: const CropAspectRatio(ratioX: 3, ratioY: 1),
+        uiSettings: [
+          AndroidUiSettings(
+            lockAspectRatio: true,
+          ),
+          IOSUiSettings(
+            aspectRatioLockEnabled: true,
+          ),
+        ],
+      );
+      if (cropped == null) return;
       if (fileCoverImage.value != null) {
         File(fileCoverImage.value?.path ?? '').delete();
       }
       XFile? compressed =
-          await MediaPickerHelper.shared.compressProfileImage(image.path);
+          await MediaPickerHelper.shared.compressProfileImage(cropped.path);
       if (compressed != null) {
         Loggers.info(
             "Compressed cover size: ${(await compressed.length()) / 1024} KB");

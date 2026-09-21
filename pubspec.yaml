@@ -137,6 +137,7 @@ dependencies:
     git:
       url: https://gitlab.com/jeelkhokhariya59/retrytech_plugin.git
       ref: master
+  image_cropper: ^12.2.1
 
 
 dev_dependencies:
