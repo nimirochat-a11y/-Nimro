@@ -292,15 +292,15 @@ class FirebaseNotificationManager {
   Future<void> sendLocalisationNotification(
     String key, {
     Map<String, String> keyParams = const {},
-    String? deviceToken = '',
+    String? toUserId,
     int? deviceType = 0,
     String? languageCode = 'en',
     required NotificationInfo body,
     required NotificationType type,
   }) async {
     // Early return if no device token provided
-    if ((deviceToken ?? '').isEmpty) {
-      Loggers.error('Device Token Empty - Notification not sent for key: $key');
+    if ((toUserId ?? '').isEmpty) {
+      Loggers.error('Recipient user id empty - Notification not sent for key: $key');
       return;
     }
 
@@ -327,7 +327,7 @@ class FirebaseNotificationManager {
       Description: $description
       Recipient: ${user?.id ?? 'Unknown'}
       Device Type: $deviceType
-      Device Token: $deviceToken
+      To User Id: $toUserId
     ''');
 
     // Send notification
@@ -336,7 +336,7 @@ class FirebaseNotificationManager {
         body: description,
         data: body.toJson(),
         deviceType: deviceType,
-        token: deviceToken,
+        toUserId: toUserId,
         type: type);
   }
 

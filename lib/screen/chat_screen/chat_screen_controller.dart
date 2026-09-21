@@ -289,7 +289,7 @@ class ChatScreenController extends BlockUserController
     NotificationService.instance.pushNotification(
         title: myUser?.fullname ?? '',
         body: bodyMessage,
-        token: otherUser?.deviceToken,
+        toUserId: otherUser?.id?.toString(),
         deviceType: otherUser?.device,
         type: NotificationType.chat,
         data: myConversationUser?.toJson());

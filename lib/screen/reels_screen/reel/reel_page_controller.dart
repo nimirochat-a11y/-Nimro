@@ -100,7 +100,7 @@ class ReelController extends BaseController {
             type: NotificationType.post,
             body: NotificationInfo(id: reel.id),
             deviceType: reel.user?.device ?? 0,
-            deviceToken: reel.user?.deviceToken ?? '',
+            toUserId: reel.user?.id?.toString(),
             languageCode: reel.user?.appLanguage);
       }
     }

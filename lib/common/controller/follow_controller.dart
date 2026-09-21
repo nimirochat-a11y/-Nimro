@@ -50,7 +50,7 @@ class FollowController extends BaseController {
               LKey.notifyStartedFollowing,
               type: NotificationType.user,
               languageCode: _user.appLanguage,
-              deviceToken: _user.deviceToken,
+              toUserId: _user.id?.toString(),
               deviceType: _user.device,
               body: NotificationInfo(id: SessionManager.instance.getUserID()));
         }

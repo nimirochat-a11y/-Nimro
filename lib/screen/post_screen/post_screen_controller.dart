@@ -67,7 +67,7 @@ class PostScreenController extends BaseController {
             type: NotificationType.post,
             body: NotificationInfo(id: post?.id),
             deviceType: post?.user?.device ?? 0,
-            deviceToken: post?.user?.deviceToken ?? '',
+            toUserId: post?.user?.id?.toString(),
             languageCode: post?.user?.appLanguage);
       }
     }

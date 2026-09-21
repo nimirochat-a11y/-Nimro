@@ -265,7 +265,7 @@ class CommentHelper {
             'username': myUser?.username ?? '',
             'comment_description': comment.commentDescription,
           },
-          deviceToken: reply.user?.deviceToken ?? '',
+          toUserId: reply.user?.id?.toString(),
           deviceType: reply.user?.device ?? 0,
           languageCode: reply.user?.appLanguage,
           body: NotificationInfo(
@@ -282,7 +282,7 @@ class CommentHelper {
       FirebaseNotificationManager.instance.sendLocalisationNotification(
         LKey.activityCommentedPost,
         keyParams: {'comment_description': comment.commentDescription},
-        deviceToken: reel.user?.deviceToken ?? '',
+        toUserId: reel.user?.id?.toString(),
         deviceType: reel.user?.device ?? 0,
         languageCode: reel.user?.appLanguage,
         body: NotificationInfo(
@@ -310,7 +310,7 @@ class CommentHelper {
       if (user.notifyMention == 1 && user.id != myUser?.id) {
         batch.add(FirebaseNotificationManager.instance
             .sendLocalisationNotification(LKey.notifyMentionedInComment,
-                deviceToken: user.deviceToken ?? '',
+                toUserId: user.id?.toString(),
                 deviceType: user.device ?? 0,
                 languageCode: user.appLanguage,
                 body: NotificationInfo(

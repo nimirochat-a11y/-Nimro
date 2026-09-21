@@ -247,7 +247,7 @@ class AuthScreenController extends BaseController {
             body: languageData[LKey.registrationBonusDescription] ?? LKey.registrationBonusDescription.tr,
             type: NotificationType.other,
             deviceType: userData.device,
-            token: userData.deviceToken,
+            toUserId: userData.id?.toString(),
             authorizationToken: userData.token?.authToken,
           )
           .timeout(const Duration(seconds: 3));

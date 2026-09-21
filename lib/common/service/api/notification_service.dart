@@ -53,7 +53,7 @@ class NotificationService {
       required String title,
       required String body,
       Map<String, dynamic>? data,
-      String? token,
+      String? toUserId,
       String? topic,
       num? deviceType,
       String? authorizationToken}) async {
@@ -79,14 +79,17 @@ class NotificationService {
     if (!isIOS) {
       messageData["notification"] = {"body": body, "title": title};
     }
-    if (token != null) {
-      messageData["token"] = token;
-    }
     if (topic != null) {
       messageData["topic"] = topic;
     }
 
     Map<String, dynamic> inputData = {"message": messageData};
+    // SECURITY: the recipient's device token is never accepted from the
+    // caller - only who to notify. The backend resolves the real token
+    // itself so this can never target an arbitrary device.
+    if (toUserId != null) {
+      inputData["to_user_id"] = toUserId;
+    }
 
     var prettyString = const JsonEncoder.withIndent('  ').convert(inputData);
     Loggers.info(prettyString);

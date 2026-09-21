@@ -359,7 +359,7 @@ class CreateFeedScreenController extends BaseController {
           type: NotificationType.post,
           body: NotificationInfo(id: post.id),
           deviceType: mentionUser.device,
-          deviceToken: mentionUser.deviceToken ?? '',
+          toUserId: mentionUser.id?.toString(),
           languageCode: mentionUser.appLanguage,
         ));
 

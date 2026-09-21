@@ -168,7 +168,7 @@ class GiftManager {
         LKey.activitySentGift,
         type: NotificationType.post,
         deviceType: user.device,
-        deviceToken: user.deviceToken,
+        toUserId: user.id?.toString(),
         languageCode: user.appLanguage,
         body: NotificationInfo(id: post?.id),
       );

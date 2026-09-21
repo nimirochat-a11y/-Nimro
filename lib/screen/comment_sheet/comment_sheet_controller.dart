@@ -272,7 +272,7 @@ class CommentSheetController extends BaseController {
         FirebaseNotificationManager.instance.sendLocalisationNotification(
             LKey.commentHasBeenLiked,
             type: NotificationType.post,
-            deviceToken: comment?.user?.deviceToken,
+            toUserId: comment?.user?.id?.toString(),
             languageCode: comment?.user?.appLanguage,
             body: NotificationInfo(id: comment?.postId, commentId: comment?.id),
             deviceType: comment?.user?.device);
@@ -414,7 +414,7 @@ class CommentSheetController extends BaseController {
                   LKey.activityGIFComment,
                   type: NotificationType.post,
                   languageCode: _post?.user?.appLanguage,
-                  deviceToken: _post?.user?.deviceToken,
+                  toUserId: _post?.user?.id?.toString(),
                   deviceType: _post?.user?.device,
                   body: NotificationInfo(id: _post?.id, commentId: value.id));
             }
