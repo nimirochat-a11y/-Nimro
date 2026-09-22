@@ -19,7 +19,14 @@ class SessionManager {
   }
 
   void setAuthToken(Token? token) {
-    storage.write(SessionKeys.authToken, token);
+    // FIX: GetStorage persists to disk via jsonEncode. Writing the raw Token
+    // *object* here (instead of its JSON map) meant the encode step could
+    // fail once the value was flushed to disk, silently leaving the auth
+    // token unreadable moments after a successful login - every API call
+    // right after would then send the literal 'AUTH TOKEN EMPTY' fallback
+    // and get bounced to the session-expired screen. Store its JSON form,
+    // matching how getToken() reads it back via Token.fromJson().
+    storage.write(SessionKeys.authToken, token?.toJson());
   }
 
   String getAuthToken() {
