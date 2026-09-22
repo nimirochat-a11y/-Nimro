@@ -112,6 +112,8 @@ class _Post {
   String fetchStory = "${apiURL}post/fetchStory";
   String fetchStoryByID = "${apiURL}post/fetchStoryByID";
   String fetchExplorePageData = "${apiURL}post/fetchExplorePageData";
+  String fetchRecommendedPosts = "${apiURL}post/fetchRecommendedPosts";
+  String trackContentEvent = "${apiURL}post/trackContentEvent";
 }
 
 class _Setting {

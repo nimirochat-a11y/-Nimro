@@ -54,6 +54,7 @@ class _ReelPageState extends State<ReelPage> {
   bool _initialized = false;
   bool _isDisposed = false;
   bool isPlaying = true;
+  DateTime? _watchStartTime;
   late ReelController reelController;
   Rx<TapDownDetails?> details = Rx(null);
   final dashboardController = Get.find<DashboardScreenController>();
@@ -125,6 +126,16 @@ class _ReelPageState extends State<ReelPage> {
   @override
   void dispose() {
     _isDisposed = true;
+    if (_watchStartTime != null) {
+      final seconds = DateTime.now().difference(_watchStartTime!).inSeconds;
+      if (seconds > 0) {
+        PostService.instance.trackContentEvent(
+          postId: widget.reelData.id ?? -1,
+          eventType: 'view',
+          watchSeconds: seconds,
+        );
+      }
+    }
     _controller?.dispose();
     _controller = null;
     super.dispose();
@@ -250,6 +261,7 @@ class _ReelPageState extends State<ReelPage> {
   }
 
   void _increaseViewsCount(Post reelData) {
+    _watchStartTime = DateTime.now();
     PostService.instance.increaseViewsCount(postId: reelData.id).then((value) {
       if (value.status == true) {
         reelController.updateReelData(reel: reelData, isIncreaseCoin: true);

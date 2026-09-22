@@ -11,6 +11,10 @@ analyzer:
   errors:
     no_leading_underscores_for_local_identifiers: ignore
     unnecessary_getters_setters: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
 include: package:flutter_lints/flutter.yaml
 
 linter:
