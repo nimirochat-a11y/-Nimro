@@ -25,41 +25,56 @@ class PostViewActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(top: 10),
-      child: Wrap(
+      // Row + Expanded instead of Wrap: all buttons always share the single
+      // line, so the views button can never drop to a second line on narrow
+      // screens. Counts scale down gracefully instead of pushing the row.
+      child: Row(
         children: [
-          PostViewIconWithCount(
-              key: likeKey,
-              onTap: () => controller.onLike(post),
-              color: post.isLiked ?? false ? ColorRes.likeRed : null,
-              image: post.isLiked ?? false
-                  ? AssetRes.icFillHeart
-                  : AssetRes.icHeart,
-              count: post.likes),
+          Expanded(
+            child: PostViewIconWithCount(
+                key: likeKey,
+                onTap: () => controller.onLike(post),
+                color: post.isLiked ?? false ? ColorRes.likeRed : null,
+                image: post.isLiked ?? false
+                    ? AssetRes.icFillHeart
+                    : AssetRes.icHeart,
+                count: post.likes),
+          ),
           if (post.canComment == 1)
-            PostViewIconWithCount(
-                onTap: controller.onComment,
-                image: AssetRes.icPostComment,
-                count: post.comments),
-          PostViewIconWithCount(
-              onTap: controller.handleShare,
-              image: AssetRes.icPostShare,
-              count: post.shares),
-          PostViewIconWithCount(
-              onTap: () => controller.onSaved(post),
-              image: post.isSaved ?? false
-                  ? AssetRes.icFillBookmark
-                  : AssetRes.icPostBookmark,
-              count: post.saves),
-          if (post.userId != SessionManager.instance.getUserID())
-            PostViewIconWithCount(
-              onTap: () => controller.onGiftTap(post),
-              image: AssetRes.icGift_2,
-              isCountVisible: false,
+            Expanded(
+              child: PostViewIconWithCount(
+                  onTap: controller.onComment,
+                  image: AssetRes.icPostComment,
+                  count: post.comments),
             ),
-          PostViewIconWithCount(
-              onTap: () {},
-              image: AssetRes.icPostViews,
-              count: post.views),
+          Expanded(
+            child: PostViewIconWithCount(
+                onTap: controller.handleShare,
+                image: AssetRes.icPostShare,
+                count: post.shares),
+          ),
+          Expanded(
+            child: PostViewIconWithCount(
+                onTap: () => controller.onSaved(post),
+                image: post.isSaved ?? false
+                    ? AssetRes.icFillBookmark
+                    : AssetRes.icPostBookmark,
+                count: post.saves),
+          ),
+          if (post.userId != SessionManager.instance.getUserID())
+            Expanded(
+              child: PostViewIconWithCount(
+                onTap: () => controller.onGiftTap(post),
+                image: AssetRes.icGift_2,
+                isCountVisible: false,
+              ),
+            ),
+          Expanded(
+            child: PostViewIconWithCount(
+                onTap: () {},
+                image: AssetRes.icPostViews,
+                count: post.views),
+          ),
         ],
       ),
     );
@@ -86,10 +101,10 @@ class PostViewIconWithCount extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 4,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 3,
       children: [
         InkWell(
           onTap: onTap,
@@ -101,12 +116,15 @@ class PostViewIconWithCount extends StatelessWidget {
               width: 23),
         ),
         if (isCountVisible)
-          SizedBox(
-            width: 32,
-            child: Text(
-              (count ?? 0).numberFormat,
-              style: TextStyleCustom.outFitRegular400(
-                  fontSize: 12.5, color: textDarkGrey(context)),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                (count ?? 0).numberFormat,
+                maxLines: 1,
+                style: TextStyleCustom.outFitRegular400(
+                    fontSize: 12.5, color: textDarkGrey(context)),
+              ),
             ),
           )
       ],
