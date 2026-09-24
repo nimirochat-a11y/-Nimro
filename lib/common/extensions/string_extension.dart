@@ -77,18 +77,30 @@ extension StringExtention on String {
     Duration diff = now.difference(time);
     int dayDiff = today.difference(messageDate).inDays;
 
+    final bool isArabic = SessionManager.instance.getLang() == 'ar';
+
     if (dayDiff == 0) {
       if (diff.inHours > 0) {
+        if (isArabic) {
+          final int h = diff.inHours;
+          return 'منذ ${h == 1 ? 'ساعة واحدة' : '${_toArabicDigits(h.toString())} ساعات'}';
+        }
         return "${diff.inHours} ${diff.inHours == 1 ? "hour" : "hours"} ago";
       }
       if (diff.inMinutes > 0) {
+        if (isArabic) {
+          final int m = diff.inMinutes;
+          return 'منذ ${m == 1 ? 'دقيقة واحدة' : '${_toArabicDigits(m.toString())} دقائق'}';
+        }
         return "${diff.inMinutes} ${diff.inMinutes == 1 ? "min" : "mins"} ago";
       }
-      return "Now";
+      return isArabic ? "الآن" : "Now";
     } else if (dayDiff == 1) {
-      return "Yesterday";
+      return isArabic ? "أمس" : "Yesterday";
     } else {
-      return DateFormat('dd MMM yyyy').format(time);
+      return isArabic
+          ? formatArabicDate(time)
+          : DateFormat('dd MMM yyyy').format(time);
     }
   }
 
@@ -102,20 +114,38 @@ extension StringExtention on String {
 
     Duration dateDiff = today.difference(messageDate);
 
+    final bool isArabic = SessionManager.instance.getLang() == 'ar';
+
     if (dateDiff.inDays == 0) {
-      return "Today, ${DateFormat('hh:mm a').format(time)}";
+      return isArabic
+          ? "اليوم، ${formatArabicTime(time)}"
+          : "Today, ${DateFormat('hh:mm a').format(time)}";
     } else if (dateDiff.inDays == 1) {
-      return "Yesterday, ${DateFormat('hh:mm a').format(time)}";
+      return isArabic
+          ? "أمس، ${formatArabicTime(time)}"
+          : "Yesterday, ${DateFormat('hh:mm a').format(time)}";
     } else {
-      return DateFormat('dd MMM, yyyy hh:mm a').format(time);
+      return isArabic
+          ? "${formatArabicDate(time)}، ${formatArabicTime(time)}"
+          : DateFormat('dd MMM, yyyy hh:mm a').format(time);
     }
   }
 
-  String get formatDate =>
-      DateFormat('dd MMM, yyyy').format(DateTime.parse(this));
+  String get formatDate {
+    final time = DateTime.parse(this);
+    if (SessionManager.instance.getLang() == 'ar') {
+      return formatArabicDate(time);
+    }
+    return DateFormat('dd MMM, yyyy').format(time);
+  }
 
-  String get formatDate1 =>
-      DateFormat('dd MMMM yyyy').format(DateTime.parse(this));
+  String get formatDate1 {
+    final time = DateTime.parse(this);
+    if (SessionManager.instance.getLang() == 'ar') {
+      return formatArabicDate(time);
+    }
+    return DateFormat('dd MMMM yyyy').format(time);
+  }
 
   String get addHash {
     return '#${replaceAll('#', '')}';
@@ -147,4 +177,64 @@ extension StringExtention on String {
       colors: [colors.first, colors.last],
     );
   }
+}
+
+/// Converts western digits (0-9) to Eastern Arabic digits (٠-٩).
+String _toArabicDigits(String input) {
+  const List<String> western = [
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9'
+  ];
+  const List<String> eastern = [
+    '٠',
+    '١',
+    '٢',
+    '٣',
+    '٤',
+    '٥',
+    '٦',
+    '٧',
+    '٨',
+    '٩'
+  ];
+  String out = input;
+  for (int i = 0; i < western.length; i++) {
+    out = out.replaceAll(western[i], eastern[i]);
+  }
+  return out;
+}
+
+/// Formats a date in Arabic, e.g. "٢٤ سبتمبر ٢٠٢٦".
+String formatArabicDate(DateTime time) {
+  const List<String> months = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر'
+  ];
+  return '${_toArabicDigits(time.day.toString())} ${months[time.month - 1]} ${_toArabicDigits(time.year.toString())}';
+}
+
+/// Formats a 12-hour time in Arabic, e.g. "٠٥:٣٠ م".
+String formatArabicTime(DateTime time) {
+  final int hour12 = time.hour % 12 == 0 ? 12 : time.hour % 12;
+  final String period = time.hour < 12 ? 'ص' : 'م';
+  final String minutes = time.minute.toString().padLeft(2, '0');
+  return '${_toArabicDigits(hour12.toString())}:${_toArabicDigits(minutes)} $period';
 }

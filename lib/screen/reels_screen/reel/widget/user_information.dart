@@ -165,7 +165,9 @@ class UserStats extends StatelessWidget {
         children: [
           Text(
             reel.id == -1
-                ? DateFormat('dd MMM yyyy').format(DateTime.now())
+                ? (SessionManager.instance.getLang() == 'ar'
+                    ? formatArabicDate(DateTime.now())
+                    : DateFormat('dd MMM yyyy').format(DateTime.now()))
                 : (reel.createdAt ?? '').formatDate,
             style: TextStyleCustom.outFitLight300(
                 color: whitePure(context), opacity: .8, fontSize: 11),
