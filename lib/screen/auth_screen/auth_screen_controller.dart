@@ -156,7 +156,9 @@ class AuthScreenController extends BaseController {
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
         idToken: profile.accessToken,
-        deviceTokenOverride: 'supabase:${profile.id}',
+        // FIX: the 'supabase:<uuid>' placeholder was never a real FCM token,
+        // so Google/Apple users never received push notifications. Register
+        // the real FCM token like every other login method.
       );
       stopLoader();
       if (data != null) _navigateScreen(data);
@@ -180,7 +182,9 @@ class AuthScreenController extends BaseController {
         fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
         idToken: profile.accessToken,
-        deviceTokenOverride: 'supabase:${profile.id}',
+        // FIX: the 'supabase:<uuid>' placeholder was never a real FCM token,
+        // so Google/Apple users never received push notifications. Register
+        // the real FCM token like every other login method.
       );
       stopLoader();
       if (data != null) _navigateScreen(data);
