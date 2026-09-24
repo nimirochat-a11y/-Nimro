@@ -89,7 +89,7 @@ class PostViewIconWithCount extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 5,
+      spacing: 4,
       children: [
         InkWell(
           onTap: onTap,
@@ -102,7 +102,7 @@ class PostViewIconWithCount extends StatelessWidget {
         ),
         if (isCountVisible)
           SizedBox(
-            width: 35,
+            width: 32,
             child: Text(
               (count ?? 0).numberFormat,
               style: TextStyleCustom.outFitRegular400(
