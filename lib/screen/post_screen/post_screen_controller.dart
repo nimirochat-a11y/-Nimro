@@ -35,10 +35,28 @@ class PostScreenController extends BaseController {
   Rx<Post> postData;
   bool isFromSinglePostScreen;
 
+  bool _isViewReported = false;
+
   PostScreenController(this.postData, this.isFromSinglePostScreen);
 
   void updatePost(Post post) {
     postData.value = post;
+  }
+
+  /// Fires once per post per session when the post becomes visible on
+  /// screen: sends increaseViewsCount to the backend and bumps the
+  /// displayed count locally.
+  void reportView() {
+    final id = postData.value.id;
+    if (_isViewReported || id == null) return;
+    _isViewReported = true;
+    PostService.instance.increaseViewsCount(postId: id).then((value) {
+      if (value.status == true) {
+        postData.update((val) {
+          val?.increaseViews();
+        });
+      }
+    });
   }
 
   void onLike(Post? post) async {
@@ -51,19 +69,23 @@ class PostScreenController extends BaseController {
     });
 
     try {
-      await (post.isLiked ?? false ? _likePostApi(post) : _disLikePostApi(post));
+      await (post.isLiked ?? false
+          ? _likePostApi(post)
+          : _disLikePostApi(post));
     } finally {
       _isLikeLoading = false;
     }
   }
 
   Future<void> _likePostApi(Post? post) async {
-    StatusModel model = await PostService.instance.likePost(postId: post?.id ?? -1);
+    StatusModel model =
+        await PostService.instance.likePost(postId: post?.id ?? -1);
 
     if (model.status == true) {
       if (post?.user?.notifyPostLike == 1 && myUser?.id != post?.userId) {
         print(post?.user?.toJson());
-        FirebaseNotificationManager.instance.sendLocalisationNotification(LKey.activityLikedPost,
+        FirebaseNotificationManager.instance.sendLocalisationNotification(
+            LKey.activityLikedPost,
             type: NotificationType.post,
             body: NotificationInfo(id: post?.id),
             deviceType: post?.user?.device ?? 0,
@@ -77,7 +99,8 @@ class PostScreenController extends BaseController {
     await PostService.instance.disLikePost(postId: post?.id?.convertInt ?? -1);
   }
 
-  void onComment({PostByIdData? postByIdData, bool isFromNotification = false}) async {
+  void onComment(
+      {PostByIdData? postByIdData, bool isFromNotification = false}) async {
     if (isFromSinglePostScreen) {
       if (Get.isRegistered<CommentSheetController>()) {
         final controller = Get.find<CommentSheetController>();
@@ -103,7 +126,9 @@ class PostScreenController extends BaseController {
     });
     try {
       DebounceAction.shared.call(() async {
-        await ((post.isSaved ?? false) ? _savePostApi(post) : _unSavePostApi(post));
+        await ((post.isSaved ?? false)
+            ? _savePostApi(post)
+            : _unSavePostApi(post));
       });
     } finally {
       _isSavedLoading = false;
@@ -119,8 +144,10 @@ class PostScreenController extends BaseController {
   }
 
   void handlePinUnpinPost(int isPinned) {
-    if (Get.isRegistered<ProfileScreenController>(tag: ProfileScreenController.tag)) {
-      final controller = Get.find<ProfileScreenController>(tag: ProfileScreenController.tag);
+    if (Get.isRegistered<ProfileScreenController>(
+        tag: ProfileScreenController.tag)) {
+      final controller =
+          Get.find<ProfileScreenController>(tag: ProfileScreenController.tag);
 
       if (isPinned == 0) {
         controller.updatePinPost(postData.value);
@@ -157,14 +184,17 @@ class PostScreenController extends BaseController {
     showLoader();
     StatusModel model;
     if (isModerator) {
-      model = await ModeratorService.instance.moderatorDeletePost(postId: post.id);
+      model =
+          await ModeratorService.instance.moderatorDeletePost(postId: post.id);
     } else {
       model = await PostService.instance.deletePost(postId: post.id);
     }
     stopLoader();
     if (model.status == true) {
-      if (Get.isRegistered<ProfileScreenController>(tag: ProfileScreenController.tag)) {
-        final controller = Get.find<ProfileScreenController>(tag: ProfileScreenController.tag);
+      if (Get.isRegistered<ProfileScreenController>(
+          tag: ProfileScreenController.tag)) {
+        final controller =
+            Get.find<ProfileScreenController>(tag: ProfileScreenController.tag);
         controller.posts.removeWhere((element) => element.id == post.id);
         postData.value = Post();
         Get.delete<PostScreenController>(tag: '${post.id}');
@@ -174,7 +204,8 @@ class PostScreenController extends BaseController {
 
   void handleReport(Post? post) {
     if (post == null) return;
-    Get.bottomSheet(ReportSheet(id: post.id, reportType: ReportType.post), isScrollControlled: true);
+    Get.bottomSheet(ReportSheet(id: post.id, reportType: ReportType.post),
+        isScrollControlled: true);
   }
 
   void notifyCommentSheet(PostByIdData? data) {

@@ -13,6 +13,7 @@ import 'package:nimiro/screen/post_screen/widget/post_view_action_button.dart';
 import 'package:nimiro/screen/post_screen/widget/post_view_center.dart';
 import 'package:nimiro/screen/post_screen/widget/post_view_info_header.dart';
 import 'package:nimiro/utilities/theme_res.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 class PostCard extends StatelessWidget {
   final Post post;
@@ -57,72 +58,81 @@ class PostCard extends StatelessWidget {
           }
           return const SizedBox();
         } else {
-          return Container(
-            color: scaffoldBackgroundColor(context),
-            padding: const EdgeInsets.only(left: 10.0, right: 10, top: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      CustomImage(
-                        size: const Size(38, 38),
-                        strokeWidth: 2,
-                        image: post.user?.profilePhoto?.addBaseURL(),
-                        fullName: post.user?.fullname,
-                        onTap: () {
-                          NavigationService.shared.openProfileScreen(post.user);
-                        },
-                      ),
-                      const SizedBox(width: 7),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            PostViewInfoHeader(
-                              post: post,
-                              controller: controller,
-                              shouldShowPinOption: shouldShowPinOption,
-                            ),
-                            PostViewCenter(
-                              post: post,
-                              onDoubleTap: (p0) {
-                                PhotoLikeService.instance.like(p0,
-                                    likeKey: likeKey,
-                                    context: context,
-                                    post: post,
-                                    size: const Size(35, 35),
-                                    leftRightPosition: 6,
-                                    onLike: controller.onLike);
-                              },
-                              onHeartAnimationEnd: () {
-                                controller.triggerLikeAnim.call();
-                                DebounceAction.shared.call(() {
-                                  if (post.isLiked == false) {
-                                    controller.onLike(post);
-                                  }
-                                });
-                              },
-                            ),
-                            PostViewActionButton(
+          return VisibilityDetector(
+            key: Key('post_${post.id}'),
+            onVisibilityChanged: (info) {
+              if (info.visibleFraction >= 0.5) {
+                controller.reportView();
+              }
+            },
+            child: Container(
+              color: scaffoldBackgroundColor(context),
+              padding: const EdgeInsets.only(left: 10.0, right: 10, top: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomImage(
+                          size: const Size(38, 38),
+                          strokeWidth: 2,
+                          image: post.user?.profilePhoto?.addBaseURL(),
+                          fullName: post.user?.fullname,
+                          onTap: () {
+                            NavigationService.shared
+                                .openProfileScreen(post.user);
+                          },
+                        ),
+                        const SizedBox(width: 7),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              PostViewInfoHeader(
                                 post: post,
                                 controller: controller,
-                                likeKey: likeKey,
-                                onTriggerReady: (trigger) {
-                                  controller.triggerLikeAnim = trigger;
-                                }),
-                          ],
+                                shouldShowPinOption: shouldShowPinOption,
+                              ),
+                              PostViewCenter(
+                                post: post,
+                                onDoubleTap: (p0) {
+                                  PhotoLikeService.instance.like(p0,
+                                      likeKey: likeKey,
+                                      context: context,
+                                      post: post,
+                                      size: const Size(35, 35),
+                                      leftRightPosition: 6,
+                                      onLike: controller.onLike);
+                                },
+                                onHeartAnimationEnd: () {
+                                  controller.triggerLikeAnim.call();
+                                  DebounceAction.shared.call(() {
+                                    if (post.isLiked == false) {
+                                      controller.onLike(post);
+                                    }
+                                  });
+                                },
+                              ),
+                              PostViewActionButton(
+                                  post: post,
+                                  controller: controller,
+                                  likeKey: likeKey,
+                                  onTriggerReady: (trigger) {
+                                    controller.triggerLikeAnim = trigger;
+                                  }),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                const CustomDivider(),
-              ],
+                  const SizedBox(height: 10),
+                  const CustomDivider(),
+                ],
+              ),
             ),
           );
         }
