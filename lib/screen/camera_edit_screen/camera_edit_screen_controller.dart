@@ -15,7 +15,8 @@ import 'package:nimiro/common/functions/media_picker_helper.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/screenshot_manager.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/service/api/post_service.dart';
+import 'package:nimiro/common/service/upload/upload_queue_service.dart';
+import 'package:nimiro/common/service/utils/web_service.dart';
 import 'package:nimiro/common/service/sight_engin/sight_engine_service.dart';
 import 'package:nimiro/common/service/utils/params.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
@@ -92,18 +93,32 @@ class CameraEditScreenController extends BaseController {
       required int duration,
       int? musicId}) async {
     try {
-      StoryModel? response = await PostService.instance.createStory(files: {
-        Params.content: [XFile(content)],
-        if (type == PostStoryContentType.storyVideo)
-          Params.thumbnail: [XFile(thumbnail!)]
-      }, param: {
-        Params.type: type == PostStoryContentType.storyVideo ? 1 : 0,
-        Params.duration: duration,
-        if (musicId != -1) Params.soundID: musicId
+      // Background upload queue: the story keeps uploading even if the user
+      // closes the app mid-upload.
+      final response = await UploadQueueService.instance.submit([
+        {
+          'kind': 'multipart',
+          'url': WebService.post.createStory,
+          'fields': {
+            Params.type:
+                '${type == PostStoryContentType.storyVideo ? 1 : 0}',
+            Params.duration: '$duration',
+            if (musicId != -1) Params.soundID: '$musicId',
+          },
+          'files': [
+            {'field': '${Params.content}', 'path': content},
+            if (type == PostStoryContentType.storyVideo && thumbnail != null)
+              {'field': '${Params.thumbnail}', 'path': thumbnail},
+          ],
+        }
+      ], onProgress: (p) {
+        updateUploadingProgress(progress: (p * 100).clamp(0, 100));
       });
-      Loggers.info(response.message);
-      if (response.status == true && response.data != null) {
-        addStoryResponse(response.data!);
+      if (response != null &&
+          response['__error'] == null &&
+          response['status'] == true &&
+          response['data'] != null) {
+        addStoryResponse(Story.fromJson(response['data']));
       } else {
         failedResponseSnackBar();
       }

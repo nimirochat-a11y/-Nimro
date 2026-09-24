@@ -18,6 +18,10 @@ import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/service/supabase/chat_api_repository.dart';
+import 'package:nimiro/common/service/upload/upload_queue_service.dart';
+import 'package:nimiro/common/service/utils/params.dart';
+import 'package:nimiro/common/service/utils/web_service.dart';
+import 'package:nimiro/utilities/const_res.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
@@ -468,26 +472,59 @@ class ChatScreenController extends BlockUserController
   }
   Future<void> _uploadAndSendMessage(MediaFile mediaFile) async {
     showLoader();
-    String filePath = await _uploadFile(mediaFile.file);
-    Loggers.success(filePath);
-    String thumbnailPath = mediaFile.type == MediaType.video
-        ? await _uploadFile(mediaFile.thumbNail)
-        : '';
+    final bool isImageMessage = mediaFile.type == MediaType.image;
+    final int time = DateTime.now().millisecondsSinceEpoch;
+    final int myId = myUser?.id ?? -1;
+    final int otherId = conversationUser.value.chatUser?.userId ?? -1;
+
+    // Background upload queue: the attachment keeps uploading (and the
+    // message keeps sending) even if the user closes the app.
+    final steps = <Map<String, dynamic>>[
+      {
+        'kind': 'multipart',
+        'url': WebService.setting.uploadFileGivePath,
+        'fields': {},
+        'files': [
+          {'field': '${Params.file}', 'path': mediaFile.file.path},
+        ],
+      },
+      if (!isImageMessage)
+        {
+          'kind': 'multipart',
+          'url': WebService.setting.uploadFileGivePath,
+          'fields': {},
+          'files': [
+            {'field': '${Params.file}', 'path': mediaFile.thumbNail.path},
+          ],
+        },
+      {
+        'kind': 'api',
+        'url': '${apiURL}chat/sendMessage',
+        'fields': {
+          'doc_id': '$time',
+          'id': '$time',
+          'conversation_id': '${conversationUser.value.conversationId}',
+          'message_type':
+              isImageMessage ? MessageType.image.value : MessageType.video.value,
+          'text_message': mediaTextController.text.trim(),
+          if (isImageMessage) 'image_message': '@s0.data',
+          if (!isImageMessage) 'video_message': '@s0.data',
+          if (!isImageMessage) 'image_message': '@s1.data',
+          'i_blocked': false,
+          'i_am_blocked': false,
+          'no_delete_ids': [myId, otherId],
+        },
+      },
+    ];
     stopLoader();
-    bool isImageMessage = mediaFile.type == MediaType.image;
-    Loggers.success('THIS IS IMAGE MESSAGE : $isImageMessage');
-    if (filePath == '') {
-      return Loggers.error('Filepath Not Found Please try Again');
+
+    final response = await UploadQueueService.instance.submit(steps);
+    if (response == null ||
+        response['__error'] != null ||
+        response['status'] != true) {
+      Loggers.error('Background chat media send failed: ${response?['__error'] ?? response?['message']}');
+      showSnackBar(LKey.somethingWentWrong.tr);
     }
-    if (!isImageMessage && thumbnailPath == '') {
-      return Loggers.error('ThumbnailPath Not Found Please try Again');
-    }
-    sendMessageToFireStore(
-      type: isImageMessage ? MessageType.image : MessageType.video,
-      imageMessage: isImageMessage ? filePath : thumbnailPath,
-      videoMessage: !isImageMessage ? filePath : thumbnailPath,
-      textMessage: mediaTextController.text.trim(),
-    );
   }
   Future<String> _uploadFile(XFile file) async {
     return (await CommonService.instance.uploadFileGivePath(file)).data ?? '';

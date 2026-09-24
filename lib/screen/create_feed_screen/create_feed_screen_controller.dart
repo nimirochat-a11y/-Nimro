@@ -18,16 +18,15 @@ import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/add_post_story_service.dart';
+import 'package:nimiro/common/service/upload/upload_queue_service.dart';
+import 'package:nimiro/common/service/utils/web_service.dart';
 import 'package:nimiro/common/service/api/common_service.dart';
-import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/sight_engin/sight_engine_service.dart';
 import 'package:nimiro/common/service/utils/params.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/general/file_path_model.dart';
 import 'package:nimiro/model/general/location_place_model.dart';
 import 'package:nimiro/model/general/place_detail.dart';
 import 'package:nimiro/model/general/settings_model.dart';
-import 'package:nimiro/model/post_story/music/music_model.dart';
 import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/camera_screen/camera_screen.dart';
@@ -388,7 +387,7 @@ class CreateFeedScreenController extends BaseController {
     }
     SelectedMusic? selectedMusic = content.sound;
     bool hasAudio = content.hasAudio;
-    Music? uploadedMusic;
+    Map<String, dynamic>? musicStep;
 
     if (hasAudio) {
       if (selectedMusic == null) {
@@ -411,62 +410,81 @@ class CreateFeedScreenController extends BaseController {
         final XFile? profileImage =
             await _loadProfileOrThumbnailImage(content.thumbNail);
 
-        Loggers.info('Uploading extracted music...');
-        uploadedMusic = await PostService.instance.addUserMusic(
-          title: AppRes.addMusicName,
-          duration: '${duration.inMinutes}:${duration.inSeconds % 60}',
-          artist: artistName,
-          sound: XFile(extractAudioPath),
-          image: profileImage,
-        );
-
-        Loggers.success('Music uploaded: ${uploadedMusic?.title}');
+        Loggers.info('Queueing extracted music upload...');
+        musicStep = {
+          'kind': 'multipart',
+          'url': WebService.post.addUserMusic,
+          'fields': {
+            Params.title: AppRes.addMusicName,
+            Params.duration:
+                '${duration.inMinutes}:${duration.inSeconds % 60}',
+            Params.artist: artistName,
+          },
+          'files': [
+            {'field': '${Params.sound}', 'path': extractAudioPath},
+            if (profileImage != null)
+              {'field': '${Params.image}', 'path': profileImage.path},
+          ],
+        };
       } else {
-        uploadedMusic = selectedMusic.music;
-      }
-
-      params[Params.soundID] = uploadedMusic?.id;
-
-      if (uploadedMusic == null) {
-        deleteFiles([videoPath, extractAudioPath]);
-        return failedResponseSnackBar(message: 'Music not found');
+        params[Params.soundID] = selectedMusic.music?.id;
       }
     }
 
-    // progress.value = 10;
+    // Run every upload through the background queue so closing the app does
+    // not cancel the reel.
     updateUploadingProgress(progress: 10);
 
-    // Step 5: Upload video & thumbnail
-    Loggers.info('Uploading video...');
-    FilePathModel uploadedVideo =
-        await CommonService.instance.uploadFileGivePath(XFile(videoPath));
+    final steps = <Map<String, dynamic>>[
+      if (musicStep != null) musicStep,
+      {
+        'kind': 'multipart',
+        'url': WebService.setting.uploadFileGivePath,
+        'fields': {},
+        'files': [
+          {'field': '${Params.file}', 'path': videoPath},
+        ],
+      },
+      {
+        'kind': 'multipart',
+        'url': WebService.setting.uploadFileGivePath,
+        'fields': {},
+        'files': [
+          {'field': '${Params.file}', 'path': content.thumbNail ?? ''},
+        ],
+      },
+    ];
 
-    Loggers.info('Uploading thumbnail...');
-    FilePathModel uploadedThumb = await CommonService.instance
-        .uploadFileGivePath(XFile(content.thumbNail ?? ''));
-
-    // Step 6: Check upload success
-    if (uploadedVideo.status == false || uploadedThumb.status == false) {
-      deleteFiles([videoPath, content.thumbNail, extractAudioPath]);
-      return failedResponseSnackBar(message: uploadedVideo.message);
+    final finalFields = <String, dynamic>{
+      for (final entry in params.entries)
+        if (entry.key != Params.video && entry.key != Params.thumbnail)
+          entry.key: entry.value,
+    };
+    finalFields['${Params.video}'] = '@s${steps.length - 2}.data';
+    finalFields['${Params.thumbnail}'] = '@s${steps.length - 1}.data';
+    if (musicStep != null) {
+      finalFields['${Params.soundID}'] = '@s0.data.id';
     }
+    steps.add({
+      'kind': 'api',
+      'url': WebService.addPostStory.addPostReel,
+      'fields': finalFields,
+    });
 
-    // progress.value = 90;
-    updateUploadingProgress(progress: 90);
-
-    // Prepare final post params
-    params[Params.video] = uploadedVideo.data;
-    params[Params.thumbnail] = uploadedThumb.data;
-
-    // Final post upload
-    try {
-      Loggers.info('Uploading final post...');
-      PostModel result =
-          await AddPostStoryService.instance.addPostReel(param: params);
-      return result;
-    } catch (e) {
-      return failedResponseSnackBar(message: '$e');
+    final response = await UploadQueueService.instance.submit(steps,
+        onProgress: (p) =>
+            updateUploadingProgress(progress: (p * 100).clamp(0, 100)));
+    if (response == null || response['__error'] != null) {
+      deleteFiles([videoPath, content.thumbNail ?? '', extractAudioPath]);
+      return failedResponseSnackBar(
+          message: '${response?['__error'] ?? 'Upload failed'}');
     }
+    if (response['status'] != true) {
+      deleteFiles([videoPath, content.thumbNail ?? '', extractAudioPath]);
+      return failedResponseSnackBar(
+          message: '${response['message'] ?? 'Post failed'}');
+    }
+    return PostModel.fromJson(response);
   }
 
   Future<XFile?> _loadProfileOrThumbnailImage(String? fallbackThumb) async {
@@ -552,47 +570,51 @@ class CreateFeedScreenController extends BaseController {
 
     Loggers.info('Compress image : ${compressImages.map((e) => e)}');
 
-    // Step 3: Uploading each image
-    List<String> uploadedImagePaths = [];
-    for (var image in compressImages) {
-      await CommonService.instance
-          .uploadFileGivePath(XFile(image))
-          .then((result) {
-        if (result.status == true && result.data != null) {
-          uploadedImagePaths.add(result.data!);
-          Loggers.success('Image uploaded: ${result.data}');
-        } else {
-          Loggers.error('Image upload failed: ${result.message}');
-          deleteFiles(images.map((e) => e.media.path).toList() +
-              filterImages.map((e) => e.path).toList() +
-              compressImages);
-          return failedResponseSnackBar(message: result.message);
-        }
-      });
-    }
-    updateUploadingProgress(progress: 90);
+    // Step 3: Upload each image through the background queue.
+    final steps = <Map<String, dynamic>>[
+      for (final image in compressImages)
+        {
+          'kind': 'multipart',
+          'url': WebService.setting.uploadFileGivePath,
+          'fields': {},
+          'files': [
+            {'field': '${Params.file}', 'path': image},
+          ],
+        },
+    ];
 
-    // Step 4: Add uploaded image paths to params
-    for (int i = 0; i < uploadedImagePaths.length; i++) {
-      params['${Params.postImages}[$i]'] = uploadedImagePaths[i];
+    // Step 4: Final post fields reference each uploaded image path.
+    final finalFields = <String, dynamic>{
+      for (final entry in params.entries) entry.key: entry.value,
+    };
+    for (int i = 0; i < compressImages.length; i++) {
+      finalFields['${Params.postImages}[$i]'] = '@s$i.data';
     }
+    steps.add({
+      'kind': 'api',
+      'url': WebService.addPostStory.addPostFeedImage,
+      'fields': finalFields,
+    });
 
     // Delete temporary files
     deleteFiles(images.map((e) => e.media.path).toList() +
         filterImages.map((e) => e.path).toList() +
         compressImages);
 
-    Loggers.info('Uploading final post... $params');
+    Loggers.info('Queueing final post...');
 
-    // Step 5: Upload final post
-    try {
-      final postResult =
-          await AddPostStoryService.instance.addPostFeedImage(param: params);
-      return postResult;
-    } catch (e) {
-      Loggers.error('Exception during post upload: $e');
-      return failedResponseSnackBar(message: '$e');
+    final response = await UploadQueueService.instance.submit(steps,
+        onProgress: (p) =>
+            updateUploadingProgress(progress: (p * 100).clamp(0, 100)));
+    if (response == null || response['__error'] != null) {
+      return failedResponseSnackBar(
+          message: '${response?['__error'] ?? 'Upload failed'}');
     }
+    if (response['status'] != true) {
+      return failedResponseSnackBar(
+          message: '${response['message'] ?? 'Post failed'}');
+    }
+    return PostModel.fromJson(response);
   }
 
   Future<PostModel?> _handleVideoUpload(Map<String, dynamic> params) async {
@@ -660,36 +682,53 @@ class CreateFeedScreenController extends BaseController {
 
     updateUploadingProgress(progress: 30);
 
-    // Step 5: Upload video
-    Loggers.info('Uploading video...');
-    FilePathModel uploadedVideo =
-        await CommonService.instance.uploadFileGivePath(finalVideoFile);
+    // Step 5: Upload through the background queue (survives app close).
+    Loggers.info('Queueing video upload...');
+    final steps = <Map<String, dynamic>>[
+      {
+        'kind': 'multipart',
+        'url': WebService.setting.uploadFileGivePath,
+        'fields': {},
+        'files': [
+          {'field': '${Params.file}', 'path': finalVideoFile.path},
+        ],
+      },
+      {
+        'kind': 'multipart',
+        'url': WebService.setting.uploadFileGivePath,
+        'fields': {},
+        'files': [
+          {'field': '${Params.file}', 'path': finalThumbnailFile.path},
+        ],
+      },
+    ];
+    final finalFields = <String, dynamic>{
+      for (final entry in params.entries)
+        if (entry.key != Params.video && entry.key != Params.thumbnail)
+          entry.key: entry.value,
+    };
+    finalFields['${Params.video}'] = '@s0.data';
+    finalFields['${Params.thumbnail}'] = '@s1.data';
+    steps.add({
+      'kind': 'api',
+      'url': WebService.addPostStory.addPostFeedVideo,
+      'fields': finalFields,
+    });
 
-    Loggers.info('Uploading thumbnail...');
-    FilePathModel uploadedThumbnail =
-        await CommonService.instance.uploadFileGivePath(finalThumbnailFile);
     deleteFiles([finalVideoFile.path, finalThumbnailFile.path]);
-    // Step 6: Check upload success
-    if (uploadedVideo.status == false || uploadedThumbnail.status == false) {
-      return failedResponseSnackBar(message: uploadedVideo.message);
+
+    final response = await UploadQueueService.instance.submit(steps,
+        onProgress: (p) =>
+            updateUploadingProgress(progress: (p * 100).clamp(0, 100)));
+    if (response == null || response['__error'] != null) {
+      return failedResponseSnackBar(
+          message: '${response?['__error'] ?? 'Upload failed'}');
     }
-
-    updateUploadingProgress(progress: 90);
-
-    // Step 7: Finalize post params and upload
-    params[Params.video] = uploadedVideo.data;
-    params[Params.thumbnail] = uploadedThumbnail.data;
-
-    Loggers.success('Uploading final video post...');
-    try {
-      final result =
-          await AddPostStoryService.instance.addPostFeedVideo(param: params);
-
-      return result;
-    } catch (e) {
-      Loggers.error('Exception while uploading video post: $e');
-      return failedResponseSnackBar(message: '$e');
+    if (response['status'] != true) {
+      return failedResponseSnackBar(
+          message: '${response['message'] ?? 'Post failed'}');
     }
+    return PostModel.fromJson(response);
   }
 
   void updateUploadingProgress({
