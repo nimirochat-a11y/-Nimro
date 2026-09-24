@@ -205,9 +205,11 @@ class ApiService {
     Loggers.info("FILES : ${request.files.map((e) => e)}");
 
     try {
+      // 10-minute window: story/post videos can take minutes on slow
+      // connections; the previous 45s timeout was cutting uploads at ~90%.
       final responseStream = await client
           .send(request)
-          .timeout(const Duration(seconds: 45));
+          .timeout(const Duration(minutes: 10));
 
       if (cancelToken?.isCancelled ?? false) {
         if (kDebugMode) {
@@ -218,7 +220,7 @@ class ApiService {
 
       final responseStr = await responseStream.stream
           .bytesToString()
-          .timeout(const Duration(seconds: 45));
+          .timeout(const Duration(minutes: 10));
       final decodedResponse = jsonDecode(responseStr) as Map<String, dynamic>;
 
       if (kDebugMode) {
