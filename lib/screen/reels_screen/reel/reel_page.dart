@@ -34,10 +34,7 @@ class ReelPage extends StatefulWidget {
   const ReelPage(
       {super.key,
       required this.reelData,
-      // FIX(v12): default to autoplay. Reels that defaulted to `false` needed a
-      // second tap before they would start, because the InkWell overlay above
-      // the player swallowed the first one.
-      this.autoPlay = true,
+      this.autoPlay = false,
       this.postByIdData,
       this.isFromChat = false,
       required this.likeKey,
@@ -54,7 +51,6 @@ class _ReelPageState extends State<ReelPage> {
   bool _initialized = false;
   bool _isDisposed = false;
   bool isPlaying = true;
-  DateTime? _watchStartTime;
   late ReelController reelController;
   Rx<TapDownDetails?> details = Rx(null);
   final dashboardController = Get.find<DashboardScreenController>();
@@ -105,10 +101,8 @@ class _ReelPageState extends State<ReelPage> {
       // until the user tapped it. Autoplay is now unconditional.
       if (widget.autoPlay) {
         await _controller!.play();
+        _increaseViewsCount(widget.reelData);
         isPlaying = true;
-        if (dashboardController.selectedPageIndex.value == 0) {
-          _increaseViewsCount(widget.reelData);
-        }
       }
 
       setState(() {});
@@ -126,16 +120,6 @@ class _ReelPageState extends State<ReelPage> {
   @override
   void dispose() {
     _isDisposed = true;
-    if (_watchStartTime != null) {
-      final seconds = DateTime.now().difference(_watchStartTime!).inSeconds;
-      if (seconds > 0) {
-        PostService.instance.trackContentEvent(
-          postId: widget.reelData.id ?? -1,
-          eventType: 'view',
-          watchSeconds: seconds,
-        );
-      }
-    }
     _controller?.dispose();
     _controller = null;
     super.dispose();
@@ -144,25 +128,32 @@ class _ReelPageState extends State<ReelPage> {
   void _handleVisibilityChanged(VisibilityInfo info) {
     if (!_initialized || _controller == null || !_controller!.value.isInitialized) return;
 
-    if ((info.visibleFraction * 100) > 90) {
+    final double visible = info.visibleFraction * 100;
+
+    // FIX(v14): the old thresholds were `> 90` to play and `else` (i.e. ANY
+    // fraction below 90) to pause. On first build the detector fires while the
+    // page is still being laid out, so a reel could be played by autoplay and
+    // then immediately paused by a sub-90% callback — the user saw a frozen
+    // first frame and had to tap. Only a genuinely off-screen page pauses now.
+    if (visible > 60) {
       if (!_controller!.value.isPlaying) {
         _controller!.play();
         isPlaying = true;
       }
-    } else {
+    } else if (visible < 20) {
       if (_controller!.value.isPlaying) {
         _controller!.pause();
         isPlaying = false;
       }
+    } else {
+      // Partially visible: keep whatever state the player is already in.
+      return;
     }
     setState(() {});
   }
 
   void onPlayPause() {
     if (_controller == null || !_controller!.value.isInitialized) return;
-    // FIX(v12): the first tap on a not-yet-started player used to be a no-op
-    // because both branches toggled state that had not been set yet. Always
-    // end up playing when the user taps a paused or never-started video.
     if (_controller!.value.isPlaying) {
       _controller!.pause();
       isPlaying = false;
@@ -261,7 +252,6 @@ class _ReelPageState extends State<ReelPage> {
   }
 
   void _increaseViewsCount(Post reelData) {
-    _watchStartTime = DateTime.now();
     PostService.instance.increaseViewsCount(postId: reelData.id).then((value) {
       if (value.status == true) {
         reelController.updateReelData(reel: reelData, isIncreaseCoin: true);

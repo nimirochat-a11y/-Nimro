@@ -437,7 +437,7 @@ class PostService {
   Future<List<Music>> searchMusic(
       {required String keyword, int? lastItemId}) async {
     MusicsModel response = await ApiService.instance.call(
-        url: WebService.post.searchMusic,
+        url: WebService.post.serchMusic,
         param: {
           Params.limit: AppRes.paginationLimit,
           Params.keyword: keyword,
@@ -539,33 +539,6 @@ class PostService {
     } else {
       Loggers.error(response.message);
       return null;
-    }
-  }
-
-  Future<List<Post>> fetchRecommendedPosts({int limit = 20, CancelToken? cancelToken}) async {
-    PostsModel model = await ApiService.instance.call(
-        url: WebService.post.fetchRecommendedPosts,
-        param: {Params.limit: limit},
-        fromJson: PostsModel.fromJson,
-        cancelToken: cancelToken);
-    return model.data ?? [];
-  }
-
-  Future<void> trackContentEvent({
-    required int postId,
-    required String eventType,
-    int watchSeconds = 0,
-  }) async {
-    try {
-      await ApiService.instance.call(
-          url: WebService.post.trackContentEvent,
-          param: {
-            Params.postId: postId,
-            "event_type": eventType,
-            "watch_seconds": watchSeconds,
-          });
-    } catch (e) {
-      Loggers.error("trackContentEvent failed: $e");
     }
   }
 }
