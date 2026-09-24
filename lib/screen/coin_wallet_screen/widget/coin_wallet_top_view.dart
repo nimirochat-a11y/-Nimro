@@ -25,7 +25,7 @@ class CoinWalletTopView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<CoinWalletScreenController>();
     return AspectRatio(
-      aspectRatio: 0.9,
+      aspectRatio: 1,
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
@@ -33,7 +33,7 @@ class CoinWalletTopView extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               return Container(
-                height: constraints.maxHeight - 84,
+                height: constraints.maxHeight - 46,
                 decoration: BoxDecoration(
                   gradient: StyleRes.themeGradient,
                   borderRadius: const BorderRadius.only(
@@ -187,7 +187,20 @@ class CoinWalletTopView extends StatelessWidget {
                                 }),
                               ),
                             ),
-                            const SizedBox(height: 20),
+                            const Spacer(),
+                            const SizedBox(height: 6),
+                            Align(
+                                alignment: AlignmentDirectional.bottomEnd,
+                                child: Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 14.0),
+                                  child: Text(
+                                    LKey.lifetime.tr,
+                                    style: TextStyleCustom.outFitLight300(
+                                        fontSize: 12,
+                                        color: whitePure(context).withValues(alpha: .6)),
+                                  ),
+                                ))
                           ],
                         ),
                       ),
@@ -200,8 +213,8 @@ class CoinWalletTopView extends StatelessWidget {
           Align(
               alignment: Alignment.bottomCenter,
               child: Container(
-                height: 130,
-                width: 130,
+                height: 96,
+                width: 96,
                 decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: Colors.white,
@@ -215,7 +228,7 @@ class CoinWalletTopView extends StatelessWidget {
                           offset: const Offset(0, 6))
                     ]),
                 alignment: Alignment.center,
-                child: Image.asset(AssetRes.icCoin, height: 114, width: 114),
+                child: Image.asset(AssetRes.icCoin, height: 84, width: 84),
               ))
         ],
       ),

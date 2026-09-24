@@ -17,14 +17,16 @@ class CoinWalletScreen extends StatelessWidget {
       body: Column(
         children: [
           const CoinWalletTopView(),
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 26),
-            child: Text(LKey.rechargeWallet.tr,
-                style: TextStyleCustom.outFitLight300(
-                    color: textLightGrey(context), fontSize: 16),
-                textAlign: TextAlign.center),
-          ),
+          const SizedBox(height: 15),
+          Text(LKey.coinShop.tr,
+              style: TextStyleCustom.unboundedRegular400(
+                color: textDarkGrey(context),
+                fontSize: 17,
+              )),
+          const SizedBox(height: 5),
+          Text(LKey.rechargeWallet.tr,
+              style: TextStyleCustom.outFitLight300(color: textLightGrey(context), fontSize: 17),
+              textAlign: TextAlign.center),
           CoinWalletList(controller: controller)
         ],
       ),
