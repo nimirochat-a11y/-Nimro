@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- SECURITY (S2): cleartext HTTP is no longer allowed app-wide. If a legacy
-     host still needs plaintext during the migration it must be listed here
-     explicitly, which makes the exception reviewable instead of implicit. -->
+<!-- SECURITY: HTTPS only by default. Cleartext is limited to ip-api.com
+     which the location helper calls over plain HTTP (free tier has no TLS). -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="false">
-        <trust-anchors>
-            <certificates src="system" />
-        </trust-anchors>
-    </base-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">ip-api.com</domain>
+    </domain-config>
 </network-security-config>
