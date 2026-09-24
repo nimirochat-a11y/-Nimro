@@ -41,9 +41,9 @@ class PostViewActionButton extends StatelessWidget {
                 image: AssetRes.icPostComment,
                 count: post.comments),
           PostViewIconWithCount(
-              onTap: () {},
-              image: AssetRes.icEye_2,
-              count: post.views),
+              onTap: controller.handleShare,
+              image: AssetRes.icPostShare,
+              count: post.shares),
           PostViewIconWithCount(
               onTap: () => controller.onSaved(post),
               image: post.isSaved ?? false
@@ -57,9 +57,9 @@ class PostViewActionButton extends StatelessWidget {
               isCountVisible: false,
             ),
           PostViewIconWithCount(
-              onTap: controller.handleShare,
-              image: AssetRes.icPostShare,
-              count: post.shares),
+              onTap: () {},
+              image: AssetRes.icPostViews,
+              count: post.views),
         ],
       ),
     );

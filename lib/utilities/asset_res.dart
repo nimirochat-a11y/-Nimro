@@ -72,6 +72,7 @@ class AssetRes {
   static const String icMore1 = '${icons}ic_more_1.png';
   static const String icPostComment = '${icons}ic_post_comment.png';
   static const String icPostShare = '${icons}ic_post_share.png';
+  static const String icPostViews = '${icons}ic_post_views.png';
   static const String icPostBookmark = '${icons}ic_post_bookmark.png';
   static const String icLive = '${icons}ic_live.png';
   static const String icVerifiedWhite = '${icons}ic_verified_white.png';
