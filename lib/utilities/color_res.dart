@@ -20,4 +20,5 @@ class ColorRes {
   static const Color bgGrey = Color(0xFFE9EEF6);
   static const Color bgMediumGrey = Color(0xFFF1F5FA);
   static const Color disabledGrey = Color(0xFFB9C4D6);
+  static const Color coinWalletLightBlue = Color(0xFF73ABFF);
 }

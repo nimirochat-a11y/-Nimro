@@ -85,7 +85,7 @@ class CoinWalletScreenController extends BaseController {
       final int price = (data.coinPlanPrice ?? 0).round();
       final String money = (settings?.currency ?? '').trim();
       final String fallbackPrice =
-          price > 0 ? (money.isEmpty ? '$price' : '$price $money') : '';
+          price > 0 ? (money.isEmpty ? '$price' : '$money $price') : '';
 
       coinPlans.add(CoinPlan(
         data.coinAmount ?? 0,
