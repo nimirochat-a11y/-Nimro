@@ -40,7 +40,9 @@ class GiphyService {
   }) async {
     String url =
         'https://api.giphy.com/v1/stickers/search?api_key=$apiKey&q=$keyWord&limit=$paginationLimit&offset=$startCount&rating=${giphyRating.title}';
-    http.Response response = await http.get(Uri.parse(url));
+    http.Response response = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 15));
     Loggers.info(url);
     if (response.statusCode == 200) {
       return GiphyModel.fromJson(jsonDecode(response.body)).data ?? [];
@@ -55,7 +57,9 @@ class GiphyService {
     String url =
         'https://api.giphy.com/v1/stickers/trending?api_key=$apiKey&limit=$paginationLimit&offset=$startCount&rating=${giphyRating.title}';
     Loggers.info(url);
-    http.Response response = await http.get(Uri.parse(url));
+    http.Response response = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 15));
     if (response.statusCode == 200) {
       return GiphyModel.fromJson(jsonDecode(response.body)).data ?? [];
     }

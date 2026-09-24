@@ -94,14 +94,17 @@ class NotificationService {
     var prettyString = const JsonEncoder.withIndent('  ').convert(inputData);
     Loggers.info(prettyString);
     try {
-      http.Response response = await http.post(
-          Uri.parse(WebService.notification.pushNotificationToSingleUser),
+      http.Response response = await http
+          .post(
+        Uri.parse(WebService.notification.pushNotificationToSingleUser),
           headers: {
             Params.apikey: apiKey,
             Params.authToken:
                 authorizationToken ?? SessionManager.instance.getAuthToken()
           },
-          body: json.encode(inputData));
+          body: json.encode(inputData),
+      )
+          .timeout(const Duration(seconds: 20));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         Loggers.error(
             'Notification request failed (${response.statusCode}): ${response.body}');

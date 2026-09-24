@@ -48,31 +48,43 @@ class SightEngineService {
       );
     }
 
-    var response = await request.send();
-    var respStr = await response.stream.bytesToString();
-    SightEngineMediaModel sightEngineMediaModel =
-        SightEngineMediaModel.fromJson(jsonDecode(respStr));
+    try {
+      var response =
+          await request.send().timeout(const Duration(seconds: 30));
+      var respStr = await response.stream
+          .bytesToString()
+          .timeout(const Duration(seconds: 30));
+      SightEngineMediaModel sightEngineMediaModel =
+          SightEngineMediaModel.fromJson(jsonDecode(respStr));
 
-    if (sightEngineMediaModel.error != null) {
+      if (sightEngineMediaModel.error != null) {
+        // Moderation API error (bad credentials / outage): fail open instead
+        // of leaving the app stuck on a loader.
+        Loggers.error(
+            'SightEngine image moderation error: ${sightEngineMediaModel.error?.message}');
+        BaseController.share.stopLoader();
+        completion();
+        return;
+      }
+
+      var result = sightEngineMediaModel.summary?.action ?? '';
+
       BaseController.share.stopLoader();
-      Loggers.error(sightEngineMediaModel.error?.message);
-      BaseController.share
-          .showSnackBar(sightEngineMediaModel.error?.message ?? '');
-      return;
-    }
-
-    var result = sightEngineMediaModel.summary?.action ?? '';
-
-    BaseController.share.stopLoader();
-    if (result == 'accept') {
-      completion(); // All images accepted
-    } else if (result == 'reject') {
-      var summaryDescription = sightEngineMediaModel.summary?.rejectReason
-              ?.map((e) => e.text ?? '')
-              .join(', ') ??
-          '';
-      BaseController.share.showSnackBar(
-          '${LKey.mediaRejectedAndContainsSuchThings.tr} $summaryDescription');
+      if (result == 'accept') {
+        completion(); // All images accepted
+      } else if (result == 'reject') {
+        var summaryDescription = sightEngineMediaModel.summary?.rejectReason
+                ?.map((e) => e.text ?? '')
+                .join(', ') ??
+            '';
+        BaseController.share.showSnackBar(
+            '${LKey.mediaRejectedAndContainsSuchThings.tr} $summaryDescription');
+      }
+    } catch (e) {
+      // Network failure / timeout: fail open, never leave the UI hanging.
+      Loggers.error('SightEngine image moderation failed: $e');
+      BaseController.share.stopLoader();
+      completion();
     }
   }
 
@@ -119,28 +131,37 @@ class SightEngineService {
           filename: file.path.split("/").last),
     );
 
-    var response = await request.send();
-    var respStr = await response.stream.bytesToString();
-    SightEngineMediaModel sightEngineMediaModel =
-        SightEngineMediaModel.fromJson(jsonDecode(respStr));
-    print(jsonDecode(respStr));
-    if (sightEngineMediaModel.error != null) {
+    try {
+      var response =
+          await request.send().timeout(const Duration(seconds: 30));
+      var respStr = await response.stream
+          .bytesToString()
+          .timeout(const Duration(seconds: 30));
+      SightEngineMediaModel sightEngineMediaModel =
+          SightEngineMediaModel.fromJson(jsonDecode(respStr));
+      if (sightEngineMediaModel.error != null) {
+        Loggers.error(
+            'SightEngine video moderation error: ${sightEngineMediaModel.error?.message}');
+        BaseController.share.stopLoader();
+        completion();
+        return;
+      }
+      var result = sightEngineMediaModel.summary?.action ?? '';
       BaseController.share.stopLoader();
-      BaseController.share
-          .showSnackBar(sightEngineMediaModel.error?.message ?? '');
-      return;
-    }
-    var result = sightEngineMediaModel.summary?.action ?? '';
-    BaseController.share.stopLoader();
-    if (result == 'accept') {
+      if (result == 'accept') {
+        completion();
+      } else if (result == 'reject') {
+        var summaryDescription = sightEngineMediaModel.summary?.rejectReason
+                ?.map((e) => e.text ?? '')
+                .join(', ') ??
+            '';
+        BaseController.share.showSnackBar(
+            '${LKey.mediaRejectedAndContainsSuchThings.tr} $summaryDescription');
+      }
+    } catch (e) {
+      Loggers.error('SightEngine video moderation failed: $e');
+      BaseController.share.stopLoader();
       completion();
-    } else if (result == 'reject') {
-      var summaryDescription = sightEngineMediaModel.summary?.rejectReason
-              ?.map((e) => e.text ?? '')
-              .join(', ') ??
-          '';
-      BaseController.share.showSnackBar(
-          '${LKey.mediaRejectedAndContainsSuchThings.tr} $summaryDescription');
     }
   }
 
@@ -168,38 +189,52 @@ class SightEngineService {
           SessionManager.instance.getSettings()?.sightEngineApiSecret ?? '',
     });
 
-    http.StreamedResponse response = await request.send();
+    try {
+      http.StreamedResponse response = await request
+          .send()
+          .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode == 200) {
-      var respStr = await response.stream.bytesToString();
-      TextModerationModel textModerationModel =
-          TextModerationModel.fromJson(jsonDecode(respStr));
-      List<Matches> matches = textModerationModel.profanity?.matches ?? [];
-      print(jsonDecode(respStr));
-      if (textModerationModel.error != null) {
-        BaseController.share.stopLoader();
-        BaseController.share
-            .showSnackBar(textModerationModel.error?.message ?? '');
-        return;
-      }
-      List<String> words = [];
-
-      for (var element in matches) {
-        if (element.intensity == 'high' || element.intensity == 'medium') {
-          words.add(element.match ?? '');
+      if (response.statusCode == 200) {
+        var respStr = await response.stream
+            .bytesToString()
+            .timeout(const Duration(seconds: 30));
+        TextModerationModel textModerationModel =
+            TextModerationModel.fromJson(jsonDecode(respStr));
+        List<Matches> matches = textModerationModel.profanity?.matches ?? [];
+        if (textModerationModel.error != null) {
+          Loggers.error(
+              'SightEngine text moderation error: ${textModerationModel.error?.message}');
+          BaseController.share.stopLoader();
+          completion();
+          return;
         }
-      }
+        List<String> words = [];
 
-      BaseController.share.stopLoader();
-      if (words.isEmpty) {
-        completion();
+        for (var element in matches) {
+          if (element.intensity == 'high' || element.intensity == 'medium') {
+            words.add(element.match ?? '');
+          }
+        }
+
+        BaseController.share.stopLoader();
+        if (words.isEmpty) {
+          completion();
+        } else {
+          log('${LKey.textRejectedAndContainsSuchThings.tr} ${words.join(', ')}');
+          BaseController.share.showSnackBar(
+              '${LKey.textRejectedAndContainsSuchThings.tr} ${words.join(', ')}');
+        }
       } else {
-        log('${LKey.textRejectedAndContainsSuchThings.tr} ${words.join(', ')}');
-        BaseController.share.showSnackBar(
-            '${LKey.textRejectedAndContainsSuchThings.tr} ${words.join(', ')}');
+        // Non-200 from moderation API: fail open instead of hanging.
+        Loggers.error(
+            'SightEngine text moderation HTTP ${response.statusCode}');
+        BaseController.share.stopLoader();
+        completion();
       }
-    } else {
-      log(response.reasonPhrase ?? '');
+    } catch (e) {
+      Loggers.error('SightEngine text moderation failed: $e');
+      BaseController.share.stopLoader();
+      completion();
     }
   }
 }

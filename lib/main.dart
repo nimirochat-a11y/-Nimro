@@ -43,7 +43,11 @@ Future<void> main() async {
     // remains active until authentication, realtime, and messaging are
     // migrated and verified feature-by-feature.
     await SupabaseService.instance.initialize();
-    await Firebase.initializeApp();
+    try {
+      await Firebase.initializeApp().timeout(const Duration(seconds: 20));
+    } catch (e, st) {
+      Loggers.error('Firebase init failed (continuing): $e\n$st');
+    }
 
     // Register background handler
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

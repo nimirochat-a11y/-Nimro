@@ -152,7 +152,8 @@ class ApiService {
   }
 
   Future<T> callGet<T>({required String url}) async {
-    http.Response response = await http.get(Uri.parse(url));
+    http.Response response =
+        await http.get(Uri.parse(url)).timeout(const Duration(seconds: 10));
     return jsonDecode(response.body);
   }
 

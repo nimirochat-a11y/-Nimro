@@ -143,9 +143,11 @@ class DominantColors {
 
   Future<Uint8List> fetchImage(String photoUrl) async {
     var httpClient = HttpClient();
+    httpClient.connectionTimeout = const Duration(seconds: 15);
     var request = await httpClient.getUrl(Uri.parse(photoUrl));
     var response = await request.close();
-    var bytes = await consolidateHttpClientResponseBytes(response);
+    var bytes = await consolidateHttpClientResponseBytes(response)
+        .timeout(const Duration(seconds: 15));
     return bytes;
   }
 }

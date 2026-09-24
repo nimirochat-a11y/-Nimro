@@ -23,7 +23,9 @@ Future<UrlMetadata?> extract(String url) async {
   );
 
   try {
-    final response = await http.get(Uri.parse(url));
+    final response = await http
+        .get(Uri.parse(url))
+        .timeout(const Duration(seconds: 10));
     if (response.headers['content-type']?.startsWith(r'image/') ?? false) {
       defaultOutput.title = '';
       defaultOutput.description = '';

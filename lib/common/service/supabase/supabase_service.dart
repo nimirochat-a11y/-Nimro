@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
@@ -19,8 +20,16 @@ class SupabaseService {
 
   Future<void> initialize() async {
     if (_initialized) return;
-    await Supabase.initialize(url: url, anonKey: anonKey);
-    _initialized = true;
+    try {
+      // Supabase init is best-effort during the migration phase: never let a
+      // slow/unreachable Supabase endpoint hang the app splash screen.
+      await Supabase.initialize(url: url, anonKey: anonKey)
+          .timeout(const Duration(seconds: 15));
+      _initialized = true;
+    } catch (e) {
+      debugPrint('Supabase initialize failed (continuing without it): $e');
+      _initialized = false;
+    }
   }
 
   SupabaseClient get client => Supabase.instance.client;
