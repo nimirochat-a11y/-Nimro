@@ -1,7 +1,6 @@
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
@@ -69,22 +68,14 @@ class SideBarList extends StatelessWidget {
               iconColor: whitePure(context),
             ),
             IconWithLabel(
-              onTap: () {},
-              image: AssetRes.icEye_2,
-              text: isPlaceholder
-                  ? '1'
-                  : (reel.views ?? 0).numberFormat,
-              iconColor: whitePure(context),
+              onTap: isPlaceholder ? () {} : controller.onShareTap,
+              image: AssetRes.icShare,
+              text: isPlaceholder ? '1' : (reel.shares ?? 0).toString(),
             ),
             Visibility(
               visible: controller.reelData.value.user?.id !=
                   SessionManager.instance.getUserID(),
               child: IconWithGift(onTap: controller.onGiftTap),
-            ),
-            IconWithLabel(
-              onTap: isPlaceholder ? () {} : controller.onShareTap,
-              image: AssetRes.icShare,
-              text: isPlaceholder ? '1' : (reel.shares ?? 0).toString(),
             ),
             Visibility(
               visible: music != null,
