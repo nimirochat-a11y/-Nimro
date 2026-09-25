@@ -111,6 +111,13 @@ class UploadQueueService {
 
     final completer = Completer<Map<String, dynamic>?>();
     Timer? poller;
+    Timer? giveUpTimer;
+    void finish(Map<String, dynamic>? result) {
+      if (completer.isCompleted) return;
+      poller?.cancel();
+      giveUpTimer?.cancel();
+      completer.complete(result);
+    }
     void check() {
       final q = _queue();
       final i = q.indexWhere((e) => e['tag'] == tag);
@@ -121,15 +128,19 @@ class UploadQueueService {
       }
       final status = j['status'];
       if (status == 'done') {
-        poller?.cancel();
-        completer.complete(Map<String, dynamic>.from(j['response'] as Map? ?? {}));
+        finish(Map<String, dynamic>.from(j['response'] as Map? ?? {}));
       } else if (status == 'failed') {
-        poller?.cancel();
-        completer.complete({'__error': j['error']});
+        finish({'__error': j['error']});
       }
     }
 
     poller = Timer.periodic(const Duration(milliseconds: 400), (_) => check());
+    // Safety net: if the job never reaches 'done' or 'failed' (e.g. the
+    // background service failed to start), the caller must not be left
+    // waiting on a spinner forever.
+    giveUpTimer = Timer(const Duration(minutes: 5), () {
+      finish({'__error': 'Upload timed out. Please try again.'});
+    });
     check();
     return completer.future;
   }
@@ -140,9 +151,28 @@ class UploadQueueService {
   static Future<bool> onServiceStart(ServiceInstance service) async {
     WidgetsFlutterBinding.ensureInitialized();
     await GetStorage.init(boxName);
+    _requeueStaleRunningJobs();
     service.on('kick').listen((_) => unawaited(processQueue(service)));
     await processQueue(service);
     return true;
+  }
+
+  /// If the OS killed the service mid-job, the job is stuck in 'running'
+  /// forever. A freshly started service is the only processor, so any
+  /// 'running' job it finds must be stale -> requeue it.
+  static void _requeueStaleRunningJobs() {
+    final box = GetStorage(boxName);
+    final raw = box.read(queueKey);
+    if (raw is! List) return;
+    final q = raw.whereType<Map<String, dynamic>>().toList();
+    var changed = false;
+    for (final j in q) {
+      if (j['status'] == 'running') {
+        j['status'] = 'queued';
+        changed = true;
+      }
+    }
+    if (changed) box.write(queueKey, q);
   }
 
   @pragma('vm:entry-point')
@@ -152,35 +182,45 @@ class UploadQueueService {
     return true;
   }
 
+  static bool _processing = false;
+
   static Future<void> processQueue([ServiceInstance? service]) async {
+    // A 'kick' can arrive while a job is already running; process one queue
+    // at a time so queue writes from concurrent loops never clobber each
+    // other.
+    if (_processing) return;
+    _processing = true;
     final box = GetStorage(boxName);
-    while (true) {
-      final raw = box.read(queueKey);
-      if (raw is! List || raw.isEmpty) {
-        if (service != null && Platform.isAndroid) service.stopSelf();
-        return;
-      }
-      final queue = raw.whereType<Map<String, dynamic>>().toList();
-      final index = queue.indexWhere((j) => j['status'] == 'queued');
-      if (index < 0) {
-        if (service != null && Platform.isAndroid) service.stopSelf();
-        return;
-      }
-      final job = queue[index];
-      job['status'] = 'running';
-      queue[index] = job;
-      box.write(queueKey, queue);
-      try {
-        await _runJob(job, service);
-      } catch (e) {
-        job['status'] = 'failed';
-        job['error'] = '$e';
+    try {
+      while (true) {
+        final raw = box.read(queueKey);
+        if (raw is! List || raw.isEmpty) {
+          if (service != null && Platform.isAndroid) service.stopSelf();
+          return;
+        }
+        final queue = raw.whereType<Map<String, dynamic>>().toList();
+        final index = queue.indexWhere((j) => j['status'] == 'queued');
+        if (index < 0) {
+          if (service != null && Platform.isAndroid) service.stopSelf();
+          return;
+        }
+        final job = queue[index];
+        job['status'] = 'running';
         queue[index] = job;
-        box.write(queueKey, queue);
-        Loggers.error('UploadQueue job failed: $e');
-        if (service != null && Platform.isAndroid) service.stopSelf();
-        return;
+        await box.write(queueKey, queue);
+        try {
+          await _runJob(job, service);
+        } catch (e) {
+          job['status'] = 'failed';
+          job['error'] = '$e';
+          queue[index] = job;
+          await box.write(queueKey, queue);
+          Loggers.error('UploadQueue job failed: $e');
+          // Keep the loop going: other queued jobs still deserve a try.
+        }
       }
+    } finally {
+      _processing = false;
     }
   }
 
@@ -212,7 +252,7 @@ class UploadQueueService {
       if (res == null || res['status'] != true) {
         job['status'] = 'failed';
         job['error'] = res?['message'] ?? 'upload failed at step $i';
-        _persistAsync(box, job);
+        await _persistAsync(box, job);
         _updateNotification(service, job);
         return;
       }
@@ -221,7 +261,7 @@ class UploadQueueService {
       job['step'] = i + 1;
       job['progress'] = (i + 1) / steps.length;
       job['finishedAt'] = DateTime.now().millisecondsSinceEpoch;
-      _persistAsync(box, job);
+      await _persistAsync(box, job);
       _updateNotification(service, job);
     }
 
@@ -229,7 +269,7 @@ class UploadQueueService {
     job['progress'] = 1.0;
     job['response'] = results.isEmpty ? <String, dynamic>{} : results.last;
     job['finishedAt'] = DateTime.now().millisecondsSinceEpoch;
-    _persistAsync(box, job);
+    await _persistAsync(box, job);
     _updateNotification(service, job);
   }
 
@@ -297,7 +337,11 @@ class UploadQueueService {
   static String? _authToken(GetStorage box) {
     try {
       final raw = box.read('authToken');
-      if (raw is Map) return raw['authToken'] as String?;
+      // BUG FIX: the stored map's field is 'auth_token' (matches Token.toJson()/
+      // Token.fromJson(), which use the API's snake_case field names) - reading
+      // 'authToken' here always returned null, so every background upload went
+      // out with no auth header at all and failed silently.
+      if (raw is Map) return raw['auth_token'] as String?;
     } catch (_) {}
     return null;
   }
