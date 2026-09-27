@@ -63,7 +63,7 @@ class Story {
     content = json['content'];
     thumbnail = json['thumbnail'];
     soundId = json['sound_id'];
-    duration = json['duration'];
+    duration = json['duration']?.toString();
     viewByUserIds = json['view_by_user_ids'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
@@ -78,7 +78,7 @@ class Story {
     content = json['content'];
     thumbnail = json['thumbnail'];
     soundId = json['sound_id'];
-    duration = json['duration'];
+    duration = json['duration']?.toString();
     viewByUserIds = json['view_by_user_ids'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
