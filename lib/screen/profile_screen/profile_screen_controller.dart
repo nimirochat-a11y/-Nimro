@@ -133,28 +133,33 @@ class ProfileScreenController extends BlockUserController
   Future<void> fetchPost({bool isEmpty = false}) async {
     if (isPostLoading.value) return;
     isPostLoading.value = true;
-    // Fetch user posts
-    UserPostData? items = await PostService.instance.fetchUserPosts(
-      type: PostType.posts,
-      userId:
-          userData.value?.id?.toInt() ?? SessionManager.instance.getUserID(),
-      lastItemId: isEmpty ? null : posts.lastOrNull?.id?.toInt(),
-    );
+    try {
+      // Fetch user posts
+      UserPostData? items = await PostService.instance.fetchUserPosts(
+        type: PostType.posts,
+        userId:
+            userData.value?.id?.toInt() ?? SessionManager.instance.getUserID(),
+        lastItemId: isEmpty ? null : posts.lastOrNull?.id?.toInt(),
+      );
 
-    if (isEmpty) {
-      posts.clear();
-    }
-    if (posts.isEmpty) {
-      posts.addAll(items?.pinnedPostList ?? []);
-    }
-
-    for (var post in (items?.posts ?? [])) {
-      if (posts.firstWhereOrNull((element) => element.id == post.id) == null) {
-        posts.add(post);
+      if (isEmpty) {
+        posts.clear();
       }
+      if (posts.isEmpty) {
+        posts.addAll(items?.pinnedPostList ?? []);
+      }
+
+      for (var post in (items?.posts ?? [])) {
+        if (posts.firstWhereOrNull((element) => element.id == post.id) == null) {
+          posts.add(post);
+        }
+      }
+      posts.refresh();
+    } catch (e) {
+      Loggers.error('Fetch Post Error : $e');
+    } finally {
+      isPostLoading.value = false;
     }
-    isPostLoading.value = false;
-    posts.refresh();
   }
 
   Future<void> onRefresh() async {
