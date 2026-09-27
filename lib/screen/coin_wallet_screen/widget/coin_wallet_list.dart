@@ -1,29 +1,24 @@
-import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/no_data_widget.dart';
-import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/coin_wallet_screen/coin_wallet_screen_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/color_res.dart';
-import 'package:nimiro/utilities/style_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
-/// Coin store list.
+/// Coin store grid.
 ///
-/// REDESIGN(v14): the rows used to be a flat grey capsule with a generic coin
-/// icon. They now use the app's own identity — the brand gradient header, the
-/// accent blue, the squircle radius and the Outfit/Unbounded type scale — so
-/// the store reads as part of Nimiro rather than a stock widget. The list is
-/// brand-led rather than neutral, and each row shows the server image when the
-/// dashboard provided one.
+/// REDESIGN(v16): packages now render as a 2-column
+grid of cards, matching
+/// the new coin-store mockup, with the first active package badged as the
+/// best seller. Tapping a card purchases it directly (no separate button),
+/// keeping each card compact.
 class CoinWalletList extends StatelessWidget {
   final CoinWalletScreenController controller;
-
   const CoinWalletList({super.key, required this.controller});
 
   @override
@@ -40,26 +35,28 @@ class CoinWalletList extends StatelessWidget {
               ),
             );
           }
-
           final plans = controller.coinPlans;
-
           if (plans.isEmpty) {
-            // An empty store is a real state (no rows, or all rows disabled) and
-            // must be stated instead of rendering a blank white sheet.
             return const NoDataWidgetWithScroll(
               title: 'No coin packages yet',
               description:
                   'The store is empty right now. New coin packages are on the way.',
             );
           }
-
-          return ListView.builder(
-            padding: const EdgeInsets.only(top: 18, bottom: 24),
+          return GridView.builder(
+            padding: const EdgeInsets.fromLTRB(14, 18, 14, 24),
             itemCount: plans.length,
             physics: const ClampingScrollPhysics(),
-            itemBuilder: (context, index) => _CoinPlanTile(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 0.92,
+            ),
+            itemBuilder: (context, index) => _CoinPlanCard(
               data: plans[index],
               controller: controller,
+              isBestSeller: index == 0,
             ),
           );
         },
@@ -68,97 +65,122 @@ class CoinWalletList extends StatelessWidget {
   }
 }
 
-class _CoinPlanTile extends StatelessWidget {
+class _CoinPlanCard extends StatelessWidget {
   final CoinPlan data;
   final CoinWalletScreenController controller;
-
-  const _CoinPlanTile({required this.data, required this.controller});
+  final bool isBestSeller;
+  const _CoinPlanCard(
+      {required this.data,
+      required this.controller,
+      required this.isBestSeller});
 
   @override
   Widget build(BuildContext context) {
-    const double radius = 16;
     final bool hasPrice = data.priceString.trim().isNotEmpty;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: ShapeDecoration(
-        shape: SmoothRectangleBorder(
-          borderRadius: SmoothBorderRadius(
-              cornerRadius: radius, cornerSmoothing: 1),
-          side: BorderSide(
-            color: ColorRes.themeAccentSolid.withValues(alpha: .18),
-            width: 1.2,
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: () => controller.onPurchase(data),
+      child: Container(
+        decoration: BoxDecoration(
+          color: whitePure(context),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isBestSeller
+                ? ColorRes.themeAccentSolid.withValues(alpha: .55)
+                : ColorRes.themeAccentSolid.withValues(alpha: .14),
+            width: isBestSeller ? 1.6 : 1,
           ),
-        ),
-        color: whitePure(context),
-        shadows: [
-          BoxShadow(
-            color: ColorRes.themeColor.withValues(alpha: .07),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipSmoothRect(
-        radius: SmoothBorderRadius(
-            cornerRadius: radius, cornerSmoothing: 1),
-        child: Stack(
-          children: [
-            // Brand accent rail on the leading edge.
-            PositionedDirectional(
-              start: 0,
-              top: 0,
-              bottom: 0,
-              child: Container(
-                width: 4,
-                decoration: BoxDecoration(gradient: StyleRes.themeGradient),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: ColorRes.themeColor.withValues(alpha: .06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
+          ],
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
             Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 12, 14),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(12, 18, 12, 12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _CoinBadge(image: data.image),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${data.coin} ${LKey.coins.tr}',
-                          style: TextStyleCustom.unboundedMedium500(
-                            color: ColorRes.textDarkGrey,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          hasPrice
-                              ? '${data.priceString} ${LKey.only.tr}'
-                              : LKey.rechargeWallet.tr,
-                          style: TextStyleCustom.outFitRegular400(
-                            color: ColorRes.textLightGrey,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 10),
+                  Text(
+                    '${data.coin}',
+                    style: TextStyleCustom.unboundedExtraBold800(
+                      color: ColorRes.textDarkGrey,
+                      fontSize: 20,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  TextButtonCustom(
-                    onTap: () => controller.onPurchase(data),
-                    title: LKey.purchase.tr,
-                    backgroundColor: ColorRes.themeAccentSolid,
-                    btnHeight: 40,
-                    fontSize: 14,
-                    titleColor: ColorRes.whitePure,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    horizontalMargin: 0,
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        LKey.coins.tr,
+                        style: TextStyleCustom.outFitRegular400(
+                          color: ColorRes.textLightGrey,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(width: 3),
+                      Image.asset(AssetRes.icStar, width: 12, height: 12),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: isBestSeller
+                          ? ColorRes.themeAccentSolid
+                          : ColorRes.textLightGrey.withValues(alpha: .12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      hasPrice ? data.priceString : LKey.rechargeWallet.tr,
+                      style: TextStyleCustom.unboundedMedium500(
+                        color: isBestSeller
+                            ? ColorRes.whitePure
+                            : ColorRes.textDarkGrey,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
+            if (isBestSeller)
+              PositionedDirectional(
+                top: -4,
+                start: 10,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: ColorRes.themeAccentSolid,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ColorRes.themeAccentSolid.withValues(alpha: .4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    'Most Popular'.tr,
+                    style: TextStyleCustom.outFitRegular400(
+                      color: ColorRes.whitePure,
+                      fontSize: 10,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -166,26 +188,30 @@ class _CoinPlanTile extends StatelessWidget {
   }
 }
 
-/// Circular brand badge holding the package image, or the app's coin icon.
+/// Circular brand badge holding the package image,
+or the app's coin icon.
 class _CoinBadge extends StatelessWidget {
   final String? image;
-
   const _CoinBadge({this.image});
 
   @override
   Widget build(BuildContext context) {
     final bool hasImage = (image ?? '').trim().isNotEmpty;
     return Container(
-      height: 46,
-      width: 46,
+      height: 44,
+      width: 44,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: StyleRes.themeGradient,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFFFD76A), Color(0xFFFF9A2E)],
+        ),
         boxShadow: [
           BoxShadow(
-            color: ColorRes.themeAccentSolid.withValues(alpha: .28),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: const Color(0xFFFF9A2E).withValues(alpha: .3),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
@@ -194,12 +220,13 @@ class _CoinBadge extends StatelessWidget {
             ? ClipOval(
                 child: CustomImage(
                   image: image!.addBaseURL(),
-                  size: const Size(40, 40),
+                  size: const Size(38, 38),
                   fit: BoxFit.cover,
                   isShowPlaceHolder: true,
                 ),
               )
-            : Image.asset(AssetRes.icCoin, width: 26, height: 26),
+            : Image.asset(AssetRes.icCoin,
+                width: 24, height: 24, color: Colors.white),
       ),
     );
   }

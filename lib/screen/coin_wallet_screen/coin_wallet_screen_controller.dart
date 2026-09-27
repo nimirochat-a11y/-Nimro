@@ -103,6 +103,28 @@ class CoinWalletScreenController extends BaseController {
         'CoinWallet: ${coinPlans.length} plan(s) rendered out of ${packages.length} served.');
   }
 
+  /// Approximate USD value of [coins] using the cheapest active server
+  /// package as the exchange rate (coins per dollar). Returns null when no
+  /// package with a positive price/coin ratio is available, so the caller can
+  /// hide the estimate instead of showing a misleading number.
+  String? approxUsdFor(int coins) {
+    if (coins <= 0) return null;
+    final packages = (settings?.coinPackages ?? [])
+        .where((p) =>
+            p.status == 1 &&
+            (p.coinAmount ?? 0) > 0 &&
+            (p.coinPlanPrice ?? 0) > 0)
+        .toList();
+    if (packages.isEmpty) return null;
+    packages.sort((a, b) =>
+        ((a.coinPlanPrice ?? 0) / (a.coinAmount ?? 1))
+            .compareTo((b.coinPlanPrice ?? 0) / (b.coinAmount ?? 1)));
+    final cheapest = packages.first;
+    final perCoin = (cheapest.coinPlanPrice ?? 0) / (cheapest.coinAmount ?? 1);
+    final value = coins * perCoin;
+    return value.toStringAsFixed(value < 10 ? 2 : 0);
+  }
+
   void onPurchase(CoinPlan offer) {
     if (!offer.isStoreBacked) {
       // No store product is wired to this package (placeholder store id, or a
