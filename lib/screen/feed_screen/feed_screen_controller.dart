@@ -62,6 +62,7 @@ class FeedScreenController extends BaseController {
       _addDataInPostList(_post, isEmpty);
     } catch (e) {
       Loggers.error('Fetch Discover Post Error : $e');
+      Get.snackbar('DEBUG ERROR', e.toString(), duration: const Duration(seconds: 10));
       isLoading.value = false;
     }
   }
