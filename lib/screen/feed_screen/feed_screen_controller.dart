@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
@@ -55,31 +56,46 @@ class FeedScreenController extends BaseController {
   Future<void> fetchDiscoverPost({bool isEmpty = false}) async {
     if (isLoading.value) return;
     isLoading.value = true;
-    List<Post> _post =
-        await PostService.instance.fetchPostsDiscover(type: PostType.posts);
-    _addDataInPostList(_post, isEmpty);
+    try {
+      List<Post> _post =
+          await PostService.instance.fetchPostsDiscover(type: PostType.posts);
+      _addDataInPostList(_post, isEmpty);
+    } catch (e) {
+      Loggers.error('Fetch Discover Post Error : $e');
+      isLoading.value = false;
+    }
   }
 
   Future<void> _fetchPostsFollowing({bool isEmpty = false}) async {
     if (isLoading.value) return;
     isLoading.value = true;
-    List<Post> _post =
-        await PostService.instance.fetchPostsFollowing(type: PostType.posts);
-    _addDataInPostList(_post, isEmpty);
+    try {
+      List<Post> _post =
+          await PostService.instance.fetchPostsFollowing(type: PostType.posts);
+      _addDataInPostList(_post, isEmpty);
+    } catch (e) {
+      Loggers.error('Fetch Following Post Error : $e');
+      isLoading.value = false;
+    }
   }
 
   Future<void> _fetchPostsNearBy({bool isEmpty = false}) async {
     if (isLoading.value) return;
     isLoading.value = true;
-    Position position = await LocationService.instance
-        .getCurrentLocation(isPermissionDialogShow: true);
+    try {
+      Position position = await LocationService.instance
+          .getCurrentLocation(isPermissionDialogShow: true);
 
-    List<Post> _post = await PostService.instance.fetchPostsNearBy(
-        type: PostType.posts,
-        placeLat: position.latitude,
-        placeLon: position.longitude);
+      List<Post> _post = await PostService.instance.fetchPostsNearBy(
+          type: PostType.posts,
+          placeLat: position.latitude,
+          placeLon: position.longitude);
 
-    _addDataInPostList(_post, isEmpty);
+      _addDataInPostList(_post, isEmpty);
+    } catch (e) {
+      Loggers.error('Fetch NearBy Post Error : $e');
+      isLoading.value = false;
+    }
   }
 
   _addDataInPostList(List<Post> newList, bool isEmpty) async {
