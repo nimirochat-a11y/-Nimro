@@ -103,24 +103,17 @@ class CoinWalletScreenController extends BaseController {
         'CoinWallet: ${coinPlans.length} plan(s) rendered out of ${packages.length} served.');
   }
 
-  /// Approximate USD value of [coins] using the cheapest active server
-  /// package as the exchange rate (coins per dollar). Returns null when no
-  /// package with a positive price/coin ratio is available, so the caller can
-  /// hide the estimate instead of showing a misleading number.
+  /// Approximate USD value of [coins] using the admin-configured
+  /// `coin_value` (price per single coin) from server settings. This is the
+  /// single source of truth the dashboard exposes for coin pricing, so the
+  /// estimate updates automatically the moment an admin changes it there -
+  /// no app update needed. Returns null when the server hasn't set a
+  /// positive coin value, so the caller can hide the estimate instead of
+  /// showing a misleading number.
   String? approxUsdFor(int coins) {
     if (coins <= 0) return null;
-    final packages = (settings?.coinPackages ?? [])
-        .where((p) =>
-            p.status == 1 &&
-            (p.coinAmount ?? 0) > 0 &&
-            (p.coinPlanPrice ?? 0) > 0)
-        .toList();
-    if (packages.isEmpty) return null;
-    packages.sort((a, b) =>
-        ((a.coinPlanPrice ?? 0) / (a.coinAmount ?? 1))
-            .compareTo((b.coinPlanPrice ?? 0) / (b.coinAmount ?? 1)));
-    final cheapest = packages.first;
-    final perCoin = (cheapest.coinPlanPrice ?? 0) / (cheapest.coinAmount ?? 1);
+    final perCoin = settings?.coinValue ?? 0;
+    if (perCoin <= 0) return null;
     final value = coins * perCoin;
     return value.toStringAsFixed(value < 10 ? 2 : 0);
   }

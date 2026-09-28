@@ -29,12 +29,12 @@ class CoinWalletScreen extends StatelessWidget {
                 Text(LKey.coinShop.tr,
                     style: TextStyleCustom.unboundedMedium500(
                       color: textDarkGrey(context),
-                      fontSize: 18,
+                      fontSize: 16,
                     )),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(LKey.rechargeWallet.tr,
                     style: TextStyleCustom.outFitLight300(
-                        color: textLightGrey(context), fontSize: 13)),
+                        color: textLightGrey(context), fontSize: 11)),
               ],
             ),
           ),

@@ -189,8 +189,8 @@ class CoinWalletTopView extends StatelessWidget {
                           ),
                         ),
                         Container(
-                          height: 96,
-                          width: 96,
+                          height: 62,
+                          width: 62,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: const LinearGradient(
@@ -202,14 +202,14 @@ class CoinWalletTopView extends StatelessWidget {
                               BoxShadow(
                                 color: const Color(0xFFFF9A2E)
                                     .withValues(alpha: .35),
-                                blurRadius: 22,
-                                offset: const Offset(0, 8),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ],
                           ),
                           alignment: Alignment.center,
-                          child: Image.asset(AssetRes.icStar,
-                              color: Colors.white, height: 40, width: 40),
+                          child: Image.asset(AssetRes.icCoin,
+                              color: Colors.white, height: 30, width: 30),
                         ),
                       ],
                     ),
