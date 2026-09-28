@@ -13,7 +13,7 @@ import 'package:nimiro/utilities/theme_res.dart';
 /// Coin store grid.
 ///
 /// REDESIGN(v16): packages now render as a 2-column
-grid of cards, matching
+/// grid of cards, matching
 /// the new coin-store mockup, with the first active package badged as the
 /// best seller. Tapping a card purchases it directly (no separate button),
 /// keeping each card compact.
@@ -189,7 +189,7 @@ class _CoinPlanCard extends StatelessWidget {
 }
 
 /// Circular brand badge holding the package image,
-or the app's coin icon.
+/// or the app's coin icon.
 class _CoinBadge extends StatelessWidget {
   final String? image;
   const _CoinBadge({this.image});
