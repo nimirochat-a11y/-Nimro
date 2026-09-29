@@ -1,5 +1,5 @@
 /// Maps a 2-letter country code (as stored on the
-user at registration) to
+/// user at registration) to
 /// its currency's 3-letter ISO code and display symbol. Used to show coin
 /// prices in each user's local currency while the admin dashboard still
 /// prices everything in USD - the conversion is display-only.
