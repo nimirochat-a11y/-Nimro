@@ -36,9 +36,32 @@ class SettingModel {
 }
 
 class Setting {
+  static Map<String, double>? _parseExchangeRates(dynamic raw) {
+    try {
+      dynamic value = raw;
+      // The server stores this as a JSON string inside a text column, so it
+      // may arrive double-encoded (a JSON string containing JSON).
+      if (value is String) {
+        if (value.trim().isEmpty) return null;
+        value = jsonDecode(value);
+      }
+      if (value is Map) {
+        final result = <String, double>{};
+        value.forEach((k, v) {
+          final d = (v is num) ? v.toDouble() : double.tryParse('$v');
+          if (d != null) result['$k'] = d;
+        });
+        return result.isEmpty ? null : result;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   int? id;
   String? appName;
   String? currency;
+  /// Cached USD exchange rates keyed by 3-letter currency code (e.g. "EGP": 49.2), refreshed periodically server-side.
+  Map<String, double>? exchangeRates;
   double? coinValue;
   int? minRedeemCoins;
   int? registrationBonusStatus;
@@ -100,6 +123,7 @@ class Setting {
     this.id,
     this.appName,
     this.currency,
+    this.exchangeRates,
     this.coinValue,
     this.minRedeemCoins,
     this.minFollowersForLive,
@@ -162,6 +186,7 @@ class Setting {
         id: json["id"],
         appName: json["app_name"],
         currency: json["currency"],
+        exchangeRates: _parseExchangeRates(json["exchange_rates"]),
         registrationBonusStatus: json["registration_bonus_status"],
         registrationBonusAmount: json["registration_bonus_amount"],
         coinValue: json["coin_value"]?.toDouble(),

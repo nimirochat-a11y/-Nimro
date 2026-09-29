@@ -9,6 +9,7 @@ import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/service/subscription/subscription_manager.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
+import 'package:nimiro/utilities/currency_by_country.dart';
 
 class CoinWalletScreenController extends BaseController {
   Rx<User?> myUser = Rx<User?>(null);
@@ -82,10 +83,9 @@ class CoinWalletScreenController extends BaseController {
         }
       }
 
-      final int price = (data.coinPlanPrice ?? 0).round();
-      final String money = (settings?.currency ?? '').trim();
+      final int usdPrice = (data.coinPlanPrice ?? 0).round();
       final String fallbackPrice =
-          price > 0 ? (money.isEmpty ? '$price' : '$price $money') : '';
+          usdPrice > 0 ? formatLocalPrice(usdPrice) : '';
 
       coinPlans.add(CoinPlan(
         data.coinAmount ?? 0,
@@ -114,8 +114,33 @@ class CoinWalletScreenController extends BaseController {
     if (coins <= 0) return null;
     final perCoin = settings?.coinValue ?? 0;
     if (perCoin <= 0) return null;
-    final value = coins * perCoin;
-    return value.toStringAsFixed(value < 10 ? 2 : 0);
+    final usdValue = coins * perCoin;
+    // Reuse the same country-aware conversion used for coin packages, minus
+    // the leading currency symbol/sign since the caller renders its own
+    // "≈" prefix and layout around this string.
+    final formatted = formatLocalPrice(usdValue);
+    return formatted.replaceFirst('\$', '').trim();
+  }
+
+  /// Converts a USD admin price to the signed-in user's registration-country
+  /// currency using the server-cached exchange rates, and formats it with
+  /// that currency's symbol (e.g. "49 ج.م" for an Egyptian account). Falls
+  /// back to a plain USD string when no rate is cached yet or the country is
+  /// unmapped, so the price is always readable.
+  String formatLocalPrice(num usdAmount) {
+    final countryCode = myUser.value?.countryCode;
+    final code = CurrencyByCountry.codeFor(countryCode);
+    final symbol = CurrencyByCountry.symbolFor(countryCode);
+    if (code == 'USD') {
+      return '\$${usdAmount.toStringAsFixed(usdAmount < 10 ? 2 : 0)}';
+    }
+    final rate = settings?.exchangeRates?[code];
+    if (rate == null) {
+      return '\$${usdAmount.toStringAsFixed(usdAmount < 10 ? 2 : 0)}';
+    }
+    final converted = usdAmount * rate;
+    final display = converted.toStringAsFixed(converted < 10 ? 2 : 0);
+    return '$display $symbol';
   }
 
   void onPurchase(CoinPlan offer) {
