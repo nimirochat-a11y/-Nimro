@@ -5,12 +5,12 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
 /// New-design settings row (v17 mockup): a title with
-a short subtitle under
+/// a short subtitle under
 /// it, a colored circular icon badge, and a left-pointing chevron. Used only
 /// by [SettingsScreen] - kept separate from the legacy
-`SettingIconTextWithArrow`
+/// `SettingIconTextWithArrow`
 /// so nothing else in the app (e.g. the notifications
-page) is affected.
+/// page) is affected.
 class SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
