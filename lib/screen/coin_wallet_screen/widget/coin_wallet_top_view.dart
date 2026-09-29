@@ -170,7 +170,7 @@ class CoinWalletTopView extends StatelessWidget {
                                           size: 14),
                                       const SizedBox(width: 6),
                                       Text(
-                                        '\u2248 $approx USD',
+                                        '\u2248 $approx',
                                         style: TextStyleCustom.outFitRegular400(
                                             color: Colors.white
                                                 .withValues(alpha: .85),
@@ -209,7 +209,7 @@ class CoinWalletTopView extends StatelessWidget {
                           ),
                           alignment: Alignment.center,
                           child: Image.asset(AssetRes.icCoin,
-                              color: Colors.white, height: 30, width: 30),
+                              height: 34, width: 34),
                         ),
                       ],
                     ),
