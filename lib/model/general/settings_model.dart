@@ -282,6 +282,7 @@ class Setting {
         "id": id,
         "app_name": appName,
         "currency": currency,
+        "exchange_rates": exchangeRates,
         "registration_bonus_status": registrationBonusStatus,
         "registration_bonus_amount": registrationBonusAmount,
         "coin_value": coinValue,

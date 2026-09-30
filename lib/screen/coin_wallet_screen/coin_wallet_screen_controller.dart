@@ -114,12 +114,11 @@ class CoinWalletScreenController extends BaseController {
     if (coins <= 0) return null;
     final perCoin = settings?.coinValue ?? 0;
     if (perCoin <= 0) return null;
-    final usdValue = coins * perCoin;
-    // Reuse the same country-aware conversion used for coin packages, minus
-    // the leading currency symbol/sign since the caller renders its own
-    // "≈" prefix and layout around this string.
-    final formatted = formatLocalPrice(usdValue);
-    return formatted.replaceFirst('\$', '').trim();
+    final formatted = formatLocalPrice(coins * perCoin);
+    if (formatted.startsWith(r'$')) {
+      return '${formatted.substring(1)} USD';
+    }
+    return formatted;
   }
 
   /// Converts a USD admin price to the signed-in user's registration-country
@@ -128,7 +127,7 @@ class CoinWalletScreenController extends BaseController {
   /// back to a plain USD string when no rate is cached yet or the country is
   /// unmapped, so the price is always readable.
   String formatLocalPrice(num usdAmount) {
-    final countryCode = myUser.value?.countryCode;
+    final countryCode = userCountryCode;
     final code = CurrencyByCountry.codeFor(countryCode);
     final symbol = CurrencyByCountry.symbolFor(countryCode);
     if (code == 'USD') {
@@ -141,6 +140,14 @@ class CoinWalletScreenController extends BaseController {
     final converted = usdAmount * rate;
     final display = converted.toStringAsFixed(converted < 10 ? 2 : 0);
     return '$display $symbol';
+  }
+
+  String? get userCountryCode {
+    final c = myUser.value?.countryCode;
+    if (c != null && c.trim().isNotEmpty) return c.trim();
+    final d = Get.deviceLocale?.countryCode;
+    if (d != null && d.trim().isNotEmpty) return d.trim();
+    return null;
   }
 
   void onPurchase(CoinPlan offer) {
