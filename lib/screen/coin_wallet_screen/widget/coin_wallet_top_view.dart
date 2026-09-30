@@ -9,14 +9,8 @@ import 'package:nimiro/screen/coin_wallet_screen/coin_wallet_screen_controller.d
 import 'package:nimiro/screen/request_withdrawal_screen/request_withdrawal_screen.dart';
 import 'package:nimiro/screen/withdrawals_screen/withdrawals_screen.dart';
 import 'package:nimiro/utilities/asset_res.dart';
-import 'package:nimiro/utilities/color_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
-import 'package:nimiro/utilities/theme_res.dart';
 
-/// REDESIGN(v16): dark hero header matching the new coin-store mockup —
-/// a black-to-purple gradient card with the balance front and center, a
-/// pill showing the approximate USD value, and a decorative coin badge
-/// instead of the old glass stats row.
 class CoinWalletTopView extends StatelessWidget {
   const CoinWalletTopView({super.key});
 
@@ -29,196 +23,218 @@ class CoinWalletTopView extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0B0B12),
-            Color(0xFF1B1030),
-            Color(0xFF2E1750),
-          ],
+          colors: [Color(0xFF0A0A10), Color(0xFF1A0F2E), Color(0xFF2B1650)],
         ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(28),
-          bottomRight: Radius.circular(28),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CustomBackButton(color: Colors.white, width: 35),
+                  Text(
+                    LKey.coinShop.tr,
+                    style: TextStyleCustom.unboundedMedium500(
+                        color: Colors.white),
+                  ),
+                  Visibility(
+                    visible: controller.settings?.isWithdrawalOn == 1,
+                    replacement: const SizedBox(width: 35),
+                    child: CustomPopupMenuButton(
+                      items: [
+                        MenuItem(LKey.withdrawals.tr, () {
+                          Get.to(() => const WithdrawalsScreen());
+                        }),
+                        MenuItem(LKey.requestWithdrawal.tr, () {
+                          Get.to(() => const RequestWithdrawalScreen())
+                              ?.then((value) {
+                            controller.fetchData();
+                          });
+                        }),
+                      ],
+                      child: Container(
+                        height: 35,
+                        width: 35,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: .12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Image.asset(AssetRes.icWallet,
+                              color: Colors.white, width: 18, height: 18),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(child: _Balance(controller: controller)),
+                  const SizedBox(width: 8),
+                  const _CoinArt(),
+                ],
+              ),
+            ],
+          ),
         ),
-        child: Stack(
-          children: [
-            // Decorative glow.
-            Positioned(
-              right: -40,
-              top: 20,
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: ColorRes.themeAccentSolid.withValues(alpha: .18),
-                ),
-              ),
+      ),
+    );
+  }
+}
+
+class _Balance extends StatelessWidget {
+  final CoinWalletScreenController controller;
+  const _Balance({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your current balance'.tr,
+          style: TextStyleCustom.outFitLight300(
+              color: Colors.white.withValues(alpha: .7), fontSize: 14),
+        ),
+        const SizedBox(height: 6),
+        Obx(() {
+          User? user = controller.myUser.value;
+          return FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              (user?.coinWallet?.toInt() ?? 0).numberFormat,
+              style: TextStyleCustom.unboundedExtraBold800(
+                  color: Colors.white, fontSize: 44),
             ),
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 26),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        CustomBackButton(color: Colors.white, width: 35),
-                        Text(
-                          LKey.coinShop.tr,
-                          style: TextStyleCustom.unboundedMedium500(
-                              color: Colors.white),
-                        ),
-                        Visibility(
-                          visible: controller.settings?.isWithdrawalOn == 1,
-                          replacement: const SizedBox(width: 35),
-                          child: CustomPopupMenuButton(
-                              items: [
-                                MenuItem(LKey.withdrawals.tr, () {
-                                  Get.to(() => const WithdrawalsScreen());
-                                }),
-                                MenuItem(LKey.requestWithdrawal.tr, () {
-                                  Get.to(() => const RequestWithdrawalScreen())
-                                      ?.then((value) {
-                                    controller.fetchData();
-                                  });
-                                }),
-                              ],
-                              child: Container(
-                                height: 35,
-                                width: 35,
-                                decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: .12),
-                                    shape: BoxShape.circle),
-                                child: Center(
-                                    child: Image.asset(AssetRes.icWallet,
-                                        color: Colors.white,
-                                        width: 18,
-                                        height: 18)),
-                              )),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 34),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                LKey.balance.tr,
-                                style: TextStyleCustom.outFitLight300(
-                                    color: Colors.white.withValues(alpha: .65),
-                                    fontSize: 14),
-                              ),
-                              const SizedBox(height: 6),
-                              Obx(() {
-                                User? user = controller.myUser.value;
-                                return Text(
-                                  (user?.coinWallet?.toInt() ?? 0)
-                                      .numberFormat,
-                                  style: TextStyleCustom.unboundedExtraBold800(
-                                      color: Colors.white, fontSize: 40),
-                                );
-                              }),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Image.asset(AssetRes.icCoin,
-                                      width: 16, height: 16),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    LKey.coins.tr,
-                                    style: TextStyleCustom.outFitRegular400(
-                                        color:
-                                            Colors.white.withValues(alpha: .8),
-                                        fontSize: 14),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              Obx(() {
-                                User? user = controller.myUser.value;
-                                final approx = controller
-                                    .approxUsdFor(user?.coinWallet?.toInt() ?? 0);
-                                if (approx == null) return const SizedBox();
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: .08),
-                                    borderRadius: BorderRadius.circular(30),
-                                    border: Border.all(
-                                        color: Colors.white
-                                            .withValues(alpha: .14)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.account_balance_wallet_outlined,
-                                          color:
-                                              Colors.white.withValues(alpha: .7),
-                                          size: 14),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        '\u2248 $approx',
-                                        style: TextStyleCustom.outFitRegular400(
-                                            color: Colors.white
-                                                .withValues(alpha: .85),
-                                            fontSize: 13),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(Icons.chevron_right,
-                                          color:
-                                              Colors.white.withValues(alpha: .6),
-                                          size: 16),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          height: 62,
-                          width: 62,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [Color(0xFFFFD76A), Color(0xFFFF9A2E)],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFF9A2E)
-                                    .withValues(alpha: .35),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Image.asset(AssetRes.icCoin,
-                              height: 34, width: 34),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+          );
+        }),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Image.asset(AssetRes.icCoin, width: 18, height: 18),
+            const SizedBox(width: 6),
+            Text(
+              LKey.coins.tr,
+              style: TextStyleCustom.outFitRegular400(
+                  color: Colors.white.withValues(alpha: .85), fontSize: 15),
             ),
           ],
         ),
+        const SizedBox(height: 14),
+        Obx(() {
+          User? user = controller.myUser.value;
+          final approx =
+              controller.approxUsdFor(user?.coinWallet?.toInt() ?? 0);
+          if (approx == null) return const SizedBox.shrink();
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: Colors.white.withValues(alpha: .16)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.savings_outlined,
+                    color: Colors.white.withValues(alpha: .75), size: 15),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    '\u2248 $approx',
+                    style: TextStyleCustom.outFitRegular400(
+                        color: Colors.white.withValues(alpha: .9),
+                        fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(Icons.chevron_left,
+                    color: Colors.white.withValues(alpha: .6), size: 16),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _CoinArt extends StatelessWidget {
+  const _CoinArt();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 150,
+      height: 150,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFFFFB84D).withValues(alpha: .28),
+                  const Color(0xFFFFB84D).withValues(alpha: 0),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 8,
+            child: Container(
+              width: 112,
+              height: 28,
+              decoration: BoxDecoration(
+                borderRadius:
+                    const BorderRadius.all(Radius.elliptical(56, 14)),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF7A45E0), Color(0xFF2B1650)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF9B5CFF).withValues(alpha: .45),
+                    blurRadius: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 10,
+            child: Image.asset(AssetRes.icCoin, width: 96, height: 96),
+          ),
+          Positioned(
+            top: 6,
+            right: 2,
+            child: Transform.rotate(
+              angle: .5,
+              child: Image.asset(AssetRes.icCoin, width: 26, height: 26),
+            ),
+          ),
+          Positioned(
+            top: 62,
+            left: 0,
+            child: Transform.rotate(
+              angle: -.5,
+              child: Image.asset(AssetRes.icCoin, width: 22, height: 22),
+            ),
+          ),
+        ],
       ),
     );
   }
