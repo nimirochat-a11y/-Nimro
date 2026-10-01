@@ -7,6 +7,7 @@ import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/general/status_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
+import 'package:nimiro/utilities/currency_by_country.dart';
 
 class RequestWithdrawalScreenController extends BaseController {
   Rx<Setting?> settings = Rx<Setting?>(null);
@@ -29,6 +30,43 @@ class RequestWithdrawalScreenController extends BaseController {
     myUser.value = SessionManager.instance.getUser();
   }
 
+  String? get userCountryCode {
+    final c = myUser.value?.countryCode;
+    if (c != null && c.trim().isNotEmpty) return c.trim();
+    final d = Get.deviceLocale?.countryCode;
+    if (d != null && d.trim().isNotEmpty) return d.trim();
+    return null;
+  }
+
+  String get localCurrencyCode {
+    final code = CurrencyByCountry.codeFor(userCountryCode);
+    if (code == 'USD') return 'USD';
+    return settings.value?.exchangeRates?[code] == null ? 'USD' : code;
+  }
+
+  double get localRate {
+    final code = localCurrencyCode;
+    if (code == 'USD') return 1;
+    return settings.value?.exchangeRates?[code] ?? 1;
+  }
+
+  String get localFlag {
+    final cc = (localCurrencyCode == 'USD' ? 'US' : (userCountryCode ?? 'US'))
+        .toUpperCase();
+    if (!RegExp(r'^[A-Z]{2}$').hasMatch(cc)) return '';
+    return String.fromCharCodes(cc.codeUnits.map((c) => 0x1F1E6 + c - 65));
+  }
+
+  String formatLocal(double usd) {
+    final v = usd * localRate;
+    return v.toStringAsFixed(v < 10 ? 2 : 0);
+  }
+
+  int get coinsPerUsd {
+    final v = settings.value?.coinValue ?? 0;
+    return v > 0 ? (1 / v).round() : 0;
+  }
+
   void onChanged(String value) {
     if (value.isEmpty) {
       estimatedAmountController.value.text = '0';
@@ -49,7 +87,7 @@ class RequestWithdrawalScreenController extends BaseController {
       );
     } else {
       estimatedAmountController.value.text =
-          '${(settings.value?.coinValue?.toDouble() ?? 0) * inputValue}';
+          formatLocal((settings.value?.coinValue?.toDouble() ?? 0) * inputValue);
     }
   }
 
