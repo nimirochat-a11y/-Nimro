@@ -87,8 +87,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      builder: (context, child) =>
-          ScrollConfiguration(behavior: MyBehavior(), child: child!),
+      builder: (context, child) => Directionality(
+          textDirection: TextDirection.rtl,
+          child: ScrollConfiguration(behavior: MyBehavior(), child: child!)),
       translations: Get.find<DynamicTranslations>(),
       locale: Locale(SessionManager.instance.getLang()),
       fallbackLocale: Locale(SessionManager.instance.getFallbackLang()),
