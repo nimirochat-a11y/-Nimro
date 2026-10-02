@@ -154,10 +154,21 @@ class _BalanceCard extends StatelessWidget {
                       Flexible(
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text(
-                            '${controller.formatLocal(usd)} ${controller.localCurrencyCode}',
-                            style: TextStyleCustom.unboundedExtraBold800(
-                                color: _navy, fontSize: 22),
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: controller.formatLocal(usd),
+                                  style: TextStyleCustom.outFitExtraBold800(
+                                      color: _navy, fontSize: 24),
+                                ),
+                                TextSpan(
+                                  text: ' ${controller.localCurrencyCode}',
+                                  style: TextStyleCustom.outFitRegular400(
+                                      color: _navy, fontSize: 13),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -200,7 +211,7 @@ class _RateChip extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               per > 0
-                  ? '${LKey.currentValue.tr} : 1 USD = $per ${LKey.coin.tr}'
+                  ? '${LKey.currentValue.tr} : \u2066 1 USD = $per \u2069 ${LKey.coin.tr}'
                   : '${LKey.currentValue.tr} : -',
               style: TextStyleCustom.outFitLight300(
                   color: Colors.grey.shade700, fontSize: 13),
@@ -242,7 +253,7 @@ class _FormCard extends StatelessWidget {
               onChanged: controller.onChanged,
               keyboardType: TextInputType.number,
               style: TextStyleCustom.outFitRegular400(
-                  color: _navy, fontSize: 16),
+                  color: _navy, fontSize: 15),
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(
@@ -286,11 +297,13 @@ class _FormCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Obx(
-                    () => Text(
-                      controller.estimatedAmountController.value.text,
-                      style: TextStyleCustom.unboundedMedium500(
-                          color: _navy, fontSize: 18),
+                  child: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable:
+                        controller.estimatedAmountController.value,
+                    builder: (context, value, child) => Text(
+                      value.text,
+                      style: TextStyleCustom.outFitSemiBold600(
+                          color: _navy, fontSize: 19),
                     ),
                   ),
                 ),
@@ -304,8 +317,8 @@ class _FormCard extends StatelessWidget {
                   child: Obx(
                     () => Text(
                       controller.localCurrencyCode,
-                      style: TextStyleCustom.unboundedMedium500(
-                          color: Colors.white, fontSize: 14),
+                      style: TextStyleCustom.outFitSemiBold600(
+                          color: Colors.white, fontSize: 13),
                     ),
                   ),
                 ),
@@ -337,11 +350,15 @@ class _FormCard extends StatelessWidget {
                   value: gateways.contains(current) ? current : gateways.first,
                   icon: const Icon(Icons.keyboard_arrow_down_rounded),
                   style: TextStyleCustom.outFitRegular400(
-                      color: _navy, fontSize: 15),
+                      color: _navy, fontSize: 13),
                   items: gateways
                       .map((e) => DropdownMenuItem<String>(
                             value: e,
-                            child: Text(e),
+                            child: Text(
+                              e.tr,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ))
                       .toList(),
                   onChanged: (v) =>
