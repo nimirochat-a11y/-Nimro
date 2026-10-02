@@ -73,6 +73,7 @@ class PostViewActionButton extends StatelessWidget {
             child: PostViewIconWithCount(
                 onTap: () {},
                 image: AssetRes.icPostViews,
+                iconBuilder: (c) => OutlinedBarsIcon(color: c),
                 count: post.views),
           ),
         ],
@@ -83,6 +84,7 @@ class PostViewActionButton extends StatelessWidget {
 
 class PostViewIconWithCount extends StatelessWidget {
   final String image;
+  final Widget Function(Color color)? iconBuilder;
   final num? count;
   final VoidCallback onTap;
   final Color? color;
@@ -92,6 +94,7 @@ class PostViewIconWithCount extends StatelessWidget {
   const PostViewIconWithCount(
       {super.key,
       required this.image,
+      this.iconBuilder,
       this.count,
       required this.onTap,
       this.color,
@@ -108,7 +111,12 @@ class PostViewIconWithCount extends StatelessWidget {
       children: [
         InkWell(
           onTap: onTap,
-          child: Image.asset(
+          child: iconBuilder != null
+              ? SizedBox(
+                  height: 23,
+                  width: 23,
+                  child: iconBuilder!(color ?? textDarkGrey(context)))
+              : Image.asset(
               key: likeKey,
               image,
               color: color ?? textDarkGrey(context),
@@ -130,4 +138,45 @@ class PostViewIconWithCount extends StatelessWidget {
       ],
     );
   }
+}
+
+class OutlinedBarsIcon extends StatelessWidget {
+  final Color color;
+  const OutlinedBarsIcon({super.key, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _OutlinedBarsPainter(color));
+  }
+}
+
+class _OutlinedBarsPainter extends CustomPainter {
+  final Color color;
+  _OutlinedBarsPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double stroke = size.width * 0.085;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke;
+    final double barW = size.width * 0.21;
+    final double gap = size.width * 0.125;
+    final double total = barW * 3 + gap * 2;
+    final double startX = (size.width - total) / 2;
+    final List<double> heights = [0.46, 0.92, 0.66];
+    for (int i = 0; i < 3; i++) {
+      final double h = size.height * heights[i];
+      final double left = startX + i * (barW + gap);
+      final rect = Rect.fromLTWH(
+          left + stroke / 2, size.height - h + stroke / 2,
+          barW - stroke, h - stroke - size.height * 0.04);
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, Radius.circular(barW * 0.32)), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OutlinedBarsPainter old) => old.color != color;
 }
