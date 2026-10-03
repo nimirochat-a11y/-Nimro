@@ -74,6 +74,10 @@ class Post {
     this.updatedAt,
     this.isLiked,
     this.isSaved,
+    this.isReposted,
+    this.reposts,
+    this.repostId,
+    this.repostedBy,
     this.mentionedUsers,
     this.images,
     this.music,
@@ -111,6 +115,10 @@ class Post {
     updatedAt = json['updated_at'];
     isLiked = json['is_liked'];
     isSaved = json['is_saved'];
+    isReposted = json['is_reposted'] == true || json['is_reposted'] == 1;
+    reposts = json['reposts'];
+    repostId = json['repost_id'];
+    repostedBy = json['reposted_by'] != null ? User.fromJson(json['reposted_by']) : null;
     if (json['mentioned_users'] != null) {
       mentionedUsers = [];
       json['mentioned_users'].forEach((v) {
@@ -155,6 +163,10 @@ class Post {
   String? updatedAt;
   bool? isLiked;
   bool? isSaved;
+  bool? isReposted;
+  num? reposts;
+  int? repostId;
+  User? repostedBy;
   List<User>? mentionedUsers;
   List<Images>? images;
   Music? music;
@@ -282,6 +294,11 @@ class Post {
     isSaved = isSave;
     int i = isSave ? 1 : -1;
     saves = ((saves ?? 0) + i).clamp(0, double.infinity).toInt();
+  }
+
+  void repostToggle(bool value) {
+    isReposted = value;
+    reposts = ((reposts ?? 0) + (value ? 1 : -1)).clamp(0, double.infinity).toInt();
   }
 
   void increaseShares(int count) {

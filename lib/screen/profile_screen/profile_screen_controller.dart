@@ -139,7 +139,7 @@ class ProfileScreenController extends BlockUserController
         type: PostType.posts,
         userId:
             userData.value?.id?.toInt() ?? SessionManager.instance.getUserID(),
-        lastItemId: isEmpty ? null : posts.lastOrNull?.id?.toInt(),
+        lastItemId: isEmpty ? null : (posts.lastOrNull?.repostId ?? posts.lastOrNull?.id)?.toInt(),
       );
 
       if (isEmpty) {

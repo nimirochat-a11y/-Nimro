@@ -311,6 +311,22 @@ class PostService {
     return model;
   }
 
+  Future<StatusModel> repostPost({required int postId}) async {
+    StatusModel model = await ApiService.instance.call(
+        url: WebService.post.repostPost,
+        param: {Params.postId: postId},
+        fromJson: StatusModel.fromJson);
+    return model;
+  }
+
+  Future<StatusModel> unRepostPost({required int postId}) async {
+    StatusModel model = await ApiService.instance.call(
+        url: WebService.post.unRepostPost,
+        param: {Params.postId: postId},
+        fromJson: StatusModel.fromJson);
+    return model;
+  }
+
   Future<CommentData?> fetchPostComments(
       {required int postId, int? lastItemId}) async {
     FetchCommentModel model = await ApiService.instance.call(

@@ -88,6 +88,8 @@ class _Post {
   String disLikePost = "${apiURL}post/disLikePost";
   String savePost = "${apiURL}post/savePost";
   String unSavePost = "${apiURL}post/unSavePost";
+  String repostPost = "${apiURL}post/repostPost";
+  String unRepostPost = "${apiURL}post/unRepostPost";
   String reportPost = "${apiURL}misc/reportPost";
   String addPostComment = "${apiURL}post/addPostComment";
   String likeComment = "${apiURL}post/likeComment";

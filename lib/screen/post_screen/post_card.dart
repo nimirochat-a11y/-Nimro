@@ -12,6 +12,7 @@ import 'package:nimiro/screen/post_screen/widget/post_animation_like.dart';
 import 'package:nimiro/screen/post_screen/widget/post_view_action_button.dart';
 import 'package:nimiro/screen/post_screen/widget/post_view_center.dart';
 import 'package:nimiro/screen/post_screen/widget/post_view_info_header.dart';
+import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -71,6 +72,29 @@ class PostCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (post.repostedBy != null)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(5, 0, 5, 6),
+                      child: Row(
+                        children: [
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: RepostIcon(color: textLightGrey(context)),
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              '${post.repostedBy?.fullname ?? post.repostedBy?.username ?? ''} ${'reposted this'.tr}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyleCustom.outFitRegular400(
+                                  color: textLightGrey(context), fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 5.0),
                     child: Row(

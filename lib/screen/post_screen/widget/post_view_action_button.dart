@@ -49,9 +49,11 @@ class PostViewActionButton extends StatelessWidget {
             ),
           Expanded(
             child: PostViewIconWithCount(
-                onTap: controller.handleShare,
+                onTap: () => controller.onRepost(post),
                 image: AssetRes.icPostShare,
-                count: post.shares),
+                iconBuilder: (c) => RepostIcon(color: c),
+                color: post.isReposted ?? false ? const Color(0xFF1FA85B) : null,
+                count: post.reposts),
           ),
           Expanded(
             child: PostViewIconWithCount(
@@ -179,4 +181,60 @@ class _OutlinedBarsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _OutlinedBarsPainter old) => old.color != color;
+}
+
+class RepostIcon extends StatelessWidget {
+  final Color color;
+  const RepostIcon({super.key, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(painter: _RepostPainter(color));
+  }
+}
+
+class _RepostPainter extends CustomPainter {
+  final Color color;
+  _RepostPainter(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.085
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final top = Path()
+      ..moveTo(w * 0.20, h * 0.44)
+      ..lineTo(w * 0.20, h * 0.36)
+      ..quadraticBezierTo(w * 0.20, h * 0.26, w * 0.30, h * 0.26)
+      ..lineTo(w * 0.80, h * 0.26);
+    canvas.drawPath(top, paint);
+    canvas.drawPath(
+        Path()
+          ..moveTo(w * 0.68, h * 0.14)
+          ..lineTo(w * 0.80, h * 0.26)
+          ..lineTo(w * 0.68, h * 0.38),
+        paint);
+
+    final bottom = Path()
+      ..moveTo(w * 0.80, h * 0.56)
+      ..lineTo(w * 0.80, h * 0.64)
+      ..quadraticBezierTo(w * 0.80, h * 0.74, w * 0.70, h * 0.74)
+      ..lineTo(w * 0.20, h * 0.74);
+    canvas.drawPath(bottom, paint);
+    canvas.drawPath(
+        Path()
+          ..moveTo(w * 0.32, h * 0.62)
+          ..lineTo(w * 0.20, h * 0.74)
+          ..lineTo(w * 0.32, h * 0.86),
+        paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RepostPainter old) => old.color != color;
 }

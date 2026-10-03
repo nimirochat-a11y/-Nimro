@@ -157,6 +157,31 @@ class PostScreenController extends BaseController {
     }
   }
 
+  bool _isRepostLoading = false;
+
+  void onRepost(Post? post) async {
+    if (_isRepostLoading || post == null || post.id == null) return;
+    if (post.userId == SessionManager.instance.getUserID()) return;
+    _isRepostLoading = true;
+    HapticManager.shared.light();
+    final bool target = !(postData.value.isReposted ?? false);
+    postData.update((val) => val?.repostToggle(target));
+    try {
+      final StatusModel model = target
+          ? await PostService.instance.repostPost(postId: post.id!.toInt())
+          : await PostService.instance.unRepostPost(postId: post.id!.toInt());
+      if (model.status != true) {
+        postData.update((val) => val?.repostToggle(!target));
+        showSnackBar(model.message);
+      }
+    } catch (e) {
+      postData.update((val) => val?.repostToggle(!target));
+      Loggers.error('Repost failed: $e');
+    } finally {
+      _isRepostLoading = false;
+    }
+  }
+
   Future<void> handleShare() async {
     Post _post = postData.value;
     if (_post.id == null) {
