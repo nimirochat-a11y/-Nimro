@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/utilities/const_res.dart';
@@ -48,6 +49,19 @@ class UploadQueueService {
 
   Future<void> ensureConfigured() async {
     if (!Platform.isAndroid) return;
+    try {
+      await FlutterLocalNotificationsPlugin()
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(const AndroidNotificationChannel(
+            'nimiro_upload',
+            'Uploads',
+            description: 'Shows media upload progress',
+            importance: Importance.low,
+          ));
+    } catch (e) {
+      Loggers.error('Upload channel creation failed: $e');
+    }
     final service = FlutterBackgroundService();
     if (await service.isRunning()) return;
     await service.configure(
