@@ -52,7 +52,6 @@ class PostViewActionButton extends StatelessWidget {
                 onTap: () => controller.onRepost(post),
                 image: AssetRes.icPostShare,
                 iconBuilder: (c) => RepostIcon(color: c),
-                color: post.isReposted ?? false ? const Color(0xFF1FA85B) : null,
                 count: post.reposts),
           ),
           Expanded(
@@ -158,7 +157,7 @@ class _OutlinedBarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double stroke = size.width * 0.075;
+    final double stroke = size.width * 0.062;
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
@@ -204,7 +203,7 @@ class _RepostPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.075
+      ..strokeWidth = w * 0.062
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
@@ -216,9 +215,9 @@ class _RepostPainter extends CustomPainter {
     canvas.drawPath(top, paint);
     canvas.drawPath(
         Path()
-          ..moveTo(w * 0.68, h * 0.14)
+          ..moveTo(w * 0.64, h * 0.12)
           ..lineTo(w * 0.80, h * 0.26)
-          ..lineTo(w * 0.68, h * 0.38),
+          ..lineTo(w * 0.64, h * 0.40),
         paint);
 
     final bottom = Path()
@@ -229,9 +228,9 @@ class _RepostPainter extends CustomPainter {
     canvas.drawPath(bottom, paint);
     canvas.drawPath(
         Path()
-          ..moveTo(w * 0.32, h * 0.62)
+          ..moveTo(w * 0.36, h * 0.60)
           ..lineTo(w * 0.20, h * 0.74)
-          ..lineTo(w * 0.32, h * 0.86),
+          ..lineTo(w * 0.36, h * 0.88),
         paint);
   }
 
