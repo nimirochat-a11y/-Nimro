@@ -158,13 +158,13 @@ class _OutlinedBarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double stroke = size.width * 0.085;
+    final double stroke = size.width * 0.075;
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke;
-    final double barW = size.width * 0.21;
-    final double gap = size.width * 0.125;
+    final double barW = size.width * 0.26;
+    final double gap = size.width * 0.07;
     final double total = barW * 3 + gap * 2;
     final double startX = (size.width - total) / 2;
     final List<double> heights = [0.46, 0.92, 0.66];
@@ -204,7 +204,7 @@ class _RepostPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = w * 0.085
+      ..strokeWidth = w * 0.075
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
