@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui' show DartPluginRegistrant;
 
 import 'package:flutter/widgets.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -48,6 +49,16 @@ class UploadQueueService {
   Future<void> _saveQueue(List<Map<String, dynamic>> q) =>
       _box.write(queueKey, q);
 
+  static bool _svcListening = false;
+  static void _listenServiceEvents(FlutterBackgroundService service) {
+    if (_svcListening) return;
+    _svcListening = true;
+    service.on('svc_event').listen((e) {
+      final m = e?['msg'];
+      if (m != null) _debug('service: $m');
+    });
+  }
+
   static void _debug(String message) {
     Loggers.error('UploadDebug: $message');
     try {
@@ -72,6 +83,7 @@ class UploadQueueService {
       Loggers.error('Upload channel creation failed: $e');
     }
     final service = FlutterBackgroundService();
+    _listenServiceEvents(service);
     if (await service.isRunning()) return;
     await service.configure(
       androidConfiguration: AndroidConfiguration(
@@ -198,11 +210,21 @@ class UploadQueueService {
 
   @pragma('vm:entry-point')
   static Future<bool> onServiceStart(ServiceInstance service) async {
+    DartPluginRegistrant.ensureInitialized();
     WidgetsFlutterBinding.ensureInitialized();
-    await GetStorage.init(boxName);
-    _requeueStaleRunningJobs();
-    service.on('kick').listen((_) => unawaited(processQueue(service)));
-    await processQueue(service);
+    try {
+      service.invoke('svc_event', {'msg': 'service isolate started'});
+      await GetStorage.init(boxName);
+      final pending = GetStorage(boxName).read(queueKey);
+      service.invoke('svc_event', {
+        'msg': 'storage ready, queue=${pending is List ? pending.length : -1}'
+      });
+      _requeueStaleRunningJobs();
+      service.on('kick').listen((_) => unawaited(processQueue(service)));
+      await processQueue(service);
+    } catch (e) {
+      service.invoke('svc_event', {'msg': 'service crashed: $e'});
+    }
     return true;
   }
 
@@ -258,6 +280,7 @@ class UploadQueueService {
         queue[index] = job;
         await box.write(queueKey, queue);
         try {
+          service?.invoke('svc_event', {'msg': 'picked job ${job['tag']}'});
           await _runJob(job, service);
         } catch (e) {
           job['status'] = 'failed';
@@ -301,6 +324,7 @@ class UploadQueueService {
       if (res == null || res['status'] != true) {
         job['status'] = 'failed';
         job['error'] = res?['message'] ?? 'upload failed at step $i';
+        service?.invoke('svc_event', {'msg': 'step $i failed: ${job['error']}'});
         await _persistAsync(box, job);
         _updateNotification(service, job);
         return;
