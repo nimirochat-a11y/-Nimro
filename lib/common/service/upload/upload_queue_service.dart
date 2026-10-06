@@ -62,8 +62,7 @@ class UploadQueueService {
   static void _debug(String message) {
     Loggers.error('UploadDebug: $message');
     try {
-      getx.Get.snackbar('UPLOAD DEBUG', message,
-          duration: const Duration(seconds: 8));
+      // debug banner disabled
     } catch (_) {}
   }
 
@@ -195,6 +194,30 @@ class UploadQueueService {
       }
     }
 
+    StreamSubscription? svcSub;
+    if (Platform.isAndroid) {
+      svcSub = FlutterBackgroundService().on('job_state').listen((e) {
+        if (e == null || e['tag'] != tag) return;
+        if (onProgress != null && e['progress'] is num) {
+          onProgress((e['progress'] as num).toDouble());
+        }
+        if (e['status'] == 'done') {
+          Map<String, dynamic> response = {};
+          try {
+            final r = e['response'];
+            if (r is String && r.isNotEmpty) {
+              response = Map<String, dynamic>.from(jsonDecode(r) as Map);
+            }
+          } catch (_) {}
+          finish(response);
+        } else if (e['status'] == 'failed') {
+          finish({'__error': e['error'] ?? 'Upload failed'});
+        }
+      });
+      completer.future.whenComplete(() {
+        svcSub?.cancel();
+      });
+    }
     poller = Timer.periodic(const Duration(milliseconds: 400), (_) => check());
     // Safety net: if the job never reaches 'done' or 'failed' (e.g. the
     // background service failed to start), the caller must not be left
@@ -360,6 +383,16 @@ class UploadQueueService {
 
   static void _updateNotification(ServiceInstance? service, job) {
     if (service == null || !Platform.isAndroid) return;
+    try {
+      service.invoke('job_state', {
+        'tag': job['tag'],
+        'status': job['status'],
+        'progress': (job['progress'] as num?)?.toDouble() ?? 0.0,
+        'error': job['error']?.toString(),
+        'response':
+            job['response'] == null ? null : jsonEncode(job['response']),
+      });
+    } catch (_) {}
     try {
       final p = ((job['progress'] as num?)?.toDouble() ?? 0.0) * 100;
       // setNotificationInfo exists on the Android implementation of

@@ -597,15 +597,16 @@ class CreateFeedScreenController extends BaseController {
     });
 
     // Delete temporary files
-    deleteFiles(images.map((e) => e.media.path).toList() +
+    final imgTemp = images.map((e) => e.media.path).toList() +
         filterImages.map((e) => e.path).toList() +
-        compressImages);
+        compressImages;
 
     Loggers.info('Queueing final post...');
 
     final response = await UploadQueueService.instance.submit(steps,
         onProgress: (p) =>
             updateUploadingProgress(progress: (p * 100).clamp(0, 100)));
+    deleteFiles(imgTemp);
     if (response == null || response['__error'] != null) {
       return failedResponseSnackBar(
           message: '${response?['__error'] ?? 'Upload failed'}');
@@ -715,11 +716,12 @@ class CreateFeedScreenController extends BaseController {
       'fields': finalFields,
     });
 
-    deleteFiles([finalVideoFile.path, finalThumbnailFile.path]);
+    final vidTemp = [finalVideoFile.path, finalThumbnailFile.path];
 
     final response = await UploadQueueService.instance.submit(steps,
         onProgress: (p) =>
             updateUploadingProgress(progress: (p * 100).clamp(0, 100)));
+    deleteFiles(vidTemp);
     if (response == null || response['__error'] != null) {
       return failedResponseSnackBar(
           message: '${response?['__error'] ?? 'Upload failed'}');
