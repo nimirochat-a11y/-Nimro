@@ -49,7 +49,11 @@ jobs:
         run: |
           export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager "ndk;29.0.14033849"
+          for v in 29.0.14033849 28.2.13676358; do
+            for i in 1 2 3; do
+              sdkmanager "ndk;$v" && break || sleep 15
+            done
+          done
 
       - name: Build release APK
         run: flutter build apk --release --split-per-abi
