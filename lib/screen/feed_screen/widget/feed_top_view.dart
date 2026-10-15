@@ -4,7 +4,6 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen_controller.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen_controller.dart';
-import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen.dart';
 import 'package:nimiro/screen/message_screen/message_screen.dart';
 import 'package:nimiro/screen/notification_screen/notification_screen.dart';
 import 'package:nimiro/utilities/asset_res.dart';
@@ -41,11 +40,7 @@ class FeedTopView extends StatelessWidget {
                             onTap: () => controller.onChangeCategory(category),
                           );
                         })),
-                    _CategoryTab(
-                      title: LKey.livestreams.tr,
-                      onTap: () => Get.to(() => const LiveStreamSearchScreen()),
-                    ),
-                  ],
+                    ],
                 ),
               ),
             ),
