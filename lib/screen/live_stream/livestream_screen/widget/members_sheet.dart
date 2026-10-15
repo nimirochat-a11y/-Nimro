@@ -1,3 +1,4 @@
+import 'package:nimiro/common/widget/border_rounded_button.dart';
 import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
