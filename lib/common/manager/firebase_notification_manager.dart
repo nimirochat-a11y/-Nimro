@@ -217,10 +217,6 @@ class FirebaseNotificationManager {
         controller.selectedPageIndex.value = 5;
         await _handleUserNotification(dataString);
         break;
-      case 'live_stream':
-        controller.selectedPageIndex.value = 2;
-        await _handleLivestreamNotification(dataString);
-        break;
       default:
         Loggers.warning('Unknown notification type: $dataType');
     }
@@ -340,35 +336,6 @@ class FirebaseNotificationManager {
         type: type);
   }
 
-  Future<void> _handleLivestreamNotification(String dataString) async {
-    final incomingStream = Livestream.fromJson(jsonDecode(dataString));
-
-    // If controller not registered, fetch from Firestore
-    final snapshot = await FirebaseFirestore.instance
-        .collection(FirebaseConst.liveStreams)
-        .withConverter<Livestream>(
-          fromFirestore: (snapshot, _) => Livestream.fromJson(snapshot.data()!),
-          toFirestore: (livestream, _) => livestream.toJson(),
-        )
-        .get();
-
-    final matchedDoc =
-        snapshot.docs.firstWhereOrNull((doc) => doc.data().roomID == incomingStream.roomID);
-
-    if (matchedDoc == null) {
-      BaseController.share.showSnackBar(LKey.livestreamHasEnded.tr);
-      return;
-    }
-
-    final stream = matchedDoc.data();
-    final myUser = SessionManager.instance.getUser();
-
-    if (stream.hostId == myUser?.id) {
-      Get.to(() => LivestreamHostScreen(isHost: true, livestream: stream));
-    } else {
-      Get.to(() => LiveStreamAudienceScreen(isHost: false, livestream: stream));
-    }
-  }
 }
 
 enum NotificationType {
