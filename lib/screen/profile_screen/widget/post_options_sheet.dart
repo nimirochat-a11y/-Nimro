@@ -18,7 +18,8 @@ class PostOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<PublishType> postOptions = PublishType.values;
+    List<PublishType> postOptions =
+        PublishType.values.where((e) => e != PublishType.goLive).toList();
     return Wrap(
       children: [
         Container(
