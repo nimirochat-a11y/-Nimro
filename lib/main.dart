@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
@@ -49,6 +50,13 @@ Future<void> main() async {
       Loggers.error('Firebase init failed (continuing): $e\n$st');
     }
 
+    // OneSignal (added alongside Firebase during migration)
+    try {
+      OneSignal.initialize('f2231f10-416c-4fd4-bc9e-f054574281a5');
+      OneSignal.Notifications.requestPermission(true);
+    } catch (e) {
+      Loggers.error('OneSignal init failed: $e');
+    }
     // Register background handler
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
