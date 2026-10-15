@@ -132,17 +132,7 @@ class ReelsScreenController extends BaseController {
     Get.bottomSheet(
         PostOptionsSheet(
           controller: controller,
-          onChanged: (type) {
-            if (type == PublishType.goLive) {
-              Future.delayed(
-                const Duration(seconds: 1),
-                () {
-                  final controller = Get.find<DashboardScreenController>();
-                  controller.onChanged(2);
-                },
-              );
-            }
-          },
+
         ),
         isScrollControlled: true);
   }
