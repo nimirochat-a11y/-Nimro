@@ -7,7 +7,7 @@ import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/custom_search_text_field.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/screen/share_sheet_widget/share_sheet_widget_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';

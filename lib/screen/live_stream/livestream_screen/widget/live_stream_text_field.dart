@@ -2,7 +2,7 @@ import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/screen/gift_sheet/send_gift_sheet.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/livestream_screen_controller.dart';

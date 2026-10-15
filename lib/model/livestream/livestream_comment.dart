@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/model/general/settings_model.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 
 class LivestreamComment {
   int? senderId;

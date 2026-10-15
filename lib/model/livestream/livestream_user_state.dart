@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 
 class LivestreamUserState {
   VideoAudioStatus audioStatus;

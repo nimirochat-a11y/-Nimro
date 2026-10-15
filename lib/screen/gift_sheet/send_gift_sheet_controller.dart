@@ -9,7 +9,7 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/gift_wallet_service.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/gift_sheet/send_gift_dialog.dart';

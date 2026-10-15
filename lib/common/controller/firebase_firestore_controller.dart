@@ -3,7 +3,7 @@ import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/supabase/supabase_service.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 

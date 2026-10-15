@@ -18,7 +18,7 @@ import 'package:nimiro/common/service/api/notification_service.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/model/livestream/livestream_comment.dart';
 import 'package:nimiro/model/livestream/livestream_user_state.dart';

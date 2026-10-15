@@ -7,7 +7,7 @@ import 'package:nimiro/common/manager/haptic_manager.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/model/livestream/livestream_user_state.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/audience/widget/live_stream_user_info_sheet.dart';

@@ -14,7 +14,7 @@ import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
 import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream_user_state.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/host/widget/live_stream_host_top_view.dart';

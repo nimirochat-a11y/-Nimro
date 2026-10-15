@@ -9,7 +9,7 @@ import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/gradient_border.dart';
 import 'package:nimiro/common/widget/gradient_text.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/audience/widget/live_stream_user_info_sheet.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/host/widget/live_stream_host_top_view.dart';

@@ -4,7 +4,7 @@ import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/model/chat/chat_thread.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/chat_screen/chat_screen.dart';
 import 'package:nimiro/screen/message_screen/message_screen_controller.dart';

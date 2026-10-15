@@ -6,7 +6,7 @@ import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/model/livestream/livestream_comment.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/livestream_screen_controller.dart';

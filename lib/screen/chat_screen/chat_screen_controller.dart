@@ -28,7 +28,7 @@ import 'package:nimiro/model/chat/chat_thread.dart';
 import 'package:nimiro/model/chat/message_data.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/general/status_model.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/model/post_story/story/story_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';

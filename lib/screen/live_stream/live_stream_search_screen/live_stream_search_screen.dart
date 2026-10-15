@@ -10,7 +10,7 @@ import 'package:nimiro/common/widget/custom_search_text_field.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream.dart';
 import 'package:nimiro/screen/live_stream/live_stream_search_screen/live_stream_search_screen_controller.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/widget/live_stream_background_blur_image.dart';

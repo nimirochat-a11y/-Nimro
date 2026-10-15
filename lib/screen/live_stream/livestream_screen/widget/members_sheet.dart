@@ -12,7 +12,7 @@ import 'package:nimiro/common/widget/custom_tab_switcher.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/no_data_widget.dart';
 import 'package:nimiro/languages/languages_keys.dart';
-import 'package:nimiro/model/livestream/app_user.dart';
+import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/livestream/livestream_user_state.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/livestream_screen_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
