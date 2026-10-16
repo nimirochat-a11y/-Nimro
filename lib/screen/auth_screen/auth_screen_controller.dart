@@ -1,3 +1,4 @@
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -252,6 +253,11 @@ class AuthScreenController extends BaseController {
       _lastRegisteredIdentity = normalisedIdentity;
       _lastRegisteredAt = now;
       _loginToSubscriptionsSafely(userData.id);
+      try {
+        OneSignal.login(userData.id.toString());
+      } catch (e) {
+        Loggers.error('OneSignal login failed: $e');
+      }
       // Subscribe My Following Ids For Live streaming notification
       return userData;
     }
