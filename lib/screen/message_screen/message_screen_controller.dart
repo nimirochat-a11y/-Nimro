@@ -59,6 +59,13 @@ class MessageScreenController extends BaseController {
     _subscription = _repo.subscribeToUserConversations(
       userId: myUser!.id!,
       onChange: (event, data) {
+        final rows = data['rows'];
+        if (rows is List) {
+          for (final row in rows.whereType<Map<String, dynamic>>()) {
+            _applyRow(row, isDelete: row['is_deleted'] == true);
+          }
+          return;
+        }
         final isDeletedFlag = event == 'delete' || data['is_deleted'] == true;
         _applyRow(data, isDelete: isDeletedFlag);
       },
