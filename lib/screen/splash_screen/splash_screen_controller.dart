@@ -1,3 +1,4 @@
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -75,6 +76,11 @@ class SplashScreenController extends BaseController {
       if (SessionManager.instance.isLogin()) {
         UserService.instance.fetchUserDetails(userId: SessionManager.instance.getUserID()).then((value) {
           if (value != null) {
+            try {
+              OneSignal.login(value.id.toString());
+            } catch (e) {
+              Loggers.error('OneSignal login failed: $e');
+            }
             Get.off(() => DashboardScreen(myUser: value));
           } else {
             Get.off(() => const LoginScreen());
