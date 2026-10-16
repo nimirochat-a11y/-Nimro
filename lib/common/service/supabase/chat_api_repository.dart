@@ -52,14 +52,12 @@ class ChatSubscription {
 ///
 /// SAFETY
 /// ------
-/// [ChatRepository] is left untouched and still works, so switching back is a
-/// one-line change: set [useApi] to false.
+/// Chat data must stay behind the authenticated backend API. The legacy direct
+/// Supabase repository is intentionally not used because RLS denies client
+/// access to these tables.
 class ChatApiRepository {
   ChatApiRepository._();
   static final ChatApiRepository instance = ChatApiRepository._();
-
-  /// Flip to false to fall back to the direct-Supabase implementation.
-  static bool useApi = true;
 
   Map<String, String> get _headers => {
         Params.apikey: apiKey,
@@ -76,11 +74,16 @@ class ChatApiRepository {
     Map<String, dynamic> body = const {},
   ]) async {
     final uri = Uri.parse('${apiURL}chat$path');
-    final params = body.map((k, v) => MapEntry(k, '$v'));
-
     try {
       final response = await http
-          .post(uri, headers: _headers, body: params)
+          .post(
+            uri,
+            headers: {
+              ..._headers,
+              'Content-Type': 'application/json; charset=utf-8',
+            },
+            body: jsonEncode(body),
+          )
           .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 401) {
@@ -160,7 +163,7 @@ class ChatApiRepository {
       String messageId, Map<String, dynamic> data) async {
     await _post('/updateMessage', {
       'doc_id': messageId,
-      'data': jsonEncode(data),
+      'data': data,
     });
   }
 

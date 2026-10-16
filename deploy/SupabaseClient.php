@@ -128,6 +128,33 @@ class SupabaseClient
     }
 
     /**
+     * List the user's directional inbox rows. Conversation doc_ids are stored
+     * as "ownerId_otherUserId"; the controller separately validates the room.
+     *
+     * @param  array<string,string|int>  $filters
+     * @return array<int,array<string,mixed>>
+     */
+    public function selectConversationsForUser(
+        int $userId,
+        array $filters = [],
+        ?int $limit = 200,
+        string $order = 'id.desc'
+    ): array {
+        if ($userId <= 0) {
+            return [];
+        }
+
+        return $this->select(
+            'conversations',
+            $filters,
+            [['doc_id', 'like', "{$userId}_*"]],
+            '*',
+            $limit,
+            $order
+        );
+    }
+
+    /**
      * SELECT a single row (or null).
      *
      * @param  array<string,string|int>  $filters

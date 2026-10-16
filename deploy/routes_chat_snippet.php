@@ -28,6 +28,7 @@ Route::prefix('chat')->group(function () {
 
     // ---- Messages ------------------------------------------------------
     Route::post('fetchMessages', [ChatController::class, 'fetchMessages'])->middleware('authorizeUser');
+    Route::post('fetchMessage', [ChatController::class, 'fetchMessage'])->middleware('authorizeUser');
     Route::post('sendMessage', [ChatController::class, 'sendMessage'])->middleware('authorizeUser');
     Route::post('updateMessage', [ChatController::class, 'updateMessage'])->middleware('authorizeUser');
     Route::post('deleteMessage', [ChatController::class, 'deleteMessage'])->middleware('authorizeUser');

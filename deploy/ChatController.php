@@ -61,7 +61,81 @@ class ChatController extends Controller
         $id = $request->attributes->get('auth_user_id')
             ?? $request->get('auth_user_id');
 
-        return $id === null ? null : (int) $id;
+        if ($id === null || ! preg_match('/^[1-9][0-9]*$/D', (string) $id)) {
+            return null;
+        }
+
+        $userId = (int) $id;
+
+        return $userId > 0 && (string) $userId === (string) $id ? $userId : null;
+    }
+
+    /**
+     * The Flutter app's canonical room id is the two positive user ids sorted
+     * numerically and joined with an underscore (e.g. "12_34").
+     *
+     * @return array{0:int,1:int}|null
+     */
+    private function conversationParticipants(string $conversationId): ?array
+    {
+        if (! preg_match('/^([1-9][0-9]*)_([1-9][0-9]*)$/D', $conversationId, $matches)) {
+            return null;
+        }
+
+        $first = (int) $matches[1];
+        $second = (int) $matches[2];
+
+        if ($first <= 0 || $second <= $first
+            || (string) $first !== $matches[1]
+            || (string) $second !== $matches[2]) {
+            return null;
+        }
+
+        return [$first, $second];
+    }
+
+    /**
+     * Conversation document ids are directional: "ownerId_otherUserId".
+     *
+     * @return array{0:int,1:int}|null
+     */
+    private function conversationDocIdParticipants(string $docId): ?array
+    {
+        if (! preg_match('/^([1-9][0-9]*)_([1-9][0-9]*)$/D', $docId, $matches)) {
+            return null;
+        }
+
+        $ownerId = (int) $matches[1];
+        $otherId = (int) $matches[2];
+
+        if ($ownerId <= 0 || $otherId <= 0 || $ownerId === $otherId
+            || (string) $ownerId !== $matches[1]
+            || (string) $otherId !== $matches[2]) {
+            return null;
+        }
+
+        return [$ownerId, $otherId];
+    }
+
+    private function canonicalConversationId(int $firstUserId, int $secondUserId): string
+    {
+        $ids = [$firstUserId, $secondUserId];
+        sort($ids, SORT_NUMERIC);
+
+        return implode('_', $ids);
+    }
+
+    private function isConversationParticipant(string $conversationId, int $userId): bool
+    {
+        $participants = $this->conversationParticipants($conversationId);
+
+        return $participants !== null && in_array($userId, $participants, true);
+    }
+
+    private function conversationNotFound(): JsonResponse
+    {
+        // Do not reveal whether another user's conversation exists.
+        return $this->fail('Conversation not found.', 404);
     }
 
     // -----------------------------------------------------------------
@@ -81,10 +155,29 @@ class ChatController extends Controller
         }
 
         try {
-            $rows = $this->sb->select('conversations', [
-                'user_id' => $userId,
-                'is_deleted' => 'false',
-            ], [], '*', 200, 'id.desc');
+            $rows = $this->sb->selectConversationsForUser(
+                $userId,
+                ['is_deleted' => 'false'],
+                200,
+                'id.desc'
+            );
+            $rows = array_values(array_filter(
+                $rows,
+                function (array $row) use ($userId): bool {
+                    $docParticipants = $this->conversationDocIdParticipants(
+                        (string) ($row['doc_id'] ?? '')
+                    );
+
+                    // Each participant has a mirrored directional row; only
+                    // the row owned by this user belongs in their inbox.
+                    return $docParticipants !== null
+                        && $docParticipants[0] === $userId
+                        && $this->isConversationParticipant(
+                            (string) ($row['conversation_id'] ?? ''),
+                            $userId
+                        );
+                }
+            ));
 
             return response()->json(['status' => true, 'data' => $rows]);
         } catch (Throwable $e) {
@@ -105,10 +198,22 @@ class ChatController extends Controller
             return $this->fail('Unauthorized Access', 401);
         }
 
-        $docId = $request->input('doc_id') ?: $userId . '_' . $otherUserId;
+        $docId = (string) ($request->input('doc_id') ?: $userId . '_' . $otherUserId);
+        $participants = $this->conversationDocIdParticipants($docId);
+        if ($participants === null
+            || ! in_array($userId, $participants, true)
+            || ! in_array($otherUserId, $participants, true)
+            || $userId === $otherUserId) {
+            return $this->conversationNotFound();
+        }
 
         try {
             $row = $this->sb->first('conversations', ['doc_id' => $docId]);
+            if ($row !== null
+                && (string) ($row['conversation_id'] ?? '')
+                    !== $this->canonicalConversationId($participants[0], $participants[1])) {
+                return $this->conversationNotFound();
+            }
 
             return response()->json(['status' => true, 'data' => $row]);
         } catch (Throwable $e) {
@@ -129,19 +234,34 @@ class ChatController extends Controller
             return $this->fail('Unauthorized Access', 401);
         }
 
-        $docId = $request->input('doc_id') ?: $userId . '_' . $otherUserId;
+        $docId = (string) ($request->input('doc_id') ?: $userId . '_' . $otherUserId);
+        $participants = $this->conversationDocIdParticipants($docId);
+        if ($participants === null
+            || $participants[1] !== $otherUserId
+            || ! in_array($userId, $participants, true)) {
+            return $this->conversationNotFound();
+        }
+        $conversationId = $this->canonicalConversationId($participants[0], $participants[1]);
+
+        if ($request->has('conversation_id')
+            && (string) $request->input('conversation_id') !== $conversationId) {
+            return $this->fail('conversation_id does not match the participants.', 422);
+        }
 
         // Only fields the client is allowed to influence are accepted.
         $allowed = [
-            'conversation_id', 'chat_type', 'last_msg', 'msg_count',
-            'is_deleted', 'deleted_id', 'i_blocked', 'i_am_blocked', 'request_type',
+            'id', 'chat_type', 'last_msg', 'msg_count',
+            'is_deleted', 'deleted_id', 'request_type',
         ];
 
         $payload = [
             'doc_id' => $docId,
-            // Ownership is forced from the token, never taken from the body.
-            'user_id' => $userId,
-            'other_user_id' => $otherUserId,
+            // The directional document id is authoritative; never trust a
+            // client-supplied user_id (the old proxy wrote the actor into both
+            // fields when creating the recipient's mirrored inbox row).
+            'user_id' => $participants[0],
+            'other_user_id' => $participants[1],
+            'conversation_id' => $conversationId,
         ];
 
         foreach ($allowed as $field) {
@@ -150,7 +270,24 @@ class ChatController extends Controller
             }
         }
 
+        if (array_key_exists('id', $payload) && $payload['id'] === null) {
+            unset($payload['id']);
+        }
+        if (array_key_exists('id', $payload)
+            && (! is_scalar($payload['id']) || ! ctype_digit((string) $payload['id']))) {
+            return $this->fail('Conversation id must be numeric.', 422);
+        }
+        if (array_key_exists('id', $payload)) {
+            $payload['id'] = (string) $payload['id'];
+        }
+
         try {
+            $existing = $this->sb->first('conversations', ['doc_id' => $docId]);
+            if ($existing !== null
+                && (string) ($existing['conversation_id'] ?? '') !== $conversationId) {
+                return $this->fail('Conversation id conflict.', 409);
+            }
+
             $rows = $this->sb->upsert('conversations', $payload, 'doc_id');
 
             return response()->json(['status' => true, 'data' => $rows[0] ?? null]);
@@ -170,7 +307,8 @@ class ChatController extends Controller
             return $e;
         }
 
-        if ($this->authUserId($request) === null) {
+        $userId = $this->authUserId($request);
+        if ($userId === null) {
             return $this->fail('Unauthorized Access', 401);
         }
 
@@ -178,13 +316,21 @@ class ChatController extends Controller
         if ($conversationId === '') {
             return $this->fail('conversation_id is required', 422);
         }
+        if (! $this->isConversationParticipant($conversationId, $userId)) {
+            return $this->conversationNotFound();
+        }
 
         $limit = (int) $request->input('limit', 50);
         $limit = max(1, min($limit, 100));
 
         $operators = [];
         if ($cursor = $request->input('cursor_after_document_id')) {
-            $operators[] = ['id', 'lt', $cursor];
+            if (! ctype_digit((string) $cursor)
+                || (int) $cursor <= 0
+                || (string) (int) $cursor !== (string) $cursor) {
+                return $this->fail('cursor_after_document_id must be numeric.', 422);
+            }
+            $operators[] = ['id', 'lt', (int) $cursor];
         }
 
         try {
@@ -200,6 +346,37 @@ class ChatController extends Controller
             return response()->json(['status' => true, 'data' => $rows]);
         } catch (Throwable $e) {
             return $this->fail('Could not load messages.');
+        }
+    }
+
+    /** Fetch one message only when the authenticated user belongs to its room. */
+    public function fetchMessage(Request $request): JsonResponse
+    {
+        if ($e = $this->unconfigured()) {
+            return $e;
+        }
+
+        $userId = $this->authUserId($request);
+        $docId = (string) $request->input('doc_id', '');
+        if ($userId === null) {
+            return $this->fail('Unauthorized Access', 401);
+        }
+        if ($docId === '') {
+            return $this->fail('doc_id is required.', 422);
+        }
+
+        try {
+            $row = $this->sb->first('messages', ['doc_id' => $docId]);
+            if ($row !== null && ! $this->isConversationParticipant(
+                (string) ($row['conversation_id'] ?? ''),
+                $userId
+            )) {
+                return $this->conversationNotFound();
+            }
+
+            return response()->json(['status' => true, 'data' => $row]);
+        } catch (Throwable $e) {
+            return $this->fail('Could not load the message.');
         }
     }
 
@@ -220,18 +397,37 @@ class ChatController extends Controller
         if ($docId === '' || $conversationId === '') {
             return $this->fail('doc_id and conversation_id are required', 422);
         }
+        if (! ctype_digit($docId) || (int) $docId <= 0 || (string) (int) $docId !== $docId) {
+            return $this->fail('doc_id must be a positive numeric message id.', 422);
+        }
+        $participants = $this->conversationParticipants($conversationId);
+        if ($participants === null || ! in_array($userId, $participants, true)) {
+            return $this->conversationNotFound();
+        }
+
+        try {
+            $existing = $this->sb->first('messages', ['doc_id' => $docId]);
+            if ($existing !== null) {
+                return $this->fail('Message id conflict.', 409);
+            }
+        } catch (Throwable $e) {
+            return $this->fail('Could not validate the message.');
+        }
 
         $allowed = [
             'message_type', 'text_message', 'image_message', 'video_message',
             'audio_message', 'post_message', 'story_reply_message', 'wave_data',
-            'no_delete_ids', 'i_blocked', 'i_am_blocked',
         ];
 
         $payload = [
             'doc_id' => $docId,
+            'id' => (int) $docId,
             'conversation_id' => $conversationId,
             // Sender is the authenticated user. A body value is ignored.
             'user_id' => $userId,
+            'no_delete_ids' => $participants,
+            'i_blocked' => false,
+            'i_am_blocked' => false,
         ];
 
         foreach ($allowed as $field) {
@@ -256,21 +452,67 @@ class ChatController extends Controller
             return $e;
         }
 
-        if ($this->authUserId($request) === null) {
+        $userId = $this->authUserId($request);
+        if ($userId === null) {
             return $this->fail('Unauthorized Access', 401);
         }
 
         $docId = (string) $request->input('doc_id', '');
         $changes = $request->input('data', []);
 
-        if ($docId === '' || ! is_array($changes)) {
+        if ($docId === '' || ! is_array($changes) || $changes === []) {
             return $this->fail('doc_id and data are required', 422);
         }
 
-        // Never let a caller re-assign ownership through an update.
-        unset($changes['user_id'], $changes['doc_id'], $changes['id']);
+        if (array_diff(array_keys($changes), ['no_delete_ids', 'story_reply_message']) !== []) {
+            return $this->fail('Unsupported message fields.', 422);
+        }
 
         try {
+            $existing = $this->sb->first(
+                'messages',
+                ['doc_id' => $docId],
+                'doc_id,conversation_id,user_id,no_delete_ids'
+            );
+            if ($existing === null) {
+                return $this->conversationNotFound();
+            }
+
+            $conversationId = (string) ($existing['conversation_id'] ?? '');
+            $participants = $this->conversationParticipants($conversationId);
+            if ($participants === null || ! in_array($userId, $participants, true)) {
+                return $this->conversationNotFound();
+            }
+
+            if (array_key_exists('no_delete_ids', $changes)) {
+                if (! is_array($changes['no_delete_ids'])) {
+                    return $this->fail('no_delete_ids must be an array.', 422);
+                }
+                $ids = [];
+                foreach ($changes['no_delete_ids'] as $id) {
+                    if (! is_numeric($id) || ! in_array((int) $id, $participants, true)) {
+                        return $this->fail('no_delete_ids contains an invalid participant.', 422);
+                    }
+                    $ids[] = (int) $id;
+                }
+                $ids = array_values(array_unique($ids));
+                $oldIds = $existing['no_delete_ids'] ?? [];
+                if (! is_array($oldIds)) {
+                    return $this->fail('Stored no_delete_ids is invalid.', 409);
+                }
+                $oldIds = array_values(array_unique(array_map('intval', $oldIds)));
+                if (array_diff($ids, $oldIds) !== []
+                    || array_diff(array_diff($oldIds, $ids), [$userId]) !== []) {
+                    return $this->fail('You may only remove yourself from no_delete_ids.', 403);
+                }
+                $changes['no_delete_ids'] = $ids;
+            }
+
+            if (array_key_exists('story_reply_message', $changes)
+                && ! is_string($changes['story_reply_message'])) {
+                return $this->fail('story_reply_message must be a string.', 422);
+            }
+
             $rows = $this->sb->update('messages', $changes, ['doc_id' => $docId]);
 
             return response()->json(['status' => true, 'data' => $rows[0] ?? null]);
@@ -286,7 +528,8 @@ class ChatController extends Controller
             return $e;
         }
 
-        if ($this->authUserId($request) === null) {
+        $userId = $this->authUserId($request);
+        if ($userId === null) {
             return $this->fail('Unauthorized Access', 401);
         }
 
@@ -296,6 +539,27 @@ class ChatController extends Controller
         }
 
         try {
+            $message = $this->sb->first(
+                'messages',
+                ['doc_id' => $docId],
+                'doc_id,conversation_id,no_delete_ids'
+            );
+            if ($message === null || ! $this->isConversationParticipant(
+                (string) ($message['conversation_id'] ?? ''),
+                $userId
+            )) {
+                return $this->conversationNotFound();
+            }
+            $remainingUsers = $message['no_delete_ids'] ?? [];
+            if (! is_array($remainingUsers)) {
+                return $this->fail('Stored no_delete_ids is invalid.', 409);
+            }
+            $remainingUsers = array_values(array_unique(array_map('intval', $remainingUsers)));
+            if (count($remainingUsers) >= 2
+                || (count($remainingUsers) === 1 && $remainingUsers[0] !== $userId)) {
+                return $this->fail('Both participants must hide the message before permanent deletion.', 409);
+            }
+
             $this->sb->delete('messages', ['doc_id' => $docId]);
 
             return response()->json(['status' => true]);
@@ -323,24 +587,35 @@ class ChatController extends Controller
         if (is_string($ids)) {
             $ids = array_filter(explode(',', $ids));
         }
+        if (! is_array($ids)) {
+            return $this->fail('user_ids must be a list of numeric ids.', 422);
+        }
+
+        $clean = [];
+        foreach ($ids as $id) {
+            if (! ctype_digit((string) $id)
+                || (int) $id <= 0
+                || (string) (int) $id !== (string) $id) {
+                return $this->fail('user_ids must contain positive numeric ids.', 422);
+            }
+            $clean[] = (int) $id;
+        }
+        $clean = array_values(array_unique($clean));
+        if ($clean === [] || count($clean) > 100) {
+            return $this->fail('Provide between 1 and 100 user ids.', 422);
+        }
 
         try {
-            if (empty($ids)) {
-                $rows = $this->sb->select('app_users', [], [], '*', 100, '');
-            } else {
-                // PostgREST ANDs repeated filters on the same column, so a list
-                // must be expressed as one `in.(a,b,c)` operator, not as
-                // several `user_id=eq.x` entries.
-                $clean = array_values(array_unique(array_map('intval', $ids)));
-                $rows = $this->sb->select(
-                    'app_users',
-                    [],
-                    [['user_id', 'in', '(' . implode(',', $clean) . ')']],
-                    '*',
-                    100,
-                    ''
-                );
-            }
+            // Do not expose `identity` (which may contain an email/login value)
+            // to other users; chat UI only needs the public profile fields.
+            $rows = $this->sb->select(
+                'app_users',
+                [],
+                [['user_id', 'in', '(' . implode(',', $clean) . ')']],
+                'user_id,username,fullname,profile,is_verify',
+                100,
+                ''
+            );
 
             return response()->json(['status' => true, 'data' => $rows]);
         } catch (Throwable $e) {
@@ -365,7 +640,9 @@ class ChatController extends Controller
             return $this->fail('Unauthorized Access', 401);
         }
 
-        $allowed = ['username', 'fullname', 'profile', 'identity', 'is_verify'];
+        // Authentication identity and verification status are managed by the
+        // trusted auth/profile backend, not by a mobile client request.
+        $allowed = ['username', 'fullname', 'profile'];
 
         $payload = [
             'doc_id' => (string) $userId,

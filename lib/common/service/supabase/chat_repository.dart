@@ -23,6 +23,7 @@ class MessageDocList {
 /// "{ownerUserId}_{otherUserId}".
 /// Message rows live in a single flat table and are filtered by
 /// `conversation_id`.
+@Deprecated('Use ChatApiRepository; direct table access is blocked by RLS.')
 class ChatRepository {
   ChatRepository._();
   static final ChatRepository instance = ChatRepository._();
