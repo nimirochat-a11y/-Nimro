@@ -78,6 +78,14 @@ class ChatScreenController extends BlockUserController
       PlayerValue(state: PlayerState.stopped, id: 0).obs;
   ChatScreenController(this.conversationUser);
   static String chatId = '';
+  static String _normConv(String id) {
+    final parts = id.split('_');
+    if (parts.length != 2) return id;
+    final a = int.tryParse(parts[0]);
+    final b = int.tryParse(parts[1]);
+    if (a == null || b == null) return id;
+    return a <= b ? '${a}_$b' : '${b}_$a';
+  }
   @override
   void onInit() {
     super.onInit();
@@ -350,7 +358,7 @@ class ChatScreenController extends BlockUserController
     final sub = _repo.subscribeToMessages(
       conversationId: chatId,
       onEvent: (event, payload) {
-      if (payload['conversation_id'] != chatId) return;
+      if (_normConv('${payload['conversation_id']}') != _normConv(chatId)) return;
       final message = MessageData.fromJson(payload);
       switch (event) {
         case 'create':
