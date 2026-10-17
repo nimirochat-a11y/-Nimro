@@ -1,3 +1,4 @@
+import 'package:nimiro/common/service/supabase/chat_api_repository.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/extensions/user_extension.dart';
@@ -63,7 +64,7 @@ class FirebaseFirestoreController extends BaseController {
         'doc_id': '${user.id}',
         ...chatUser.toJson(),
       };
-      await _db.from('app_users').upsert(payload, onConflict: 'doc_id');
+      await ChatApiRepository.instance.upsertAppUser(chatUser.toJson());
     } catch (e) {
       Loggers.error('[ADD_USER] Failed to add user ${user.id} — $e');
     }
