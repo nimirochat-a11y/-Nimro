@@ -247,7 +247,7 @@ class ChatApiRepository {
   ChatSubscription subscribeToMessages({
     required void Function(String event, Map<String, dynamic> payload) onEvent,
     required String conversationId,
-    Duration interval = const Duration(seconds: 3),
+    Duration interval = const Duration(seconds: 2),
   }) {
     final sub = ChatSubscription('messages_$conversationId');
     int? lastSeenId;
@@ -270,11 +270,9 @@ class ChatApiRepository {
       // `lastSeenId` is a captured local, so Dart will not promote it to a
       // non-nullable int inside this closure; copy it out first.
       final seenId = lastSeenId;
-      if (seenId != null) {
-        for (final row in rows.reversed) {
-          final id = int.tryParse('${row['id']}');
-          if (id != null && id > seenId) onEvent('create', row);
-        }
+      for (final row in rows.reversed) {
+        final id = int.tryParse('${row['id']}');
+        if (id != null && (seenId == null || id > seenId)) onEvent('create', row);
       }
 
       if (newestId != null) lastSeenId = newestId;

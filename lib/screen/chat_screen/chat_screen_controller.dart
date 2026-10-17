@@ -210,6 +210,10 @@ class ChatScreenController extends BlockUserController
       waveData: waveData?.join(','),
     );
     Loggers.success('APPWRITE MESSAGE : ${message.toJson()}');
+    if (!chatList.any((m) => m.id == message.id)) {
+      chatList.add(message);
+      chatList.sort((a, b) => b.id?.compareTo(a.id ?? 0) ?? 0);
+    }
     try {
       await _repo.createMessage(messageId: time.toString(), data: message.toJson());
     } catch (error) {
