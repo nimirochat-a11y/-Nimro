@@ -27,11 +27,8 @@ class FirebaseFirestoreController extends BaseController {
       return;
     }
     Loggers.info('[LOAD_USER] Fetching user $userId from Supabase');
-    _db
-        .from('app_users')
-        .select()
-        .eq('doc_id', '$userId')
-        .maybeSingle()
+    ChatApiRepository.instance
+        .fetchAppUser(userId)
         .then((row) {
           if (row == null) return;
           final fetchedUser = AppUser.fromJson(row);
