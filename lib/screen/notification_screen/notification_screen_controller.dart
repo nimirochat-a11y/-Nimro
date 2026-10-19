@@ -1,3 +1,4 @@
+import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
@@ -38,6 +39,7 @@ class NotificationScreenController extends BaseController {
   }
 
   void iniData() {
+    SessionManager.instance.storage.write(SessionKeys.notifyCount, 0);
     fetchActivityNotifications();
     fetchAdminNotification();
   }
