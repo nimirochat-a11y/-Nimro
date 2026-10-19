@@ -249,12 +249,8 @@ class ChatScreenController extends BlockUserController
       ChatType status = ChatType.approved;
       String? reqType = UserRequestAction.accept.title;
       if (otherUser != null) {
-        status = otherUser?.followStatus == 2 || otherUser?.followStatus == 3
-            ? ChatType.approved
-            : ChatType.request;
-        reqType = otherUser?.followStatus == 2 || otherUser?.followStatus == 3
-            ? UserRequestAction.accept.title
-            : null;
+        status = ChatType.approved;
+        reqType = UserRequestAction.accept.title;
       }
       ChatThread myConversation = ChatThread(
           id: time.toString(),
