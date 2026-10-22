@@ -355,8 +355,11 @@ class ChatScreenController extends BlockUserController
       );
       for (var doc in result.rows) {
         final message = MessageData.fromJson(doc.data);
-        chatList.add(message);
+        if (!chatList.any((m) => m.id == message.id)) {
+          chatList.add(message);
+        }
       }
+      chatList.sort((a, b) => b.id?.compareTo(a.id ?? 0) ?? 0);
       if (result.rows.isNotEmpty) {
         lastMessageDocumentId = result.rows.last.$id;
       }
