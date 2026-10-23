@@ -99,7 +99,7 @@ class ChatScreenController extends BlockUserController
     _getChat();
     _addUsersFirebaseFireStore();
     _markAsRead();
-    Timer.periodic(const Duration(seconds: 4), (t) {
+    Timer.periodic(const Duration(seconds: 15), (t) {
       if (chatId.isEmpty) {
         t.cancel();
         return;

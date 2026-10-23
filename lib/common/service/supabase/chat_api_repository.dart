@@ -247,7 +247,7 @@ class ChatApiRepository {
   ChatSubscription subscribeToMessages({
     required void Function(String event, Map<String, dynamic> payload) onEvent,
     required String conversationId,
-    Duration interval = const Duration(seconds: 2),
+    Duration interval = const Duration(seconds: 3),
   }) {
     final sub = ChatSubscription('messages_$conversationId');
     int? lastSeenId;

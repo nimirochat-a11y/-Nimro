@@ -20,6 +20,7 @@ import 'package:nimiro/screen/splash_screen/splash_screen.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
 import 'common/service/network_helper/network_helper.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -82,8 +83,15 @@ Future<void> main() async {
     // Load Translations
     Get.put(DynamicTranslations());
 
-    // Run app
-    runApp(const RestartWidget(child: MyApp()));
+    await SentryFlutter.init(
+    (options) {
+      options.dsn = 'https://e57768e45209ac08dd8703e373689aa3@o4512265705553920.ingest.de.sentry.io/4512266288431184';
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 0.1;
+    },
+    appRunner: () => runApp(SentryWidget(child: const RestartWidget(child: MyApp()))),
+  );
   } catch (e, st) {
     Loggers.error('Fatal crash during app startup $st');
   }
