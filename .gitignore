@@ -46,3 +46,7 @@ app.*.map.json
 /android/app/.cxx
 /ios/build
 android/build
+
+sentry.properties
+
+sentry.properties
