@@ -50,10 +50,13 @@ class _ImageViewScreenState extends State<ImageViewScreen> {
             },
             itemBuilder: (context, index) {
               Images? image = images[index];
+              final imageUrl = image.image?.addBaseURL() ?? '';
               return Hero(
                 tag: '${widget.tag}_${image.image}',
                 child: PhotoView(
-                  imageProvider: CachedNetworkImageProvider(image.image?.addBaseURL() ?? ''),
+                  imageProvider: imageUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(imageUrl) as ImageProvider
+                      : const AssetImage(AssetRes.icNoImage),
                   // wantKeepAlive: true,
                   minScale: PhotoViewComputedScale.contained,
                   // initialScale: PhotoViewComputedScale.contained,
