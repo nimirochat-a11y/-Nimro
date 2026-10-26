@@ -253,6 +253,7 @@ class _ReelPageState extends State<ReelPage> {
 
   void _increaseViewsCount(Post reelData) {
     PostService.instance.increaseViewsCount(postId: reelData.id).then((value) {
+      if (_isDisposed) return;
       if (value.status == true) {
         reelController.updateReelData(reel: reelData, isIncreaseCoin: true);
       }
