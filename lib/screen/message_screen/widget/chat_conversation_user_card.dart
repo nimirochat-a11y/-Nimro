@@ -20,7 +20,9 @@ class ChatConversationUserCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.find<MessageScreenController>();
 
-    return InkWell(
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
       onTap: () {
         Get.to(
           () => ChatScreen(conversationUser: chatConversation, user: User(id: chatConversation.userId)),
@@ -84,6 +86,7 @@ class ChatConversationUserCard extends StatelessWidget {
           ),
         );
       }),
+    ),
     );
   }
 }
