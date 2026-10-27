@@ -17,9 +17,8 @@ class FeedTopView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
+    return Container(
       color: scaffoldBackgroundColor(context),
-      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: SafeArea(
         bottom: false,
