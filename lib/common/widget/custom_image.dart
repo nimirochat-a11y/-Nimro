@@ -54,7 +54,7 @@ class CustomImage extends StatelessWidget {
               cornerRadius: radius, cornerSmoothing: cornerSmoothing),
           child: Stack(
             children: [
-              imageUrl.isEmpty
+              (imageUrl.isEmpty || !imageUrl.startsWith('http'))
                   ? ImageErrorWidget(
                       size: size,
                       radius: radius,
