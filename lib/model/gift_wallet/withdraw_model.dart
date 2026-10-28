@@ -52,7 +52,7 @@ class Withdraw {
     requestNumber = json['request_number'];
     gateway = json['gateway'];
     account = json['account'];
-    amount = json['amount'];
+    amount = json['amount']?.toString();
     coins = json['coins'];
     coinValue = json['coin_value'];
     status = json['status'];
