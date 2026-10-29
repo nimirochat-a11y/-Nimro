@@ -116,6 +116,7 @@ class _Post {
 
 class _Setting {
   String fetchSettings = "${apiURL}settings/fetchSettings";
+  String fetchSecureSettings = "${apiURL}settings/fetchSecureSettings";
   String uploadFileGivePath = "${apiURL}settings/uploadFileGivePath";
   String deleteFile = "${apiURL}settings/deleteFile";
 }

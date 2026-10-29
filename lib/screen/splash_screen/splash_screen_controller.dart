@@ -74,6 +74,11 @@ class SplashScreenController extends BaseController {
           .setBool(SessionKeys.isLanguageScreenSelect, true);
 
       if (SessionManager.instance.isLogin()) {
+        try {
+          await CommonService.instance.fetchSecureSettings();
+        } catch (e) {
+          Loggers.error('Secure settings loading failed: $e');
+        }
         UserService.instance.fetchUserDetails(userId: SessionManager.instance.getUserID()).then((value) {
           if (value != null) {
             try {

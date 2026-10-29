@@ -50,3 +50,9 @@ android/build
 sentry.properties
 
 sentry.properties
+
+# Android signing material - never commit
+android/key.properties
+**/*.jks
+**/*.keystore
+**/*.p12

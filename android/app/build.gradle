@@ -39,10 +39,9 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26
         targetSdk = 36
-        // v13: light-theme restore + live/chat/notification fixes. The code is
-        // bumped so this build installs as an update over v12 (code 15).
-        versionCode = 16
-        versionName = '1.1.6'
+        // CI build: signed with the permanent Nimiro release key.
+        versionCode = 17
+        versionName = '1.1.7'
     }
 
     signingConfigs {
@@ -52,6 +51,8 @@ android {
                 keyPassword = keystoreProperties['keyPassword']
                 storeFile = file(keystoreProperties['storeFile'])
                 storePassword = keystoreProperties['storePassword']
+                // The keystore is a PKCS#12 file (see docs/signing.md).
+                storeType = keystoreProperties['storeType'] ?: 'PKCS12'
             }
         }
     }
@@ -60,9 +61,12 @@ android {
         release {
             shrinkResources false
             minifyEnabled false
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            // Sign with the real release key when key.properties exists
+            // (local builds and GitHub Actions). Falls back to the debug key
+            // only for throwaway local builds, never for distribution.
+            signingConfig = keystorePropertiesFile.exists()
+                    ? signingConfigs.release
+                    : signingConfigs.debug
         }
     }
 

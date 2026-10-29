@@ -9,11 +9,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-apk:
     name: Build Nimiro release APK
     runs-on: ubuntu-22.04
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout source
@@ -42,6 +46,30 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Configure release signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_BASE64:-}" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 is missing."
+            exit 1
+          fi
+          # The keystore only ever exists on the runner, never in the repo.
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/nimiro-release.p12"
+          chmod 600 "$RUNNER_TEMP/nimiro-release.p12"
+          cat > android/key.properties <<EOF
+          storeType=PKCS12
+          storeFile=$RUNNER_TEMP/nimiro-release.p12
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+          echo "Signing keystore configured (alias: $KEY_ALIAS)."
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -49,6 +77,7 @@ jobs:
         run: |
           export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
           yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" >/dev/null 2>&1 || true
           for v in 29.0.14033849 28.2.13676358; do
             for i in 1 2 3; do
               sdkmanager "ndk;$v" && break || sleep 15
@@ -58,10 +87,27 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release --split-per-abi
 
-      - name: Upload APK artifact
+      - name: Verify signature and checksums
+        run: |
+          set -euo pipefail
+          APKSIGNER=$(ls "$ANDROID_SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          for apk in build/app/outputs/flutter-apk/*-release.apk; do
+            echo "=== $apk ($(du -h "$apk" | cut -f1)) ==="
+            sha256sum "$apk"
+            if [ -n "$APKSIGNER" ]; then
+              "$APKSIGNER" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
+            fi
+          done
+
+      - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nimiro-release-apk
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          name: nimiro-release-apk-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/*-release.apk
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 30
+
+      - name: Remove signing material
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/nimiro-release.p12" android/key.properties

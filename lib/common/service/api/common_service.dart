@@ -33,6 +33,43 @@ class CommonService {
     return false;
   }
 
+  /// Loads the third-party credentials (ZEGO / Google Places / Giphy / DeepAR)
+  /// from the authenticated endpoint and merges them into the cached settings.
+  ///
+  /// The public fetchSettings endpoint still returns these values for older
+  /// installed builds. Once this version is the minimum supported release the
+  /// backend can stop exposing them there.
+  Future<void> fetchSecureSettings() async {
+    if (!SessionManager.instance.isLogin()) return;
+
+    final response = await ApiService.instance.call<Map<String, dynamic>>(
+      url: WebService.setting.fetchSecureSettings,
+      fromJson: (json) => json,
+    );
+
+    final data = response['data'];
+    if (data is! Map) return;
+
+    final setting = SessionManager.instance.getSettings();
+    if (setting == null) return;
+
+    String? pick(String key) {
+      final value = data[key];
+      return value is String && value.isNotEmpty ? value : null;
+    }
+
+    setting.zegoAppId = pick('zego_app_id') ?? setting.zegoAppId;
+    setting.zegoAppSign = pick('zego_app_sign') ?? setting.zegoAppSign;
+    setting.placeApiAccessToken =
+        pick('place_api_access_token') ?? setting.placeApiAccessToken;
+    setting.giphyKey = pick('giphy_key') ?? setting.giphyKey;
+    setting.deeparAndroidKey =
+        pick('deepar_android_key') ?? setting.deeparAndroidKey;
+    setting.deeparIOSKey = pick('deepar_iOS_key') ?? setting.deeparIOSKey;
+
+    SessionManager.instance.setSettings(setting);
+  }
+
   Future<FilePathModel> uploadFileGivePath(XFile files,
       {Function(double percentage)? onProgress}) async {
     FilePathModel model = await ApiService.instance.multiPartCallApi(

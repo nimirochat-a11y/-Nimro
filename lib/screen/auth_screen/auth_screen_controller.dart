@@ -380,6 +380,11 @@ class AuthScreenController extends BaseController {
     DebounceAction.shared.call(() async {
       SessionManager.instance.setLogin(true);
       SessionManager.instance.setUser(data);
+      try {
+        await CommonService.instance.fetchSecureSettings();
+      } catch (e) {
+        Loggers.error('Secure settings loading failed: $e');
+      }
       Get.offAll(() => DashboardScreen(myUser: data));
     }, milliseconds: 250);
   }
