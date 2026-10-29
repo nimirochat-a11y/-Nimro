@@ -18,28 +18,44 @@ String _toArabicDigits(String input) {
   return out;
 }
 
+/// Arabic decimal separator (U+066B). A comma is the *thousands* separator in
+/// Arabic, so "٣,١ ألف" reads as an ambiguous number; it must be "٣٫١ ألف".
+const String _arabicDecimalSeparator = '\u066B';
+
+/// Arabic thousands separator (U+066C).
+const String _arabicThousandsSeparator = '\u066C';
+
 String _arabicCompactFormat(num n) {
-  double absN = n.abs().toDouble();
-  String sign = n < 0 ? '-' : '';
-  double value;
-  String suffix;
-  if (absN >= 1000000000) {
-    value = absN / 1000000000;
-    suffix = ' مليار';
-  } else if (absN >= 1000000) {
-    value = absN / 1000000;
-    suffix = ' مليون';
-  } else if (absN >= 1000) {
-    value = absN / 1000;
-    suffix = ' ألف';
-  } else {
+  final double absN = n.abs().toDouble();
+  final String sign = n < 0 ? '-' : '';
+
+  const List<double> units = [1000, 1000000, 1000000000];
+  const List<String> suffixes = [' ألف', ' مليون', ' مليار'];
+
+  int unitIndex = -1;
+  for (int i = 0; i < units.length; i++) {
+    if (absN >= units[i]) unitIndex = i;
+  }
+  if (unitIndex < 0) {
     return '$sign${_toArabicDigits(absN.toInt().toString())}';
   }
-  String valueStr = value == value.roundToDouble()
-      ? value.toInt().toString()
-      : value.toStringAsFixed(1);
-  valueStr = valueStr.replaceAll('.', ',');
-  return '$sign${_toArabicDigits(valueStr)}$suffix';
+
+  double value = absN / units[unitIndex];
+  int tenths = (value * 10).round();
+
+  // 999,999 must read "١ مليون", not "١٠٠٠٫٠ ألف": if rounding pushes the
+  // value to 1000, promote it to the next unit.
+  if (tenths >= 10000 && unitIndex < units.length - 1) {
+    unitIndex++;
+    value = absN / units[unitIndex];
+    tenths = (value * 10).round();
+  }
+
+  final String valueStr = tenths % 10 == 0
+      ? (tenths ~/ 10).toString()
+      : '${tenths ~/ 10}$_arabicDecimalSeparator${tenths % 10}';
+
+  return '$sign${_toArabicDigits(valueStr)}${suffixes[unitIndex]}';
 }
 
 extension Number on num {
@@ -48,6 +64,18 @@ extension Number on num {
       return _arabicCompactFormat(this);
     }
     return NumberFormat.compact().format(this);
+  }
+
+  /// Full number with grouping and no unit suffix ("٣٬١٠٠" instead of
+  /// "٣٫١ ألف"). Used where the whole value must be readable, such as the coin
+  /// balance, so a large "ألف" never dominates the number.
+  String get numberFormatFull {
+    if (SessionManager.instance.getLang() == 'ar') {
+      final grouped = NumberFormat.decimalPattern('en').format(this);
+      return _toArabicDigits(grouped)
+          .replaceAll(',', _arabicThousandsSeparator);
+    }
+    return NumberFormat.decimalPattern().format(this);
   }
 
   String get currencyFormat =>

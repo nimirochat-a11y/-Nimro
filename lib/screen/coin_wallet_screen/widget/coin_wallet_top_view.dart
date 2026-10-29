@@ -113,7 +113,9 @@ class _Balance extends StatelessWidget {
             fit: BoxFit.scaleDown,
             alignment: AlignmentDirectional.centerStart,
             child: Text(
-              (user?.coinWallet?.toInt() ?? 0).numberFormat,
+              // Full grouped number: "٣٬١٠٠" instead of "٣٫١ ألف", so the
+              // word "ألف" never renders at the 44px display size.
+              (user?.coinWallet?.toInt() ?? 0).numberFormatFull,
               style: TextStyleCustom.unboundedExtraBold800(
                   color: Colors.white, fontSize: 44),
             ),
