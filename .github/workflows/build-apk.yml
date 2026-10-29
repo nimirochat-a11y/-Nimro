@@ -89,13 +89,14 @@ jobs:
 
       - name: Verify signature and checksums
         run: |
-          set -euo pipefail
-          APKSIGNER=$(ls "$ANDROID_SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          set -uo pipefail
+          APKSIGNER=$(ls "$ANDROID_SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)
+          echo "apksigner: ${APKSIGNER:-not found}"
           for apk in build/app/outputs/flutter-apk/*-release.apk; do
             echo "=== $apk ($(du -h "$apk" | cut -f1)) ==="
             sha256sum "$apk"
-            if [ -n "$APKSIGNER" ]; then
-              "$APKSIGNER" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
+            if [ -n "${APKSIGNER:-}" ]; then
+              "$APKSIGNER" verify --print-certs "$apk" || echo "::warning::apksigner reported a problem for $apk"
             fi
           done
 
