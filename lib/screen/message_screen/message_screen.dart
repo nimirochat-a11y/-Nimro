@@ -15,56 +15,53 @@ class MessageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(MessageScreenController());
-    return DefaultTextStyle.merge(
-      style: const TextStyle(decoration: TextDecoration.none),
-      child: Container(
-        color: scaffoldBackgroundColor(context),
-        child: Column(
-          children: [
-            Container(
-              color: scaffoldBackgroundColor(context),
-              child: SafeArea(
-                minimum: const EdgeInsets.only(top: 15),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: Text(LKey.messages.tr,
-                      style: TextStyleCustom.unboundedMedium500(
-                          fontSize: 15, color: textDarkGrey(context))),
-                ),
+    return Scaffold(
+      backgroundColor: scaffoldBackgroundColor(context),
+      body: Column(
+        children: [
+          Container(
+            color: scaffoldBackgroundColor(context),
+            child: SafeArea(
+              minimum: const EdgeInsets.only(top: 15),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Text(LKey.messages.tr,
+                    style: TextStyleCustom.unboundedMedium500(
+                        fontSize: 15, color: textDarkGrey(context))),
               ),
             ),
-            const CustomSearchTextField(),
-            Expanded(
-              child: ColoredBox(
-                color: scaffoldBackgroundColor(context),
-                child: Obx(() {
-                  final List<ChatThread> combined = [
-                    ...controller.requestsUsers,
-                    ...controller.chatsUsers,
-                  ];
-                  if (controller.isLoading.value && combined.isEmpty) {
-                    return const LoaderWidget();
-                  }
-                  return NoDataView(
-                    showShow: combined.isEmpty,
-                    title: LKey.chatListEmptyTitle.tr,
-                    description: LKey.chatListEmptyDescription.tr,
-                    child: ListView.builder(
-                      itemCount: combined.length,
-                      padding: EdgeInsets.zero,
-                      itemBuilder: (context, index) {
-                        ChatThread chatConversation = combined[index];
-                        chatConversation.bindChatUser();
-                        return ChatConversationUserCard(
-                            chatConversation: chatConversation);
-                      },
-                    ),
-                  );
-                }),
-              ),
-            )
-          ],
-        ),
+          ),
+          const CustomSearchTextField(),
+          Expanded(
+            child: ColoredBox(
+              color: scaffoldBackgroundColor(context),
+              child: Obx(() {
+                final List<ChatThread> combined = [
+                  ...controller.requestsUsers,
+                  ...controller.chatsUsers,
+                ];
+                if (controller.isLoading.value && combined.isEmpty) {
+                  return const LoaderWidget();
+                }
+                return NoDataView(
+                  showShow: combined.isEmpty,
+                  title: LKey.chatListEmptyTitle.tr,
+                  description: LKey.chatListEmptyDescription.tr,
+                  child: ListView.builder(
+                    itemCount: combined.length,
+                    padding: EdgeInsets.zero,
+                    itemBuilder: (context, index) {
+                      ChatThread chatConversation = combined[index];
+                      chatConversation.bindChatUser();
+                      return ChatConversationUserCard(
+                          chatConversation: chatConversation);
+                    },
+                  ),
+                );
+              }),
+            ),
+          )
+        ],
       ),
     );
   }
