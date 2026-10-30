@@ -1,3 +1,6 @@
+import 'package:nimiro/common/manager/logger.dart';
+import 'package:gal/gal.dart';
+import 'package:http/http.dart' as http;
 import 'package:dismissible_page/dismissible_page.dart';
 import 'package:figma_squircle_updated/figma_squircle.dart';
 import 'package:flutter/gestures.dart';
@@ -255,20 +258,22 @@ class PostImageView extends StatelessWidget {
               Align(
                 alignment: AlignmentDirectional.bottomEnd,
                 child: InkWell(
-                  onTap: () {
-                    context.pushTransparentRoute(ImageViewScreen(
-                      images: post.images ?? [],
-                      selectedIndex: selectedIndex.value,
-                      onChanged: (position) {
-                        controller.jumpToPage(position);
-                      },
-                      tag: '$uniqueTag',
-                    ));
+                  onTap: () async {
+                    try {
+                      final img = (post.images ?? [])[selectedIndex.value].image;
+                      final url = img?.addBaseURL();
+                      if (url == null || !url.startsWith('http')) return;
+                      final res = await http.get(Uri.parse(url));
+                      await Gal.putImageBytes(res.bodyBytes);
+                      Get.snackbar('', LKey.downloadCompletedSuccessfully.tr);
+                    } catch (e) {
+                      Loggers.error('Image download error: $e');
+                    }
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: CustomBgCircleButton(
-                        image: AssetRes.icExpand, size: Size(30, 30)),
+                        image: AssetRes.icDownload, size: Size(30, 30)),
                   ),
                 ),
               )
