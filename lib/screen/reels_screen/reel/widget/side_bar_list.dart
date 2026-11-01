@@ -69,11 +69,6 @@ class SideBarList extends StatelessWidget {
               iconColor: whitePure(context),
             ),
             IconWithLabel(
-              onTap: isPlaceholder ? () {} : controller.onShareTap,
-              image: AssetRes.icShare,
-              text: isPlaceholder ? '1' : (reel.shares ?? 0).toString(),
-            ),
-            IconWithLabel(
               onTap: isPlaceholder
                   ? () {}
                   : () => Get.put(ShareSheetWidgetController(reel, null))
