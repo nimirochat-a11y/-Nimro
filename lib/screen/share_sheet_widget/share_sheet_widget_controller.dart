@@ -201,8 +201,11 @@ class ShareSheetWidgetController extends BaseController {
     }
   }
 
-  void _downloadReel(Post? reel) async {
+  void _downloadReel(Post? reel) {
     Get.back();
+    downloadReel(reel);
+  }
+  void downloadReel(Post? reel) async {
     final videoUrl = reel?.video?.addBaseURL() ?? '';
     if (videoUrl.isEmpty) {
       return Loggers.error('Video not found');

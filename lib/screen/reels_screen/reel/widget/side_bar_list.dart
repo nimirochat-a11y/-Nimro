@@ -1,3 +1,4 @@
+import 'package:nimiro/screen/share_sheet_widget/share_sheet_widget_controller.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -71,6 +72,14 @@ class SideBarList extends StatelessWidget {
               onTap: isPlaceholder ? () {} : controller.onShareTap,
               image: AssetRes.icShare,
               text: isPlaceholder ? '1' : (reel.shares ?? 0).toString(),
+            ),
+            IconWithLabel(
+              onTap: isPlaceholder
+                  ? () {}
+                  : () => Get.put(ShareSheetWidgetController(reel, null))
+                      .downloadReel(reel),
+              image: AssetRes.icDownload,
+              text: '',
             ),
             Visibility(
               visible: controller.reelData.value.user?.id !=
