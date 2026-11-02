@@ -5,6 +5,7 @@ import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/bottom_sheet_top_view.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
+import 'package:nimiro/common/widget/gift_media_viewer.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/gradient_text.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -127,10 +128,41 @@ class SendGiftSheet extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            CustomImage(
-                                image: gift.image?.addBaseURL(),
-                                size: const Size(65, 65),
-                                radius: 0),
+                            GestureDetector(
+                              onTap: (gift.video?.isNotEmpty ?? false)
+                                  ? () => GiftMediaViewer.open(
+                                      context, gift.video!.addBaseURL())
+                                  : null,
+                              child: SizedBox(
+                                width: 65,
+                                height: 65,
+                                child: Stack(
+                                  children: [
+                                    Center(
+                                      child: CustomImage(
+                                          image: gift.image?.addBaseURL(),
+                                          size: const Size(65, 65),
+                                          radius: 0),
+                                    ),
+                                    if (gift.video?.isNotEmpty ?? false)
+                                      const Positioned(
+                                        bottom: 0,
+                                        right: 0,
+                                        child: Icon(
+                                          Icons.play_circle_fill,
+                                          size: 22,
+                                          color: Colors.white,
+                                          shadows: [
+                                            Shadow(
+                                                blurRadius: 6,
+                                                color: Colors.black45)
+                                          ],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ),
                             Text(
                                 '${(gift.coinPrice ?? 0).numberFormat} ${LKey.coins.tr}',
                                 style: TextStyleCustom.outFitMedium500(

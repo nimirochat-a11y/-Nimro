@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
+import 'package:nimiro/common/widget/gift_media_viewer.dart';
 import 'package:nimiro/common/widget/gradient_border.dart';
 import 'package:nimiro/common/widget/gradient_text.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -39,12 +40,41 @@ class ChatGiftMessage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              CustomImage(
-                  size: const Size(130, 130),
-                  image: message.imageMessage?.addBaseURL(),
-                  radius: 10,
-                  cornerSmoothing: 1,
-                  isShowPlaceHolder: true),
+              GestureDetector(
+                onTap: (message.videoMessage?.isNotEmpty ?? false)
+                    ? () => GiftMediaViewer.open(
+                        context, message.videoMessage!.addBaseURL())
+                    : null,
+                child: SizedBox(
+                  width: 130,
+                  height: 130,
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: CustomImage(
+                            size: const Size(130, 130),
+                            image: message.imageMessage?.addBaseURL(),
+                            radius: 10,
+                            cornerSmoothing: 1,
+                            isShowPlaceHolder: true),
+                      ),
+                      if (message.videoMessage?.isNotEmpty ?? false)
+                        const Positioned(
+                          bottom: 6,
+                          right: 6,
+                          child: Icon(
+                            Icons.play_circle_fill,
+                            size: 30,
+                            color: Colors.white,
+                            shadows: [
+                              Shadow(blurRadius: 8, color: Colors.black45)
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
               GradientText(
                 '${int.parse(message.textMessage ?? '0').numberFormat} ${LKey.coins.tr}',
                 gradient: StyleRes.themeGradient,

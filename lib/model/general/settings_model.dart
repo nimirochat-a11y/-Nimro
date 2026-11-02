@@ -466,6 +466,7 @@ class Gift {
   int? id;
   int? coinPrice;
   String? image;
+  String? video;
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -473,6 +474,7 @@ class Gift {
     this.id,
     this.coinPrice,
     this.image,
+    this.video,
     this.createdAt,
     this.updatedAt,
   });
@@ -481,6 +483,7 @@ class Gift {
         id: json["id"],
         coinPrice: json["coin_price"],
         image: json["image"],
+        video: json["video"],
         createdAt: json["created_at"] == null
             ? null
             : DateTime.parse(json["created_at"]),
@@ -493,6 +496,7 @@ class Gift {
         "id": id,
         "coin_price": coinPrice,
         "image": image,
+        "video": video,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

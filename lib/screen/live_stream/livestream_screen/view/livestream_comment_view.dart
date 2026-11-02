@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
+import 'package:nimiro/common/widget/gift_media_viewer.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/user_model/app_user.dart';
@@ -162,12 +163,35 @@ class LiveStreamCommentView extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CustomImage(
-                      size: const Size(50, 50),
-                      image: comment.gift?.image?.addBaseURL() ?? '',
-                      cornerSmoothing: 0,
-                      radius: 10,
-                      isShowPlaceHolder: true),
+                  GestureDetector(
+                    onTap: (comment.gift?.video?.isNotEmpty ?? false)
+                        ? () => GiftMediaViewer.open(
+                            context, comment.gift!.video!.addBaseURL())
+                        : null,
+                    child: Stack(
+                      children: [
+                        CustomImage(
+                            size: const Size(50, 50),
+                            image: comment.gift?.image?.addBaseURL() ?? '',
+                            cornerSmoothing: 0,
+                            radius: 10,
+                            isShowPlaceHolder: true),
+                        if (comment.gift?.video?.isNotEmpty ?? false)
+                          const Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Icon(
+                              Icons.play_circle_fill,
+                              size: 20,
+                              color: Colors.white,
+                              shadows: [
+                                Shadow(blurRadius: 6, color: Colors.black45)
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 5),
                   Container(
                     height: 30,

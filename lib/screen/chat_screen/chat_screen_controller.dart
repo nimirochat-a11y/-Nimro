@@ -460,7 +460,10 @@ class ChatScreenController extends BlockUserController
           sendMessageToFireStore(
               type: MessageType.gift,
               textMessage: giftManager.gift.coinPrice.toString(),
-              imageMessage: giftManager.gift.image);
+              imageMessage: giftManager.gift.image,
+              videoMessage: (giftManager.gift.video?.isNotEmpty ?? false)
+                  ? giftManager.gift.video
+                  : null);
         });
   }
   void pickSticker() {
