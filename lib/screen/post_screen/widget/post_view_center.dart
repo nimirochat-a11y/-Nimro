@@ -258,22 +258,20 @@ class PostImageView extends StatelessWidget {
               Align(
                 alignment: AlignmentDirectional.bottomEnd,
                 child: InkWell(
-                  onTap: () async {
-                    try {
-                      final img = (post.images ?? [])[selectedIndex.value].image;
-                      final url = img?.addBaseURL();
-                      if (url == null || !url.startsWith('http')) return;
-                      final res = await http.get(Uri.parse(url));
-                      await Gal.putImageBytes(res.bodyBytes);
-                      Get.snackbar('', LKey.downloadCompletedSuccessfully.tr);
-                    } catch (e) {
-                      Loggers.error('Image download error: $e');
-                    }
+                  onTap: () {
+                    context.pushTransparentRoute(ImageViewScreen(
+                      images: post.images ?? [],
+                      selectedIndex: selectedIndex.value,
+                      onChanged: (position) {
+                        controller.jumpToPage(position);
+                      },
+                      tag: '$uniqueTag',
+                    ));
                   },
                   child: const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: CustomBgCircleButton(
-                        image: AssetRes.icDownload, size: Size(30, 30)),
+                        image: AssetRes.icExpand, size: Size(30, 30)),
                   ),
                 ),
               )
