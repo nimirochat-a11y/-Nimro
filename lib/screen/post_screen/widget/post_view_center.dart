@@ -240,14 +240,27 @@ class PostImageView extends StatelessWidget {
                 itemCount: (post.images ?? []).length,
                 itemBuilder: (context, index) {
                   Images? image = post.images?[index];
-                  return Hero(
-                    tag: '${uniqueTag}_${image?.image}',
-                    child: CustomImage(
-                        size: Size(MediaQuery.of(context).size.width, 300),
-                        image: image?.image?.addBaseURL(),
-                        radius: 0,
-                        isShowPlaceHolder: true,
-                        cornerSmoothing: 1),
+                  return GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      context.pushTransparentRoute(ImageViewScreen(
+                        images: post.images ?? [],
+                        selectedIndex: selectedIndex.value,
+                        onChanged: (position) {
+                          controller.jumpToPage(position);
+                        },
+                        tag: '$uniqueTag',
+                      ));
+                    },
+                    child: Hero(
+                      tag: '${uniqueTag}_${image?.image}',
+                      child: CustomImage(
+                          size: Size(MediaQuery.of(context).size.width, 300),
+                          image: image?.image?.addBaseURL(),
+                          radius: 0,
+                          isShowPlaceHolder: true,
+                          cornerSmoothing: 1),
+                    ),
                   );
                 },
               ),
@@ -255,26 +268,6 @@ class PostImageView extends StatelessWidget {
                 CustomPageIndicator(
                     length: (post.images ?? []).length,
                     selectedIndex: selectedIndex),
-              Align(
-                alignment: AlignmentDirectional.bottomEnd,
-                child: InkWell(
-                  onTap: () {
-                    context.pushTransparentRoute(ImageViewScreen(
-                      images: post.images ?? [],
-                      selectedIndex: selectedIndex.value,
-                      onChanged: (position) {
-                        controller.jumpToPage(position);
-                      },
-                      tag: '$uniqueTag',
-                    ));
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CustomBgCircleButton(
-                        image: AssetRes.icExpand, size: Size(30, 30)),
-                  ),
-                ),
-              )
             ],
           ),
         ),
