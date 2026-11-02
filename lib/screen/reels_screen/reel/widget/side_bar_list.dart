@@ -75,6 +75,7 @@ class SideBarList extends StatelessWidget {
                       .downloadReel(reel),
               image: AssetRes.icDownload,
               text: '',
+              iconColor: whitePure(context),
             ),
             Visibility(
               visible: controller.reelData.value.user?.id !=
