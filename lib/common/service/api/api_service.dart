@@ -11,6 +11,7 @@ import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/utils/params.dart';
 import 'package:nimiro/screen/session_expired_screen/session_expired_screen.dart';
+import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/utilities/const_res.dart';
 
 class CancelToken {
@@ -78,12 +79,11 @@ class ApiService {
         final decodedResponse =
             jsonDecode(response.body) as Map<String, dynamic>;
 
-        if (decodedResponse['message'] == 'this user is freezed!') {
-          DebounceAction.shared.call(() {
-            Get.offAll(
-                () => const SessionExpiredScreen(type: SessionType.freeze));
-          });
-          return decodedResponse as T;
+        if (decodedResponse['message'] == 'this user is freezed!' ||
+            decodedResponse['message'] == 'Your account has been restricted.') {
+          // Restricted accounts stay signed in; only their writes are
+          // rejected. Show the translated restriction message everywhere.
+          decodedResponse['message'] = LKey.accountRestricted.tr;
         }
 
         if (decodedResponse['status'] == false) {

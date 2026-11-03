@@ -196,6 +196,10 @@ class ChatScreenController extends BlockUserController
       String? postMessage,
       String? storyReplyMessage,
       List<double>? waveData}) async {
+    // Restricted accounts may read chats but never send anything.
+    if ((myUser?.isFreez ?? 0) == 1) {
+      return showSnackBar(LKey.accountRestricted.tr);
+    }
     int time = DateTime.now().millisecondsSinceEpoch;
     List<int> noDeleteIds = [
       myUser?.id ?? -1,

@@ -827,7 +827,12 @@ class LivestreamScreenController extends BaseController {
 
   void onTextCommentSend() {
     String comment = textCommentController.text.trim();
-    textCommentController.clear();
+    // Restricted accounts may watch lives but never comment.
+    if ((SessionManager.instance.getUser()?.isFreez ?? 0) == 1) {
+      textCommentController.clear();
+      isTextEmpty.value = true;
+      return showSnackBar(LKey.accountRestricted.tr);
+    }
     isTextEmpty.value = true;
     if (comment.isEmpty) return;
     _sendCommentToFirestore(type: LivestreamCommentType.text, comment: comment);
