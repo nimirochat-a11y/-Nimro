@@ -41,6 +41,10 @@ class SettingsScreenController extends BaseController {
   }
 
   void onChangedWhoCanSeePost(WhoCanSeePost? value) async {
+    // Restricted accounts may view these settings but not change them.
+    if ((SessionManager.instance.getUser()?.isFreez ?? 0) == 1) {
+      return showSnackBar(LKey.accountRestricted.tr);
+    }
     isUpdateApiCalled.value = true;
 
     selectedWhoCanSeePost.value = value ?? WhoCanSeePost.values.first;
@@ -49,6 +53,10 @@ class SettingsScreenController extends BaseController {
   }
 
   onChangedToggle(bool value, SettingToggle settingToggle) async {
+    // Restricted accounts may view these settings but not change them.
+    if ((SessionManager.instance.getUser()?.isFreez ?? 0) == 1) {
+      return showSnackBar(LKey.accountRestricted.tr);
+    }
     isUpdateApiCalled.value = true;
     await UserService.instance.updateUserDetails(
         notifyPostLike:

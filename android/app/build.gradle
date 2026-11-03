@@ -40,8 +40,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // CI build: signed with the permanent Nimiro release key.
-        versionCode = 22
-        versionName = '1.1.12'
+        versionCode = 23
+        versionName = '1.1.13'
     }
 
     signingConfigs {

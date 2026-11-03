@@ -143,6 +143,10 @@ class EditProfileScreenController extends BaseController {
 
   void onSaveTap() async {
     if (isLoading.value) return;
+    // Restricted accounts may view their profile but never edit it.
+    if ((SessionManager.instance.getUser()?.isFreez ?? 0) == 1) {
+      return showSnackBar(LKey.accountRestricted.tr);
+    }
     if (fullNameController.text.trim().isEmpty) {
       return showSnackBar(LKey.fullNameEmpty.tr);
     }
