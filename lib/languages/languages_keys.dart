@@ -575,6 +575,8 @@ class LKey {
   static const String connection = "Connection";
   static const String noInternetDesc =
       "It looks like you are not\nconnected to the internet";
+  static const String noInternetTitle = "No internet connection";
+  static const String retry = "Retry";
   static const String downloadingFailed = "Download failed.";
   static const String from = "From";
   static const String somethingWentWrong = "Something went wrong.";
