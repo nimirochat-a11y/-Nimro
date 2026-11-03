@@ -187,7 +187,8 @@ class EditProfileScreen extends StatelessWidget {
                       onChanged: controller.checkUsernameAvailability,
                       isError: !controller.isValidUserName.value,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9_.]')),
+                        TextInputFormatter.withFunction((o, n) => n.copyWith(text: n.text.toLowerCase())),
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-z0-9_.]')),
                       ],
                     );
                   }),

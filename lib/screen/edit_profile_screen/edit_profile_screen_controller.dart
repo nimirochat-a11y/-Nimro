@@ -160,7 +160,7 @@ class EditProfileScreenController extends BaseController {
     try {
       User? userData = await UserService.instance.updateUserDetails(
           fullname: fullNameController.text.trim(),
-          userName: usernameController.text.trim(),
+          userName: usernameController.text.trim().toLowerCase(),
           bio: bioController.text.trim(),
           email: emailController.text.trim(),
           profilePhoto: fileProfileImage.value,
