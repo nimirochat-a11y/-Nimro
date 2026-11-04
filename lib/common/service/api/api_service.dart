@@ -85,6 +85,10 @@ class ApiService {
           // rejected. Show the translated restriction message everywhere.
           decodedResponse['message'] = LKey.accountRestricted.tr;
         }
+        if (decodedResponse['message'] ==
+            'This user is not receiving messages right now.') {
+          decodedResponse['message'] = LKey.userNotReceivingMessages.tr;
+        }
 
         if (decodedResponse['status'] == false) {
           Loggers.error('API RESPONSE : ${decodedResponse['message']}');

@@ -578,6 +578,10 @@ class LKey {
   static const String noInternetTitle = "No internet connection";
   static const String retry = "Retry";
   static const String accountRestricted = "Your account has been restricted.";
+  static const String userNotReceivingMessages =
+      "This user is not receiving messages right now.";
+  static const String accountRestrictedDesc =
+      "You can only review your settings right now.";
   static const String downloadingFailed = "Download failed.";
   static const String from = "From";
   static const String somethingWentWrong = "Something went wrong.";
