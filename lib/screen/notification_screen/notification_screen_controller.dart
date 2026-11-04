@@ -1,6 +1,7 @@
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/api/notification_service.dart';
@@ -30,6 +31,15 @@ class NotificationScreenController extends BaseController {
 
   @override
   void onInit() {
+    // Deferred permission request: the user is IN the notifications screen,
+    // so this is the one moment they are actively saying "I want these".
+    // No startup popup — the OS itself throttles repeat asks after first
+    // answer, so calling here is safe and never annoys.
+    try {
+      OneSignal.Notifications.requestPermission(false);
+    } catch (e) {
+      Loggers.error('notifications permission request failed: $e');
+    }
     iniData();
     super.onInit();
   }

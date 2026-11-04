@@ -54,7 +54,9 @@ Future<void> main() async {
     // OneSignal (added alongside Firebase during migration)
     try {
       OneSignal.initialize('f2231f10-416c-4fd4-bc9e-f054574281a5');
-      OneSignal.Notifications.requestPermission(true);
+      // Notification permission is NOT requested at startup: it is asked
+      // the first time the user opens the notifications screen — the one
+      // moment they're actively telling us they want notifications.
     } catch (e) {
       Loggers.error('OneSignal init failed: $e');
     }
