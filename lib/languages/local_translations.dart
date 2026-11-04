@@ -997,6 +997,7 @@ class LocalTranslations {
       "Hey, @name is now live": "مرحبًا، @name الآن على الهواء",
       "Hurry up and join before it ends.": "أسرع وانضم قبل أن ينتهي.",
       "Livestream has ended.": "انتهى البث المباشر.",
+      "Cover Photo": "صورة الغلاف",
     },
   };
 }
