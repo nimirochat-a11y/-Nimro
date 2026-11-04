@@ -69,6 +69,9 @@ class Post {
     this.placeLon,
     this.state,
     this.country,
+    this.nearbyLayer,
+    this.distanceKm,
+    this.governorateName,
     this.isPinned,
     this.createdAt,
     this.updatedAt,
@@ -110,6 +113,11 @@ class Post {
     placeLon = json['place_lon'];
     state = json['state'];
     country = json['country'];
+    nearbyLayer = json['nearby_layer'];
+    distanceKm = json['distance_km'] != null
+        ? (json['distance_km'] as num).toDouble()
+        : null;
+    governorateName = json['governorate_name'];
     isPinned = json['is_pinned'];
     createdAt = json['created_at'];
     updatedAt = json['updated_at'];
@@ -158,6 +166,9 @@ class Post {
   num? placeLon;
   String? state;
   String? country;
+  String? nearbyLayer; // near | governorate | country (from fetchPostsNearBy)
+  double? distanceKm;
+  String? governorateName;
   int? isPinned;
   String? createdAt;
   String? updatedAt;

@@ -514,6 +514,11 @@ class LKey {
   static const String nearbyReelsPermissionTitle = "Find Reels Around You";
   static const String nearbyReelsPermissionDescription =
       "Allow location access to explore reels shared by people near you.";
+  static const String lessThanKmFromYou = "Less than 1 km from you";
+  static const String kmFromYou = "{km} km from you";
+  static const String inYourGovernorate = "In your governorate";
+  static const String fromGovernorateName = "From {name} governorate";
+  static const String inYourCountry = "In your country";
   static const String locationServicesDisabledTitle =
       "Location Services Are Still Disabled";
   static const String locationServicesDisabledDescription =

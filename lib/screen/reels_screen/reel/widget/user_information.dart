@@ -43,6 +43,7 @@ class UserInformation extends StatelessWidget {
           const SizedBox(height: 2),
           UserStats(controller: controller),
           UserLocation(controller: controller),
+          ReelDistanceBadge(controller: controller),
           UserDescription(controller: controller),
         ],
       ),
@@ -193,6 +194,63 @@ class UserStats extends StatelessWidget {
         ],
       );
     });
+  }
+}
+
+class ReelDistanceBadge extends StatelessWidget {
+  final ReelController controller;
+
+  const ReelDistanceBadge({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    Post reel = controller.reelData.value;
+    if (reel.nearbyLayer == null) {
+      return const SizedBox();
+    }
+
+    String? label;
+    if (reel.nearbyLayer == 'near' && reel.distanceKm != null) {
+      label = reel.distanceKm! < 1
+          ? LKey.lessThanKmFromYou.tr
+          : LKey.kmFromYou.tr.replaceFirst(
+              '{km}', reel.distanceKm!.toStringAsFixed(1));
+    } else if (reel.nearbyLayer == 'governorate') {
+      label = LKey.inYourGovernorate.tr;
+    } else if (reel.nearbyLayer == 'country') {
+      label = (reel.governorateName ?? '').isNotEmpty
+          ? LKey.fromGovernorateName
+              .tr
+              .replaceFirst('{name}', reel.governorateName!)
+          : LKey.inYourCountry.tr;
+    }
+
+    if (label == null || label.isEmpty) {
+      return const SizedBox();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            AssetRes.icLocationPin,
+            width: 13,
+            height: 13,
+          ),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyleCustom.outFitLight300(color: whitePure(context)),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
