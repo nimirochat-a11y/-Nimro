@@ -7,6 +7,7 @@ import 'package:nimiro/common/controller/ads_controller.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/service/supabase/chat_api_repository.dart';
+import 'package:nimiro/common/manager/activity_tracker.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
@@ -66,6 +67,9 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     onProgress = (progress) {
       postProgress.value = progress;
     };
+
+    // Analytics: session tracking + batched content events.
+    ActivityTracker.instance.start();
   }
 
   @override

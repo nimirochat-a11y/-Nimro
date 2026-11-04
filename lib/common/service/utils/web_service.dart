@@ -11,6 +11,12 @@ class WebService {
   static var search = _Search();
   static var moderation = _Moderation();
   static var common = _Common();
+  static var activity = _Activity();
+}
+
+class _Activity {
+  String trackSession = "${apiURL}misc/trackSession";
+  String trackEvents = "${apiURL}misc/trackEvents";
 }
 
 class _Common {

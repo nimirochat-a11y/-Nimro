@@ -1,0 +1,113 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/widgets.dart';
+import 'package:nimiro/common/manager/logger.dart';
+import 'package:nimiro/common/service/api/api_service.dart';
+import 'package:nimiro/common/service/utils/web_service.dart';
+
+/// Lightweight activity tracker: session heartbeats + content watch-time
+/// events. Everything is batched (flush every 30s or 25 events) so battery
+/// and data usage stay minimal. Sessions are sent as a heartbeat every 60s
+/// and closed when the app goes to the background.
+class ActivityTracker with WidgetsBindingObserver {
+  ActivityTracker._();
+
+  static final instance = ActivityTracker._();
+
+  final List<Map<String, dynamic>> _events = [];
+  Timer? _heartbeat;
+  Timer? _flushTimer;
+  DateTime? _sessionStart;
+  String _sessionKey = '';
+  bool _bound = false;
+
+  /// Called once from the dashboard controller after a successful login.
+  void start() {
+    if (!_bound) {
+      _bound = true;
+      WidgetsBinding.instance.addObserver(this);
+    }
+    _beginSession();
+  }
+
+  void _beginSession() {
+    if (_sessionStart != null) return;
+    _sessionStart = DateTime.now();
+    _sessionKey = '${_sessionStart!.millisecondsSinceEpoch}';
+    _sendSession();
+
+    _heartbeat?.cancel();
+    _heartbeat = Timer.periodic(
+        const Duration(seconds: 60), (_) => _sendSession());
+    _flushTimer?.cancel();
+    _flushTimer = Timer.periodic(
+        const Duration(seconds: 30), (_) => flushEvents());
+  }
+
+  void _endSession() {
+    if (_sessionStart == null) return;
+    _sendSession(end: true);
+    _sessionStart = null;
+    _heartbeat?.cancel();
+    flushEvents();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _beginSession();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _endSession();
+    }
+  }
+
+  /// Reels / feed players report what was watched and for how long.
+  void addContentEvent(
+      {required int postId, required String eventType, int watchSeconds = 0}) {
+    if (postId <= 0) return;
+    _events.add({
+      'post_id': postId,
+      'event_type': eventType,
+      'watch_seconds': watchSeconds,
+      'occurred_at': DateTime.now().millisecondsSinceEpoch,
+    });
+    if (_events.length >= 25) flushEvents();
+  }
+
+  Future<void> flushEvents() async {
+    if (_events.isEmpty) return;
+    final batch = List<Map<String, dynamic>>.of(_events);
+    _events.clear();
+    try {
+      await ApiService.instance.call(
+        url: WebService.activity.trackEvents,
+        param: {
+          'events': jsonEncode(batch),
+          if (_sessionKey.isNotEmpty) 'session_key': _sessionKey,
+        },
+      );
+    } catch (e) {
+      Loggers.error('ActivityTracker flush failed: $e');
+    }
+  }
+
+  Future<void> _sendSession({bool end = false}) async {
+    if (_sessionStart == null) return;
+    try {
+      await ApiService.instance.call(
+        url: WebService.activity.trackSession,
+        param: {
+          'session_key': _sessionKey,
+          'started_at': _sessionStart!.millisecondsSinceEpoch,
+          if (end) 'ended_at': DateTime.now().millisecondsSinceEpoch,
+          'platform': Platform.isIOS ? 'ios' : 'android',
+        },
+      );
+    } catch (e) {
+      Loggers.error('ActivityTracker session failed: $e');
+    }
+  }
+}

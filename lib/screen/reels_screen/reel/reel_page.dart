@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
+import 'package:nimiro/common/manager/activity_tracker.dart';
 import 'package:nimiro/common/service/api/post_service.dart';
 import 'package:nimiro/common/widget/black_gradient_shadow.dart';
 import 'package:nimiro/common/widget/double_tap_detector.dart';
@@ -51,6 +52,7 @@ class _ReelPageState extends State<ReelPage> {
   bool _initialized = false;
   bool _isDisposed = false;
   bool isPlaying = true;
+  DateTime? _watchSegmentStart;
   late ReelController reelController;
   Rx<TapDownDetails?> details = Rx(null);
   final dashboardController = Get.find<DashboardScreenController>();
@@ -120,10 +122,29 @@ class _ReelPageState extends State<ReelPage> {
   @override
   void dispose() {
     _isDisposed = true;
+    _endWatchSegment();
     _controller?.dispose();
     _controller = null;
     super.dispose();
   }
+
+  // --- watch-time tracking (analytics) -------------------------------
+  void _startWatchSegment() {
+    _watchSegmentStart ??= DateTime.now();
+  }
+
+  void _endWatchSegment() {
+    final segment = _watchSegmentStart;
+    if (segment == null) return;
+    _watchSegmentStart = null;
+    final seconds = DateTime.now().difference(segment).inSeconds;
+    final reelId = widget.reelData.id;
+    if (seconds >= 1 && (reelId ?? 0) > 0) {
+      ActivityTracker.instance.addContentEvent(
+          postId: reelId!, eventType: 'view', watchSeconds: seconds);
+    }
+  }
+  // ---------------------------------------------------------------------
 
   void _handleVisibilityChanged(VisibilityInfo info) {
     if (!_initialized || _controller == null || !_controller!.value.isInitialized) return;
@@ -136,11 +157,13 @@ class _ReelPageState extends State<ReelPage> {
     // then immediately paused by a sub-90% callback — the user saw a frozen
     // first frame and had to tap. Only a genuinely off-screen page pauses now.
     if (visible > 60) {
+      _startWatchSegment();
       if (!_controller!.value.isPlaying) {
         _controller!.play();
         isPlaying = true;
       }
     } else if (visible < 20) {
+      _endWatchSegment();
       if (_controller!.value.isPlaying) {
         _controller!.pause();
         isPlaying = false;
@@ -155,9 +178,11 @@ class _ReelPageState extends State<ReelPage> {
   void onPlayPause() {
     if (_controller == null || !_controller!.value.isInitialized) return;
     if (_controller!.value.isPlaying) {
+      _endWatchSegment();
       _controller!.pause();
       isPlaying = false;
     } else {
+      _startWatchSegment();
       _controller!.play();
       isPlaying = true;
     }
