@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
@@ -61,6 +62,8 @@ class PostScreenController extends BaseController {
 
   void onLike(Post? post) async {
     Loggers.success(post?.user?.appLanguage);
+    // Restricted accounts: refuse before the optimistic heart toggle.
+    if (RestrictionGuard.blockIfRestricted()) return;
     if (_isLikeLoading || post == null) return;
     _isLikeLoading = true;
 
@@ -118,6 +121,8 @@ class PostScreenController extends BaseController {
   }
 
   void onSaved(Post? post) async {
+    // Restricted accounts: refuse before the optimistic save toggle.
+    if (RestrictionGuard.blockIfRestricted()) return;
     if (_isSavedLoading || post == null) return;
     _isSavedLoading = true;
     HapticManager.shared.light();
@@ -160,6 +165,8 @@ class PostScreenController extends BaseController {
   bool _isRepostLoading = false;
 
   void onRepost(Post? post) async {
+    // Restricted accounts: refuse before the optimistic repost toggle.
+    if (RestrictionGuard.blockIfRestricted()) return;
     if (_isRepostLoading || post == null || post.id == null) return;
     if (post.userId == SessionManager.instance.getUserID()) return;
     _isRepostLoading = true;

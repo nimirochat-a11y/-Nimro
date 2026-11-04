@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 import 'package:nimiro/common/widget/banner_ads_custom.dart';
-import 'package:nimiro/common/manager/session_manager.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
-import 'package:nimiro/screen/account_restricted_screen/account_restricted_screen.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen_controller.dart';
 import 'package:nimiro/screen/explore_screen/explore_screen.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen.dart';
@@ -22,12 +21,11 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Restricted accounts are locked out of the whole app except the
-    // settings screen, which is reachable from the gate screen below.
-    final restrictedUser =
-        myUser ?? SessionManager.instance.getUser();
-    if ((restrictedUser?.isFreez ?? 0) == 1) {
-      return const AccountRestrictedScreen();
+    // Restricted accounts enter and browse like everyone else — only their
+    // write actions are refused (see RestrictionGuard at every interaction
+    // site + the server-side write block).
+    if (RestrictionGuard.isRestricted) {
+      Future.microtask(RestrictionGuard.blockIfRestricted);
     }
     final controller = Get.put(DashboardScreenController());
     return Scaffold(

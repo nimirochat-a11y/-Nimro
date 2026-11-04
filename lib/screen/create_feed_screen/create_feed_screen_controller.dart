@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:retrytech_plugin/retrytech_plugin.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/functions/media_picker_helper.dart';
@@ -265,6 +266,9 @@ class CreateFeedScreenController extends BaseController {
   }
 
   Future<void> _uploadPostHandler(Map<String, dynamic> postParams) async {
+    // Restricted accounts: refuse before any upload starts.
+    if (RestrictionGuard.blockIfRestricted()) return;
+
     // Close any previous screens if needed
     Get.back();
     if (createType == CreateFeedType.reel) {

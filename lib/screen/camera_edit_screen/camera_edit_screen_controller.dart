@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:retrytech_plugin/retrytech_plugin.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/functions/generate_color.dart';
@@ -92,6 +93,9 @@ class CameraEditScreenController extends BaseController {
       required PostStoryContentType type,
       required int duration,
       int? musicId}) async {
+    // Restricted accounts: refuse before the upload starts.
+    if (RestrictionGuard.blockIfRestricted()) return;
+
     try {
       // Background upload queue: the story keeps uploading even if the user
       // closes the app mid-upload.

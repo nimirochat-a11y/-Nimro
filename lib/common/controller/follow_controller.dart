@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
@@ -18,6 +19,9 @@ class FollowController extends BaseController {
   }
 
   Future<User?> followUnFollowUser() async {
+    // Restricted accounts: refuse before any optimistic follow toggle.
+    if (RestrictionGuard.blockIfRestricted()) return null;
+
     int userId = user.value?.id ?? -1;
     bool isFollowing = user.value?.isFollowing ?? false;
     if (userId == -1) {

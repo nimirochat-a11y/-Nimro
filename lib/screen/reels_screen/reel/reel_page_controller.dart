@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
@@ -62,10 +63,12 @@ class ReelController extends BaseController {
   }
 
   void onLikeTap() {
+    // Restricted accounts: refuse before the optimistic heart toggle.
+    FocusManager.instance.primaryFocus?.unfocus();
+    if (RestrictionGuard.blockIfRestricted()) return;
     if (reelData.value.isLiked == false) {
       HapticManager.shared.light();
     }
-    FocusManager.instance.primaryFocus?.unfocus();
     int reelId = reelData.value.id?.toInt() ?? -1;
 
     if (reelId == -1) {
@@ -126,6 +129,8 @@ class ReelController extends BaseController {
 
   void onSaved() {
     FocusManager.instance.primaryFocus?.unfocus();
+    // Restricted accounts: refuse before the optimistic save toggle.
+    if (RestrictionGuard.blockIfRestricted()) return;
     int reelId = reelData.value.id?.toInt() ?? -1;
     if (reelId == -1) {
       return Loggers.error('Invalid Post id : $reelId');

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
@@ -376,6 +377,10 @@ class CommentSheetController extends BaseController {
   }
 
   Future<void> onSendComment() async {
+    // Restricted accounts: refuse text AND GIF branch here (helper gates
+    // the text path again; this keeps the GIF picker from even opening).
+    if (RestrictionGuard.blockIfRestricted()) return;
+
     if (commentHelper.isTextComment.value) {
       await commentHelper.onCommentPost(
           reel: post.value!,

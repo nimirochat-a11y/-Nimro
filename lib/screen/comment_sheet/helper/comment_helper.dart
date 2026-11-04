@@ -2,6 +2,7 @@ import 'package:detectable_text_field/detectable_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
+import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
@@ -167,6 +168,9 @@ class CommentHelper {
     required CommentType commentType,
     required Function(Comment comment, bool isReplyComment) onUpdateComment,
   }) async {
+    // Restricted accounts: refuse before clearing the field.
+    if (RestrictionGuard.blockIfRestricted()) return;
+
     String description = detectableTextController.text.trim();
 
     if (description.isEmpty) {
@@ -353,6 +357,9 @@ class CommentHelper {
 
   Future<Comment?> _handleReplyComment(String description,
       {String? mentionUserIds}) async {
+    // Restricted accounts: refuse before the reply request.
+    if (RestrictionGuard.blockIfRestricted()) return null;
+
     int commentId = replyComment.value?.id?.toInt() ?? -1;
 
     if (commentId == -1) {
