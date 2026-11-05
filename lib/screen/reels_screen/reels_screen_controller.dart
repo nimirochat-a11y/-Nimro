@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/manager/activity_tracker.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/model/post_story/comment/fetch_comment_model.dart';
@@ -70,6 +71,9 @@ class ReelsScreenController extends BaseController {
   /// Handle page change
   Future<void> onPageChanged(int index) async {
     currentIndex.value = index;
+    // Deliver the previous reel's ranking signals promptly (throttled inside
+    // ActivityTracker, so a fast swipe does not spam the API).
+    ActivityTracker.instance.flushEvents();
     // Fetch more data if near end
     if (index >= reels.length - 3) {
       onFetchMoreData?.call();
@@ -98,6 +102,11 @@ class ReelsScreenController extends BaseController {
 
   @override
   void onClose() {
+    // The last visible reel emits its "view" from ReelPage.dispose, which can
+    // run just after this controller closes - force a final flush shortly
+    // after so the last signals are not left in memory.
+    Future.delayed(const Duration(milliseconds: 700),
+        () => ActivityTracker.instance.flushEvents(force: true));
     pageController.dispose();
     super.onClose();
   }

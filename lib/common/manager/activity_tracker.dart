@@ -19,6 +19,7 @@ class ActivityTracker with WidgetsBindingObserver {
   final List<Map<String, dynamic>> _events = [];
   Timer? _heartbeat;
   Timer? _flushTimer;
+  DateTime? _lastFlushAt;
   DateTime? _sessionStart;
   String _sessionKey = '';
   bool _bound = false;
@@ -77,8 +78,17 @@ class ActivityTracker with WidgetsBindingObserver {
     if (_events.length >= 25) flushEvents();
   }
 
-  Future<void> flushEvents() async {
+  Future<void> flushEvents({bool force = false}) async {
     if (_events.isEmpty) return;
+    final now = DateTime.now();
+    // Page swipes ask for a flush too; keep that from becoming one request
+    // per swipe while still delivering signals within ~10 seconds.
+    if (!force &&
+        _lastFlushAt != null &&
+        now.difference(_lastFlushAt!).inSeconds < 10) {
+      return;
+    }
+    _lastFlushAt = now;
     final batch = List<Map<String, dynamic>>.of(_events);
     _events.clear();
     try {
@@ -90,6 +100,9 @@ class ActivityTracker with WidgetsBindingObserver {
         },
       );
     } catch (e) {
+      // Keep the signals for the next attempt (bounded so a persistent
+      // failure cannot grow memory forever).
+      if (_events.length < 200) _events.insertAll(0, batch);
       Loggers.error('ActivityTracker flush failed: $e');
     }
   }

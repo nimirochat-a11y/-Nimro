@@ -47,12 +47,23 @@ class ReelPage extends StatefulWidget {
   State<ReelPage> createState() => _ReelPageState();
 }
 
-class _ReelPageState extends State<ReelPage> {
+class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
   VideoPlayerController? _controller;
-  bool _initialized = false;
   bool _isDisposed = false;
   bool isPlaying = true;
+
+  // --- For You ranking signals (phase 1) --------------------------------
+  // One impression per appearance, total watch time across pauses, one
+  // "complete" when >=92% of the reel was seen, and "skip" when the user
+  // leaves before 2 seconds. These are analytics signals only: the public
+  // view counter is still incremented once by _increaseViewsCount().
   DateTime? _watchSegmentStart;
+  int _watchedSeconds = 0;
+  bool _impressionLogged = false;
+  bool _completeLogged = false;
+  bool _visible = false;
+  double _maxPositionFraction = 0;
+
   late ReelController reelController;
   Rx<TapDownDetails?> details = Rx(null);
   final dashboardController = Get.find<DashboardScreenController>();
@@ -60,6 +71,7 @@ class _ReelPageState extends State<ReelPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     // ✅ Setup Reel Controller
     if (Get.isRegistered<ReelController>(tag: '${widget.reelData.id}')) {
@@ -94,7 +106,7 @@ class _ReelPageState extends State<ReelPage> {
 
       if (_isDisposed) return;
       _controller!.setLooping(true);
-      _initialized = true;
+      _controller!.addListener(_onVideoProgress);
 
       // FIX(v13): autoplay no longer waits for a "page visible" flag.
       // `isCurrentPageVisible` is only flipped by the reel-page observer, so a
@@ -122,34 +134,108 @@ class _ReelPageState extends State<ReelPage> {
   @override
   void dispose() {
     _isDisposed = true;
-    _endWatchSegment();
+    WidgetsBinding.instance.removeObserver(this);
+    _endWatchSegment(emit: true);
+    _controller?.removeListener(_onVideoProgress);
     _controller?.dispose();
     _controller = null;
     super.dispose();
   }
 
-  // --- watch-time tracking (analytics) -------------------------------
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Leaving the app mid-reel: keep the seconds already watched and report
+    // them now, otherwise they would be lost when the process is killed.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _endWatchSegment(emit: true);
+      // Send now: the process may be killed while in the background.
+      ActivityTracker.instance.flushEvents(force: true);
+    } else if (state == AppLifecycleState.resumed && _visible) {
+      // The visibility fraction does not change when the app is resumed, so
+      // start a fresh signal window explicitly for the reel still on screen.
+      _logImpression();
+      _startWatchSegment();
+    }
+  }
+
+  // --- For You ranking signals (phase 1) --------------------------------
   void _startWatchSegment() {
     _watchSegmentStart ??= DateTime.now();
   }
 
-  void _endWatchSegment() {
+  int get _currentWatchSeconds {
     final segment = _watchSegmentStart;
-    if (segment == null) return;
-    _watchSegmentStart = null;
-    final seconds = DateTime.now().difference(segment).inSeconds;
+    if (segment == null) return _watchedSeconds;
+    return _watchedSeconds + DateTime.now().difference(segment).inSeconds;
+  }
+
+  void _logImpression() {
+    if (_impressionLogged) return;
     final reelId = widget.reelData.id;
-    if (seconds >= 1 && (reelId ?? 0) > 0) {
+    if ((reelId ?? 0) <= 0) return;
+    _impressionLogged = true;
+    ActivityTracker.instance
+        .addContentEvent(postId: reelId!, eventType: 'impression');
+  }
+
+  void _endWatchSegment({bool emit = false}) {
+    final segment = _watchSegmentStart;
+    if (segment != null) {
+      _watchSegmentStart = null;
+      final seconds = DateTime.now().difference(segment).inSeconds;
+      if (seconds > 0) _watchedSeconds += seconds;
+    }
+    if (!emit) return;
+
+    final reelId = widget.reelData.id;
+    if ((reelId ?? 0) <= 0) return;
+    final watched = _watchedSeconds;
+
+    if (watched >= 1) {
       ActivityTracker.instance.addContentEvent(
-          postId: reelId!, eventType: 'view', watchSeconds: seconds);
+          postId: reelId!, eventType: 'view', watchSeconds: watched);
+    }
+    if (watched < 2) {
+      ActivityTracker.instance.addContentEvent(
+          postId: reelId!, eventType: 'skip', watchSeconds: watched);
+    }
+
+    // A new appearance starts a new signal window (rewatching the same reel
+    // later is a fresh impression, not a continuation).
+    _watchedSeconds = 0;
+    _impressionLogged = false;
+    _completeLogged = false;
+    _maxPositionFraction = 0;
+  }
+
+  void _onVideoProgress() {
+    final value = _controller?.value;
+    if (value == null || !value.isInitialized) return;
+    final totalMs = value.duration.inMilliseconds;
+    if (totalMs <= 0) return;
+
+    final fraction = value.position.inMilliseconds / totalMs;
+    if (fraction > _maxPositionFraction) _maxPositionFraction = fraction;
+
+    if (_completeLogged || !_impressionLogged) return;
+    if (_maxPositionFraction < 0.92) return;
+    final watched = _currentWatchSeconds;
+    if (watched < 2) return;
+
+    _completeLogged = true;
+    final reelId = widget.reelData.id;
+    if ((reelId ?? 0) > 0) {
+      ActivityTracker.instance.addContentEvent(
+          postId: reelId!, eventType: 'complete', watchSeconds: watched);
     }
   }
   // ---------------------------------------------------------------------
 
   void _handleVisibilityChanged(VisibilityInfo info) {
-    if (!_initialized || _controller == null || !_controller!.value.isInitialized) return;
-
     final double visible = info.visibleFraction * 100;
+    final bool playerReady =
+        _controller != null && _controller!.value.isInitialized;
 
     // FIX(v14): the old thresholds were `> 90` to play and `else` (i.e. ANY
     // fraction below 90) to pause. On first build the detector fires while the
@@ -157,14 +243,17 @@ class _ReelPageState extends State<ReelPage> {
     // then immediately paused by a sub-90% callback — the user saw a frozen
     // first frame and had to tap. Only a genuinely off-screen page pauses now.
     if (visible > 60) {
+      _visible = true;
+      _logImpression();
       _startWatchSegment();
-      if (!_controller!.value.isPlaying) {
+      if (playerReady && !_controller!.value.isPlaying) {
         _controller!.play();
         isPlaying = true;
       }
     } else if (visible < 20) {
-      _endWatchSegment();
-      if (_controller!.value.isPlaying) {
+      _visible = false;
+      _endWatchSegment(emit: true);
+      if (playerReady && _controller!.value.isPlaying) {
         _controller!.pause();
         isPlaying = false;
       }
@@ -172,7 +261,7 @@ class _ReelPageState extends State<ReelPage> {
       // Partially visible: keep whatever state the player is already in.
       return;
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   void onPlayPause() {
