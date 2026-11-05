@@ -62,6 +62,7 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
   bool _impressionLogged = false;
   bool _completeLogged = false;
   bool _visible = false;
+  DateTime? _lastEmitAt;
   double _maxPositionFraction = 0;
 
   late ReelController reelController;
@@ -174,6 +175,13 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
     if (_impressionLogged) return;
     final reelId = widget.reelData.id;
     if ((reelId ?? 0) <= 0) return;
+    // A page can bounce back into view for a moment while swiping; do not
+    // count that as a second appearance.
+    final lastEmit = _lastEmitAt;
+    if (lastEmit != null &&
+        DateTime.now().difference(lastEmit).inSeconds < 5) {
+      return;
+    }
     _impressionLogged = true;
     ActivityTracker.instance
         .addContentEvent(postId: reelId!, eventType: 'impression');
@@ -190,7 +198,14 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
 
     final reelId = widget.reelData.id;
     if ((reelId ?? 0) <= 0) return;
+
+    // A page that was never actually shown (built as an off-screen neighbour
+    // and then disposed) has nothing to report. Emitting here used to create
+    // phantom "skip 0" events for reels the user never saw.
+    if (!_impressionLogged && _watchedSeconds == 0) return;
+
     final watched = _watchedSeconds;
+    _lastEmitAt = DateTime.now();
 
     if (watched >= 1) {
       ActivityTracker.instance.addContentEvent(
