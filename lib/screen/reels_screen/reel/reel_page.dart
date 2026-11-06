@@ -64,6 +64,7 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
   bool _visible = false;
   DateTime? _lastEmitAt;
   double _maxPositionFraction = 0;
+  int _reelDurationSeconds = 0;
 
   late ReelController reelController;
   Rx<TapDownDetails?> details = Rx(null);
@@ -106,6 +107,8 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
       await _controller!.initialize();
 
       if (_isDisposed) return;
+      final durationSeconds = _controller!.value.duration.inSeconds;
+      if (durationSeconds > 0) _reelDurationSeconds = durationSeconds;
       _controller!.setLooping(true);
       _controller!.addListener(_onVideoProgress);
 
@@ -183,8 +186,10 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
       return;
     }
     _impressionLogged = true;
-    ActivityTracker.instance
-        .addContentEvent(postId: reelId!, eventType: 'impression');
+    ActivityTracker.instance.addContentEvent(
+        postId: reelId!,
+        eventType: 'impression',
+        durationSeconds: _reelDurationSeconds);
   }
 
   void _endWatchSegment({bool emit = false}) {
@@ -209,11 +214,17 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
 
     if (watched >= 1) {
       ActivityTracker.instance.addContentEvent(
-          postId: reelId!, eventType: 'view', watchSeconds: watched);
+          postId: reelId!,
+          eventType: 'view',
+          watchSeconds: watched,
+          durationSeconds: _reelDurationSeconds);
     }
     if (watched < 2) {
       ActivityTracker.instance.addContentEvent(
-          postId: reelId!, eventType: 'skip', watchSeconds: watched);
+          postId: reelId!,
+          eventType: 'skip',
+          watchSeconds: watched,
+          durationSeconds: _reelDurationSeconds);
     }
 
     // A new appearance starts a new signal window (rewatching the same reel
@@ -232,6 +243,10 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
 
     final fraction = value.position.inMilliseconds / totalMs;
     if (fraction > _maxPositionFraction) _maxPositionFraction = fraction;
+    if (_reelDurationSeconds <= 0) {
+      final seconds = value.duration.inSeconds;
+      if (seconds > 0) _reelDurationSeconds = seconds;
+    }
 
     if (_completeLogged || !_impressionLogged) return;
     if (_maxPositionFraction < 0.92) return;
@@ -242,7 +257,10 @@ class _ReelPageState extends State<ReelPage> with WidgetsBindingObserver {
     final reelId = widget.reelData.id;
     if ((reelId ?? 0) > 0) {
       ActivityTracker.instance.addContentEvent(
-          postId: reelId!, eventType: 'complete', watchSeconds: watched);
+          postId: reelId!,
+          eventType: 'complete',
+          watchSeconds: watched,
+          durationSeconds: _reelDurationSeconds);
     }
   }
   // ---------------------------------------------------------------------

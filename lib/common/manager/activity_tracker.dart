@@ -66,13 +66,19 @@ class ActivityTracker with WidgetsBindingObserver {
   }
 
   /// Reels / feed players report what was watched and for how long.
+  /// `durationSeconds` lets the server rank by watch *percentage*; it is
+  /// omitted when the player has not reported a duration yet.
   void addContentEvent(
-      {required int postId, required String eventType, int watchSeconds = 0}) {
+      {required int postId,
+      required String eventType,
+      int watchSeconds = 0,
+      int durationSeconds = 0}) {
     if (postId <= 0) return;
     _events.add({
       'post_id': postId,
       'event_type': eventType,
       'watch_seconds': watchSeconds,
+      if (durationSeconds > 0) 'duration_seconds': durationSeconds,
       'occurred_at': DateTime.now().millisecondsSinceEpoch,
     });
     if (_events.length >= 25) flushEvents();
