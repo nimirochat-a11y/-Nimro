@@ -5,6 +5,7 @@ import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/restriction_guard.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
+import 'package:nimiro/common/manager/activity_tracker.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
@@ -51,6 +52,11 @@ class PostScreenController extends BaseController {
     final id = postData.value.id;
     if (_isViewReported || id == null) return;
     _isViewReported = true;
+    // `increaseViewsCount` only bumps the public counter. The For You ranker
+    // needs an impression event to know the post actually appeared on screen
+    // (seen/repeat-exposure penalties, exploration profile).
+    ActivityTracker.instance
+        .addContentEvent(postId: id, eventType: 'impression');
     PostService.instance.increaseViewsCount(postId: id).then((value) {
       if (value.status == true) {
         postData.update((val) {
