@@ -14,6 +14,7 @@ import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/camera_screen/camera_screen.dart';
 import 'package:nimiro/screen/profile_screen/profile_screen_controller.dart';
 import 'package:nimiro/screen/story_view_screen/story_view_screen.dart';
+import 'package:nimiro/utilities/app_res.dart';
 
 class FeedScreenController extends BaseController {
   RxList<Post> posts = RxList();
@@ -22,6 +23,12 @@ class FeedScreenController extends BaseController {
   ScrollController postScrollController = ScrollController();
   RxBool isStoriesLoading = false.obs;
   Rx<User?> myUser;
+
+  // Personalised "For You" posts feed. The server returns a stable ranked
+  // order, so the app advances the page only when a full page comes back.
+  int _forYouPage = 0;
+  bool _forYouHasMore = true;
+  bool _forYouFallbackUsed = false;
 
   FeedScreenController(this.myUser);
 
@@ -55,15 +62,68 @@ class FeedScreenController extends BaseController {
 
   Future<void> fetchDiscoverPost({bool isEmpty = false}) async {
     if (isLoading.value) return;
+    if (!isEmpty && !_forYouHasMore) return;
     isLoading.value = true;
     try {
-      List<Post> _post =
-          await PostService.instance.fetchPostsDiscover(type: PostType.posts);
-      _addDataInPostList(_post, isEmpty);
+      if (isEmpty) {
+        _forYouPage = 0;
+        _forYouHasMore = true;
+        _forYouFallbackUsed = false;
+      }
+
+      List<Post> ranked = await PostService.instance.fetchForYou(
+          page: _forYouPage,
+          limit: AppRes.paginationLimit,
+          types: PostType.posts);
+
+      if (ranked.length < AppRes.paginationLimit) {
+        _forYouHasMore = false;
+      }
+      if (ranked.isNotEmpty) {
+        _forYouPage++;
+      }
+
+      // An empty personalised feed (new account, no ranked candidates) falls
+      // back to the legacy discover list instead of showing a blank tab.
+      if (isEmpty && ranked.isEmpty) {
+        await _appendDiscoverFallback(isEmpty: true);
+        return;
+      }
+
+      _addDataInPostList(ranked, isEmpty);
+
+      // The posts catalogue is still small. Once the ranked feed is
+      // exhausted, top it up once with the legacy discover list so the tab
+      // does not stop after one or two posts. Duplicates are removed by
+      // _addDataInPostList.
+      if (!_forYouHasMore &&
+          !_forYouFallbackUsed &&
+          posts.length < AppRes.paginationLimit) {
+        _forYouFallbackUsed = true;
+        final legacy = await PostService.instance
+            .fetchPostsDiscover(type: PostType.posts);
+        _addDataInPostList(legacy, false);
+      }
     } catch (e) {
       Loggers.error('Fetch Discover Post Error : $e');
+      if (isEmpty && !_forYouFallbackUsed) {
+        try {
+          await _appendDiscoverFallback(isEmpty: true);
+          return;
+        } catch (fallbackError) {
+          Loggers.error('Fetch Discover Fallback Error : $fallbackError');
+        }
+      }
       isLoading.value = false;
     }
+  }
+
+  Future<void> _appendDiscoverFallback({bool isEmpty = false}) async {
+    _forYouFallbackUsed = true;
+    _forYouHasMore = false;
+    final legacy =
+        await PostService.instance.fetchPostsDiscover(type: PostType.posts);
+    _addDataInPostList(legacy, isEmpty);
   }
 
   Future<void> _fetchPostsFollowing({bool isEmpty = false}) async {
@@ -102,7 +162,18 @@ class FeedScreenController extends BaseController {
     if (isEmpty) {
       posts.clear();
     }
-    posts.addAll(newList);
+    // The ranked feed is paginated and the profile can change between
+    // requests, so the same post may come back on a later page. Never render
+    // the same post twice in one feed.
+    final existingIds = posts.map((post) => post.id).whereType<int>().toSet();
+    final uniquePosts = <Post>[];
+    for (final post in newList) {
+      final id = post.id;
+      if (id == null || existingIds.add(id)) {
+        uniquePosts.add(post);
+      }
+    }
+    posts.addAll(uniquePosts);
 
     await Future.delayed(const Duration(milliseconds: 200));
     isLoading.value = false;
