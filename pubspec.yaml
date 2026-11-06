@@ -41,6 +41,9 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
+  ### 📦 Diagnostics
+  package_info_plus: ^9.0.1
+
   ### 🔥 Firebase
   firebase_core: ^4.2.1
   firebase_auth: ^6.1.2

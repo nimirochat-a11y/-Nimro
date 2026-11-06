@@ -38,6 +38,7 @@ class PostScreenController extends BaseController {
   bool isFromSinglePostScreen;
 
   bool _isViewReported = false;
+  DateTime? _visibleSince;
 
   PostScreenController(this.postData, this.isFromSinglePostScreen);
 
@@ -52,11 +53,6 @@ class PostScreenController extends BaseController {
     final id = postData.value.id;
     if (_isViewReported || id == null) return;
     _isViewReported = true;
-    // `increaseViewsCount` only bumps the public counter. The For You ranker
-    // needs an impression event to know the post actually appeared on screen
-    // (seen/repeat-exposure penalties, exploration profile).
-    ActivityTracker.instance
-        .addContentEvent(postId: id, eventType: 'impression');
     PostService.instance.increaseViewsCount(postId: id).then((value) {
       if (value.status == true) {
         postData.update((val) {
@@ -64,6 +60,54 @@ class PostScreenController extends BaseController {
         });
       }
     });
+  }
+
+  /// Called by the visibility detector every time the card enters or leaves
+  /// the screen. Every appearance is an impression for the For You ranker and
+  /// the time the post stayed visible is reported as attention time (the
+  /// posts equivalent of reel watch time).
+  void reportVisibility(bool visible) {
+    final id = postData.value.id;
+    if (id == null) return;
+
+    if (visible) {
+      if (_visibleSince == null) {
+        _visibleSince = DateTime.now();
+        ActivityTracker.instance
+            .addContentEvent(postId: id, eventType: 'impression');
+      }
+      reportView();
+      return;
+    }
+
+    _closeAttentionSegment(id);
+  }
+
+  /// Closes the current attention window and reports it: 3 seconds or more
+  /// means the post got real attention (view), less than that means it was
+  /// scrolled past quickly (skip).
+  void _closeAttentionSegment(int id) {
+    final start = _visibleSince;
+    _visibleSince = null;
+    if (start == null) return;
+
+    // Time spent with the app in the background is not attention time.
+    final backgroundedAt = ActivityTracker.instance.backgroundedAt;
+    var end = DateTime.now();
+    if (backgroundedAt != null && backgroundedAt.isAfter(start)) {
+      end = backgroundedAt;
+    }
+    final millis = end.difference(start).inMilliseconds;
+    if (millis < 1200) return; // the card was barely on screen
+    final rawSeconds = (millis / 1000).round();
+    final seconds = rawSeconds > 120 ? 120 : rawSeconds;
+    if (seconds >= 3) {
+      ActivityTracker.instance.addContentEvent(
+          postId: id, eventType: 'view', watchSeconds: seconds);
+    } else {
+      ActivityTracker.instance.addContentEvent(
+          postId: id, eventType: 'skip', watchSeconds: seconds);
+    }
   }
 
   void onLike(Post? post) async {
@@ -268,5 +312,11 @@ class PostScreenController extends BaseController {
   void onClose() {
     super.onClose();
     _debounce?.cancel();
+    // Do not lose the attention the user gave to a post that was still on
+    // screen when this card was disposed.
+    final id = postData.value.id;
+    if (id != null && _visibleSince != null) {
+      _closeAttentionSegment(id);
+    }
   }
 }

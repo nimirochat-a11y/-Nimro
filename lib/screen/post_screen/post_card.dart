@@ -62,9 +62,7 @@ class PostCard extends StatelessWidget {
           return VisibilityDetector(
             key: Key('post_${post.id}'),
             onVisibilityChanged: (info) {
-              if (info.visibleFraction >= 0.5) {
-                controller.reportView();
-              }
+              controller.reportVisibility(info.visibleFraction >= 0.5);
             },
             child: Container(
               color: scaffoldBackgroundColor(context),

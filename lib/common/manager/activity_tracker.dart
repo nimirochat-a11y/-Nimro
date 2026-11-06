@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/api/api_service.dart';
 import 'package:nimiro/common/service/utils/web_service.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 /// Lightweight activity tracker: session heartbeats + content watch-time
 /// events. Everything is batched (flush every 30s or 25 events) so battery
@@ -23,6 +24,12 @@ class ActivityTracker with WidgetsBindingObserver {
   DateTime? _sessionStart;
   String _sessionKey = '';
   bool _bound = false;
+  DateTime? _backgroundedAt;
+  String? _appVersion;
+
+  /// When the app was last sent to the background. Attention timers use it
+  /// so time spent away from the app is never counted as watch time.
+  DateTime? get backgroundedAt => _backgroundedAt;
 
   /// Called once from the dashboard controller after a successful login.
   void start() {
@@ -30,7 +37,19 @@ class ActivityTracker with WidgetsBindingObserver {
       _bound = true;
       WidgetsBinding.instance.addObserver(this);
     }
+    _loadAppVersion();
     _beginSession();
+  }
+
+  /// Reads the installed app version once so every session carries it.
+  Future<void> _loadAppVersion() async {
+    if (_appVersion != null) return;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      _appVersion = '${info.version}+${info.buildNumber}';
+    } catch (e) {
+      Loggers.error('App version read failed: $e');
+    }
   }
 
   void _beginSession() {
@@ -58,9 +77,11 @@ class ActivityTracker with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _backgroundedAt = null;
       _beginSession();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
+      _backgroundedAt = DateTime.now();
       _endSession();
     }
   }
@@ -123,6 +144,7 @@ class ActivityTracker with WidgetsBindingObserver {
           'started_at': _sessionStart!.millisecondsSinceEpoch,
           if (end) 'ended_at': DateTime.now().millisecondsSinceEpoch,
           'platform': Platform.isIOS ? 'ios' : 'android',
+          if (_appVersion != null) 'app_version': _appVersion,
         },
       );
     } catch (e) {
