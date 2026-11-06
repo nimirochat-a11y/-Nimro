@@ -1,5 +1,6 @@
 import 'package:image_picker/image_picker.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
+import 'package:nimiro/common/manager/activity_tracker.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/api/api_service.dart';
 import 'package:nimiro/common/service/utils/params.dart';
@@ -73,17 +74,21 @@ class PostService {
 
   /// Personalised "For You" feed. The server ranks posts from the user's
   /// watch/complete/skip/like/save profile and reserves ~15% for exploration.
+  /// The session key makes the order rotate per app session, so pulling to
+  /// refresh does not replay the exact same feed.
   Future<List<Post>> fetchForYou(
       {int page = 0,
       int limit = AppRes.paginationLimit,
       String? types,
       CancelToken? cancelToken}) async {
+    final sessionKey = ActivityTracker.instance.sessionKey;
     PostsModel model = await ApiService.instance.call(
         url: WebService.growth.fetchForYou,
         param: {
           Params.limit: limit,
           Params.page: page,
           Params.types: types ?? PostType.reels,
+          if (sessionKey.isNotEmpty) 'session_key': sessionKey,
         },
         fromJson: PostsModel.fromJson,
         cancelToken: cancelToken);

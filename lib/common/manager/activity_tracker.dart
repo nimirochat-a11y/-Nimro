@@ -31,6 +31,11 @@ class ActivityTracker with WidgetsBindingObserver {
   /// so time spent away from the app is never counted as watch time.
   DateTime? get backgroundedAt => _backgroundedAt;
 
+  /// Identifier of the current app session. The server uses it to rotate
+  /// the For You order per session, so a refresh shows different content
+  /// while pagination inside one session stays consistent.
+  String get sessionKey => _sessionKey;
+
   /// Called once from the dashboard controller after a successful login.
   void start() {
     if (!_bound) {
