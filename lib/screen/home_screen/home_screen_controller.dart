@@ -35,6 +35,11 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
   StreamSubscription<Map>? streamSubscription;
   CancelToken token = CancelToken();
 
+  // "For You" pagination: the server returns a stable ranked order, so the
+  // app only needs to advance the page when a full page comes back.
+  int _forYouPage = 0;
+  bool _forYouHasMore = true;
+
   Rx<User?> get myUser => Rx(SessionManager.instance.getUser());
 
   @override
@@ -163,9 +168,30 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
   }
 
   Future<void> fetchDiscoverPost(bool resetData) async {
+    if (!resetData && !_forYouHasMore) return;
+    if (resetData) {
+      _forYouPage = 0;
+      _forYouHasMore = true;
+    }
+
     isLoading.value = true;
-    List<Post> newPosts = await PostService.instance.fetchPostsDiscover(type: PostType.reels, cancelToken: token);
-    addResponseData(newPosts, resetData);
+    try {
+      List<Post> newPosts = await PostService.instance.fetchForYou(
+          page: _forYouPage,
+          limit: AppRes.paginationLimit,
+          types: PostType.reels,
+          cancelToken: token);
+      if (newPosts.length < AppRes.paginationLimit) {
+        _forYouHasMore = false;
+      }
+      if (newPosts.isNotEmpty) {
+        _forYouPage++;
+      }
+      addResponseData(newPosts, resetData);
+    } catch (e) {
+      Loggers.error('For You fetch failed: $e');
+      isLoading.value = false;
+    }
   }
 
   Future<void> _fetchFollowingPost(bool resetData) async {
@@ -191,8 +217,18 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
         controller.handleRefresh(() async {});
       }
     }
-    if (newPosts.isNotEmpty) {
-      reels.addAll(newPosts);
+    // The ranked feed is paginated, but a changing profile can still make a
+    // post appear twice. Never render the same reel twice in one feed.
+    final existingIds = reels.map((post) => post.id).whereType<int>().toSet();
+    final uniquePosts = <Post>[];
+    for (final post in newPosts) {
+      final id = post.id;
+      if (id == null || existingIds.add(id)) {
+        uniquePosts.add(post);
+      }
+    }
+    if (uniquePosts.isNotEmpty) {
+      reels.addAll(uniquePosts);
     }
 
     isLoading.value = false;

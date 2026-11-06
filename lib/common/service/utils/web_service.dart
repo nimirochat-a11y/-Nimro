@@ -12,6 +12,11 @@ class WebService {
   static var moderation = _Moderation();
   static var common = _Common();
   static var activity = _Activity();
+  static var growth = _Growth();
+}
+
+class _Growth {
+  String fetchForYou = "${apiURL}growth/fetchForYou";
 }
 
 class _Activity {

@@ -71,6 +71,25 @@ class PostService {
     return model.data ?? [];
   }
 
+  /// Personalised "For You" feed. The server ranks posts from the user's
+  /// watch/complete/skip/like/save profile and reserves ~15% for exploration.
+  Future<List<Post>> fetchForYou(
+      {int page = 0,
+      int limit = AppRes.paginationLimit,
+      String? types,
+      CancelToken? cancelToken}) async {
+    PostsModel model = await ApiService.instance.call(
+        url: WebService.growth.fetchForYou,
+        param: {
+          Params.limit: limit,
+          Params.page: page,
+          Params.types: types ?? PostType.reels,
+        },
+        fromJson: PostsModel.fromJson,
+        cancelToken: cancelToken);
+    return model.data ?? [];
+  }
+
   Future<PostByIdModel> fetchPostById(
       {required int postId, int? commentId, int? replyId}) async {
     if (postId == -1) {

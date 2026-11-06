@@ -43,6 +43,7 @@ class Params {
   static const String state = 'state';
   static const String keyword = 'keyword';
   static const String limit = 'limit';
+  static const String page = 'page';
   static const String lastItemId = 'last_item_id';
   static const String categoryId = 'category_id';
   static const String file = 'file';
