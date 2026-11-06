@@ -40,6 +40,10 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
   int _forYouPage = 0;
   bool _forYouHasMore = true;
 
+  // New token for every fresh load (first open / pull to refresh) so the
+  // server rotates the order; the pages of one load reuse it.
+  String _feedToken = '';
+
   Rx<User?> get myUser => Rx(SessionManager.instance.getUser());
 
   @override
@@ -172,6 +176,7 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
     if (resetData) {
       _forYouPage = 0;
       _forYouHasMore = true;
+      _feedToken = DateTime.now().microsecondsSinceEpoch.toString();
     }
 
     isLoading.value = true;
@@ -180,6 +185,7 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
           page: _forYouPage,
           limit: AppRes.paginationLimit,
           types: PostType.reels,
+          feedToken: _feedToken,
           cancelToken: token);
       if (newPosts.length < AppRes.paginationLimit) {
         _forYouHasMore = false;

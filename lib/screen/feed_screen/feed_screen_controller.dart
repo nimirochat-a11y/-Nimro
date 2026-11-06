@@ -30,6 +30,11 @@ class FeedScreenController extends BaseController {
   bool _forYouHasMore = true;
   bool _forYouFallbackUsed = false;
 
+  // New token for every fresh load (first open / pull to refresh). It makes
+  // the server rotate the ranked order, while the pages of one load keep
+  // the same token so pagination stays continuous.
+  String _feedToken = '';
+
   FeedScreenController(this.myUser);
 
   final GlobalKey<RefreshIndicatorState> refreshKey =
@@ -65,6 +70,9 @@ class FeedScreenController extends BaseController {
     if (!isEmpty && !_forYouHasMore) return;
     isLoading.value = true;
     try {
+      if (isEmpty || _feedToken.isEmpty) {
+        _feedToken = DateTime.now().microsecondsSinceEpoch.toString();
+      }
       if (isEmpty) {
         _forYouPage = 0;
         _forYouHasMore = true;
@@ -74,7 +82,8 @@ class FeedScreenController extends BaseController {
       List<Post> ranked = await PostService.instance.fetchForYou(
           page: _forYouPage,
           limit: AppRes.paginationLimit,
-          types: PostType.posts);
+          types: PostType.posts,
+          feedToken: _feedToken);
 
       if (ranked.length < AppRes.paginationLimit) {
         _forYouHasMore = false;

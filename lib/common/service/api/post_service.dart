@@ -74,12 +74,13 @@ class PostService {
 
   /// Personalised "For You" feed. The server ranks posts from the user's
   /// watch/complete/skip/like/save profile and reserves ~15% for exploration.
-  /// The session key makes the order rotate per app session, so pulling to
-  /// refresh does not replay the exact same feed.
+  /// The session key makes the order rotate per app session and the feed
+  /// token per refresh, so pulling to refresh never replays the same feed.
   Future<List<Post>> fetchForYou(
       {int page = 0,
       int limit = AppRes.paginationLimit,
       String? types,
+      String? feedToken,
       CancelToken? cancelToken}) async {
     final sessionKey = ActivityTracker.instance.sessionKey;
     PostsModel model = await ApiService.instance.call(
@@ -89,6 +90,7 @@ class PostService {
           Params.page: page,
           Params.types: types ?? PostType.reels,
           if (sessionKey.isNotEmpty) 'session_key': sessionKey,
+          if (feedToken != null && feedToken.isNotEmpty) 'feed_token': feedToken,
         },
         fromJson: PostsModel.fromJson,
         cancelToken: cancelToken);
