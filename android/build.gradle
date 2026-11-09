@@ -1,5 +1,8 @@
 allprojects {
     repositories {
+        // Reliable Maven Central mirror for CI (GitHub's redirect to
+        // github.com/JetBrains occasionally returns 504).
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
         google()
         mavenCentral()
     }
