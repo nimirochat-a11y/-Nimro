@@ -60,6 +60,9 @@ class ApiService {
     if (!cancelAuthToken) {
       header[Params.authToken] = SessionManager.instance.getAuthToken();
     }
+    // Let the backend return the legal pages and other localized content in
+    // the language currently selected inside the app (ar by default).
+    header[Params.lang] = SessionManager.instance.getLang();
     Loggers.info("URL: $url");
     Loggers.info("header: $header");
     Loggers.info("Parameters: ${params.isEmpty ? "Empty" : params}");
@@ -191,6 +194,7 @@ class ApiService {
     });
 
     request.fields.addAll(params);
+    header[Params.lang] = SessionManager.instance.getLang();
     request.headers.addAll(header);
 
     filesMap.forEach((keyName, files) {

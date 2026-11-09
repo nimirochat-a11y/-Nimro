@@ -1,5 +1,6 @@
 class Params {
   static const String apikey = 'apikey';
+  static const String lang = 'lang';
   static const String fullname = 'fullname';
   static const String username = 'username';
   static const String userEmail = 'user_email';
