@@ -75,6 +75,26 @@ class PostViewInfoHeader extends StatelessWidget {
                         color: textLightGrey(context), fontSize: 13),
                     overflow: TextOverflow.ellipsis,
                   ),
+                ),
+              if (post.nearbyLayer == 'near' && post.distanceKm != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.near_me_rounded,
+                          size: 12, color: textLightGrey(context)),
+                      const SizedBox(width: 4),
+                      Text(
+                        post.distanceKm! < 1
+                            ? LKey.lessThanKmFromYou.tr
+                            : LKey.kmFromYou.tr.replaceFirst(
+                                '{km}', post.distanceKm!.toStringAsFixed(1)),
+                        style: TextStyleCustom.outFitLight300(
+                            color: textLightGrey(context), fontSize: 12),
+                      ),
+                    ],
+                  ),
                 )
             ],
           ),

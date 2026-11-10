@@ -168,7 +168,6 @@ class SearchScreenController extends BaseController {
     if (position == null) {
       try {
         position = await LocationService.instance.getCurrentLocation();
-        print('ABC $position');
         isLocationError.value = false;
       } catch (e) {
         Loggers.error(e);

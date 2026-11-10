@@ -148,9 +148,21 @@ class LocationErrorWidget extends StatelessWidget {
         const SizedBox(height: 10),
         TextButtonCustom(
           onTap: () async {
-            Position position = await LocationService.instance
-                .getCurrentLocation(isPermissionDialogShow: true);
-            onCompletion.call(position);
+            try {
+              Position position = await LocationService.instance
+                  .getCurrentLocation(isPermissionDialogShow: true);
+              onCompletion.call(position);
+            } on LocationFailure catch (e) {
+              // A permanent denial already opened the settings sheet.
+              if (e.reason == LocationFailureReason.permissionDeniedForever) {
+                return;
+              }
+              Get.snackbar(LKey.locationUnavailableTitle.tr,
+                  LKey.locationUnavailableDescription.tr);
+            } catch (_) {
+              Get.snackbar(LKey.locationUnavailableTitle.tr,
+                  LKey.locationUnavailableDescription.tr);
+            }
           },
           title: LKey.turnOnLocationServicesButton.tr,
           fontSize: 14,

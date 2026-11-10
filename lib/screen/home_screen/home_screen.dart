@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:nimiro/common/service/location/location_service.dart';
+import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/home_screen/home_screen_controller.dart';
 import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 import 'package:nimiro/utilities/app_res.dart';
@@ -14,16 +16,39 @@ class HomeScreen extends StatelessWidget {
     final controller = Get.put(HomeScreenController());
     return Scaffold(
       backgroundColor: blackPure(context),
-      body: ReelsScreen(
-        isHomePage: true,
-        reels: controller.reels,
-        position: 0,
-        isLoading: controller.isLoading,
-        onFetchMoreData: () => controller.onRefreshPage(reset: false),
-        widget: HomeTopCenterWidget(controller: controller),
-        onRefresh: controller.onRefreshPage,
-      ),
+      body: Obx(() {
+        final isNearby =
+            controller.selectedReelCategory.value == TabType.nearby;
+        return ReelsScreen(
+          isHomePage: true,
+          reels: controller.reels,
+          position: 0,
+          isLoading: controller.isLoading,
+          onFetchMoreData: () => controller.onRefreshPage(reset: false),
+          widget: HomeTopCenterWidget(controller: controller),
+          onRefresh: controller.onRefreshPage,
+          emptyTitle: isNearby ? LKey.noNearbyReelsTitle.tr : null,
+          emptyDescription: isNearby ? _nearbyDescription(controller) : null,
+        );
+      }),
     );
+  }
+
+  String _nearbyDescription(HomeScreenController controller) {
+    switch (controller.nearbyFailure.value) {
+      case LocationFailureReason.permissionDenied:
+        return LKey.nearbyPermissionDeniedDescription.tr;
+      case LocationFailureReason.permissionDeniedForever:
+        return LKey.nearbyPermissionForeverDescription.tr;
+      case LocationFailureReason.serviceDisabled:
+        return LKey.nearbyServiceDisabledDescription.tr;
+      case LocationFailureReason.timeout:
+        return LKey.nearbyTimeoutDescription.tr;
+      case LocationFailureReason.unavailable:
+        return LKey.nearbyUnavailableDescription.tr;
+      case null:
+        return LKey.noNearbyReelsDescription.tr;
+    }
   }
 }
 
@@ -45,7 +70,8 @@ class HomeTopCenterWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           children: [
             ...TabType.values.map((tabType) => Obx(() {
-                  final isSelected = controller.selectedReelCategory.value == tabType;
+                  final isSelected =
+                      controller.selectedReelCategory.value == tabType;
                   return _buildTab(
                     context,
                     title: tabType.title,
@@ -60,8 +86,12 @@ class HomeTopCenterWidget extends StatelessWidget {
   }
 
   Widget _buildTab(BuildContext context,
-      {required String title, required VoidCallback onTap, bool isSelected = false}) {
-    final foreground = isSelected ? whitePure(context) : whitePure(context).withValues(alpha: .72);
+      {required String title,
+      required VoidCallback onTap,
+      bool isSelected = false}) {
+    final foreground = isSelected
+        ? whitePure(context)
+        : whitePure(context).withValues(alpha: .72);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: InkWell(
@@ -73,14 +103,16 @@ class HomeTopCenterWidget extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: isSelected ? themeAccentSolid(context) : Colors.transparent,
+                color:
+                    isSelected ? themeAccentSolid(context) : Colors.transparent,
                 width: 2,
               ),
             ),
           ),
           child: Text(
             title.toUpperCase(),
-            style: TextStyleCustom.unboundedBold700(fontSize: 12, color: foreground),
+            style: TextStyleCustom.unboundedBold700(
+                fontSize: 12, color: foreground),
           ),
         ),
       ),

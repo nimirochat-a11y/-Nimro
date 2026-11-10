@@ -519,6 +519,25 @@ class LKey {
   static const String inYourGovernorate = "In your governorate";
   static const String fromGovernorateName = "From {name} governorate";
   static const String inYourCountry = "In your country";
+  static const String noNearbyPostsTitle = "No Posts Near You";
+  static const String noNearbyPostsDescription =
+      "There are no posts within 100 km of your location. Pull down to try again.";
+  static const String noNearbyReelsTitle = "No Reels Near You";
+  static const String noNearbyReelsDescription =
+      "There are no reels within 100 km of your location. Pull down to try again.";
+  static const String nearbyPermissionDeniedDescription =
+      "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.";
+  static const String nearbyPermissionForeverDescription =
+      "Location permission is blocked. Open the app settings, allow location, then try again.";
+  static const String nearbyServiceDisabledDescription =
+      "Location services are off. Turn them on from your device settings to see posts near you.";
+  static const String nearbyTimeoutDescription =
+      "We could not determine your location in time. Move to an open area and try again.";
+  static const String nearbyUnavailableDescription =
+      "We could not access your location. Check your connection and location settings, then try again.";
+  static const String locationUnavailableTitle = "Location Unavailable";
+  static const String locationUnavailableDescription =
+      "We could not access your location. Please allow location access and try again.";
   static const String locationServicesDisabledTitle =
       "Location Services Are Still Disabled";
   static const String locationServicesDisabledDescription =

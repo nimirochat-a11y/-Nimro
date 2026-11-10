@@ -26,7 +26,8 @@ import 'package:nimiro/screen/reels_screen/reels_screen.dart';
 import 'package:nimiro/screen/reels_screen/reels_screen_controller.dart';
 import 'package:nimiro/utilities/app_res.dart';
 
-class HomeScreenController extends BaseController with GetSingleTickerProviderStateMixin {
+class HomeScreenController extends BaseController
+    with GetSingleTickerProviderStateMixin {
   Rx<TabType> selectedReelCategory = TabType.values.first.obs;
   RxList<Post> reels = <Post>[].obs;
   late AnimationController controller;
@@ -34,6 +35,10 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
   RxBool isAnimateTab = false.obs;
   StreamSubscription<Map>? streamSubscription;
   CancelToken token = CancelToken();
+
+  // Nearby is distance-only. Keep the tab selected when the location is not
+  // available and let the screen explain the reason honestly.
+  Rx<LocationFailureReason?> nearbyFailure = Rx(null);
 
   // "For You" pagination: the server returns a stable ranked order, so the
   // app only needs to advance the page when a full page comes back.
@@ -48,7 +53,8 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
 
   @override
   void onInit() {
-    controller = AnimationController(duration: const Duration(milliseconds: 250), vsync: this);
+    controller = AnimationController(
+        duration: const Duration(milliseconds: 250), vsync: this);
     animation = CurvedAnimation(parent: controller, curve: Curves.linear);
 
     // Call both methods concurrently
@@ -78,17 +84,20 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
   Future<void> _onNotificationTap() async {
     if (Platform.isIOS) {
       // Handle the iOS notification payload once
-      final payload = FirebaseNotificationManager.instance.notificationPayload.value;
+      final payload =
+          FirebaseNotificationManager.instance.notificationPayload.value;
       if (payload.isNotEmpty) {
         FirebaseNotificationManager.instance.handleNotification(payload);
       }
     } else {
       // Set up a listener to handle future payload changes
       // Android: Get the message if the app was opened via notification
-      RemoteMessage? message = await FirebaseMessaging.instance.getInitialMessage();
+      RemoteMessage? message =
+          await FirebaseMessaging.instance.getInitialMessage();
 
       if (message != null) {
-        await FirebaseNotificationManager.instance.handleNotification(jsonEncode(message.toMap()));
+        await FirebaseNotificationManager.instance
+            .handleNotification(jsonEncode(message.toMap()));
       }
     }
 
@@ -103,19 +112,24 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
     ShareManager.shared.listen((key, value) async {
       await Future.delayed(const Duration(milliseconds: 500));
       if (key == ShareKeys.post.value) {
-        PostByIdModel model = await PostService.instance.fetchPostById(postId: value);
+        PostByIdModel model =
+            await PostService.instance.fetchPostById(postId: value);
         if (model.status == true) {
           Post? post = model.data?.post;
           if (post != null) {
-            await Get.to(() => SinglePostScreen(post: post, isFromNotification: true), preventDuplicates: false);
+            await Get.to(
+                () => SinglePostScreen(post: post, isFromNotification: true),
+                preventDuplicates: false);
           }
         }
       } else if (key == ShareKeys.reel.value) {
-        PostByIdModel model = await PostService.instance.fetchPostById(postId: value);
+        PostByIdModel model =
+            await PostService.instance.fetchPostById(postId: value);
         if (model.status == true) {
           Post? post = model.data?.post;
           if (post != null) {
-            await Get.to(() => ReelsScreen(reels: [post].obs, position: 0), preventDuplicates: false);
+            await Get.to(() => ReelsScreen(reels: [post].obs, position: 0),
+                preventDuplicates: false);
           }
         }
       } else if (key == ShareKeys.user.value) {
@@ -139,11 +153,7 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
         await _fetchFollowingPost(reset);
         break;
       case TabType.nearby:
-        try {
-          await _fetchPostsNearBy(reset);
-        } catch (e) {
-          selectedReelCategory.value = TabType.discover;
-        }
+        await _fetchPostsNearBy(reset);
         break;
     }
   }
@@ -168,7 +178,8 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
 
   onAnimationBack() {
     isAnimateTab.value = false;
-    controller.animateBack(0, duration: const Duration(milliseconds: 250), curve: Curves.linear);
+    controller.animateBack(0,
+        duration: const Duration(milliseconds: 250), curve: Curves.linear);
   }
 
   Future<void> fetchDiscoverPost(bool resetData) async {
@@ -202,24 +213,48 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
 
   Future<void> _fetchFollowingPost(bool resetData) async {
     isLoading.value = true;
-    List<Post> newPosts = await PostService.instance.fetchPostsFollowing(type: PostType.reels, cancelToken: token);
+    List<Post> newPosts = await PostService.instance
+        .fetchPostsFollowing(type: PostType.reels, cancelToken: token);
 
     addResponseData(newPosts, resetData);
   }
 
   Future<void> _fetchPostsNearBy(bool resetData) async {
     isLoading.value = true;
-    Position position = await LocationService.instance.getCurrentLocation(isPermissionDialogShow: true);
-    List<Post> newPosts = await PostService.instance.fetchPostsNearBy(
-        type: PostType.reels, placeLat: position.latitude, placeLon: position.longitude, cancelToken: token);
-    addResponseData(newPosts, resetData);
+    if (resetData) {
+      // Do not keep the previous tab's reels behind the permission prompt or
+      // behind an empty nearby result.
+      reels.clear();
+      nearbyFailure.value = null;
+    }
+    try {
+      Position position = await LocationService.instance
+          .getCurrentLocation(isPermissionDialogShow: true);
+      List<Post> newPosts = await PostService.instance.fetchPostsNearBy(
+          type: PostType.reels,
+          placeLat: position.latitude,
+          placeLon: position.longitude,
+          cancelToken: token);
+      nearbyFailure.value = null;
+      addResponseData(newPosts, resetData);
+    } on LocationFailure catch (e) {
+      Loggers.error('Fetch Nearby Reels Error : $e');
+      nearbyFailure.value = e.reason;
+      isLoading.value = false;
+    } catch (e) {
+      Loggers.error('Fetch Nearby Reels Error : $e');
+      nearbyFailure.value = LocationFailureReason.unavailable;
+      isLoading.value = false;
+    }
   }
 
   void addResponseData(List<Post> newPosts, bool resetData) {
     if (resetData) {
       reels.clear();
-      if (Get.isRegistered<ReelsScreenController>(tag: ReelsScreenController.tag)) {
-        var controller = Get.find<ReelsScreenController>(tag: ReelsScreenController.tag);
+      if (Get.isRegistered<ReelsScreenController>(
+          tag: ReelsScreenController.tag)) {
+        var controller =
+            Get.find<ReelsScreenController>(tag: ReelsScreenController.tag);
         controller.handleRefresh(() async {});
       }
     }
@@ -249,8 +284,10 @@ class HomeScreenController extends BaseController with GetSingleTickerProviderSt
     }
 
     if (detail != null) {
-      UserService.instance
-          .updateUserDetails(region: detail.region, regionName: detail.regionName, timezone: detail.timezone);
+      UserService.instance.updateUserDetails(
+          region: detail.region,
+          regionName: detail.regionName,
+          timezone: detail.timezone);
     }
   }
 }

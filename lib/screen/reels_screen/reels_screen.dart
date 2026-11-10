@@ -26,6 +26,8 @@ class ReelsScreen extends StatefulWidget {
   final PostByIdData? postByIdData;
   final bool isHomePage;
   final bool isFromChat;
+  final String? emptyTitle;
+  final String? emptyDescription;
 
   const ReelsScreen({
     super.key,
@@ -38,6 +40,8 @@ class ReelsScreen extends StatefulWidget {
     this.postByIdData,
     this.isHomePage = false,
     this.isFromChat = false,
+    this.emptyTitle,
+    this.emptyDescription,
   });
 
   @override
@@ -57,7 +61,9 @@ class _ReelsScreenState extends State<ReelsScreen> {
           onFetchMoreData: widget.onFetchMoreData,
           isHomePage: widget.isHomePage,
         ),
-        tag: widget.isHomePage ? ReelsScreenController.tag : '${DateTime.now().millisecondsSinceEpoch}');
+        tag: widget.isHomePage
+            ? ReelsScreenController.tag
+            : '${DateTime.now().millisecondsSinceEpoch}');
   }
 
   @override
@@ -81,11 +87,16 @@ class _ReelsScreenState extends State<ReelsScreen> {
                       Obx(() {
                         final reels = widget.reels;
                         if (widget.isLoading?.value == true && reels.isEmpty) {
-                          return Center(child: CupertinoActivityIndicator(color: textLightGrey(context)));
+                          return Center(
+                              child: CupertinoActivityIndicator(
+                                  color: textLightGrey(context)));
                         }
                         if (widget.isLoading?.value == false && reels.isEmpty) {
                           return NoDataWidgetWithScroll(
-                              title: LKey.reelsEmptyTitle.tr, description: LKey.reelsEmptyDescription.tr);
+                              title:
+                                  widget.emptyTitle ?? LKey.reelsEmptyTitle.tr,
+                              description: widget.emptyDescription ??
+                                  LKey.reelsEmptyDescription.tr);
                         }
                         return PageView.builder(
                           controller: controller.pageController,
@@ -98,24 +109,30 @@ class _ReelsScreenState extends State<ReelsScreen> {
                               () {
                                 bool isLoading = controller.isLoading.value;
                                 return isLoading
-                                    ? Center(child: CupertinoActivityIndicator(color: textLightGrey(context)))
+                                    ? Center(
+                                        child: CupertinoActivityIndicator(
+                                            color: textLightGrey(context)))
                                     : ReelPage(
                                         reelData: reels[index],
                                         // FIX(v14): autoplay is granted to the reel the user is actually on,
                                         // and the first reel always autoplays so a feed opened from a
                                         // notification or shared link never waits for a tap.
-                                        autoPlay: index == controller.currentIndex.value ||
-                                            (index == 0 && !controller.isLoading.value),
+                                        autoPlay: index ==
+                                                controller.currentIndex.value ||
+                                            (index == 0 &&
+                                                !controller.isLoading.value),
                                         likeKey: GlobalKey(),
                                         reelsScreenController: controller,
-                                        onUpdateReelData: controller.onUpdateReelData,
+                                        onUpdateReelData:
+                                            controller.onUpdateReelData,
                                         isHomePage: widget.isHomePage);
                               },
                             );
                           },
                         );
                       }),
-                      HashTagAndMentionUserView(helper: controller.commentHelper),
+                      HashTagAndMentionUserView(
+                          helper: controller.commentHelper),
                     ],
                   ),
                 ),
@@ -139,5 +156,6 @@ class CustomPageViewScrollPhysics extends ScrollPhysics {
   }
 
   @override
-  SpringDescription get spring => const SpringDescription(mass: 1, stiffness: 1000, damping: 60);
+  SpringDescription get spring =>
+      const SpringDescription(mass: 1, stiffness: 1000, damping: 60);
 }

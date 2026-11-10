@@ -24,6 +24,11 @@ class FeedScreenController extends BaseController {
   RxBool isStoriesLoading = false.obs;
   Rx<User?> myUser;
 
+  // Nearby is an honest, distance-only tab. When the device location is not
+  // available we keep the tab selected and explain why instead of silently
+  // replacing it with the Discover feed.
+  Rx<LocationFailureReason?> nearbyFailure = Rx(null);
+
   // Personalised "For You" posts feed. The server returns a stable ranked
   // order, so the app advances the page only when a full page comes back.
   int _forYouPage = 0;
@@ -109,8 +114,8 @@ class FeedScreenController extends BaseController {
           !_forYouFallbackUsed &&
           posts.length < AppRes.paginationLimit) {
         _forYouFallbackUsed = true;
-        final legacy = await PostService.instance
-            .fetchPostsDiscover(type: PostType.posts);
+        final legacy =
+            await PostService.instance.fetchPostsDiscover(type: PostType.posts);
         _addDataInPostList(legacy, false);
       }
     } catch (e) {
@@ -150,19 +155,31 @@ class FeedScreenController extends BaseController {
 
   Future<void> _fetchPostsNearBy({bool isEmpty = false}) async {
     if (isLoading.value) return;
+    if (isEmpty) {
+      // Never leave posts from the previous tab on screen while the nearby
+      // request is running or after it fails.
+      posts.clear();
+      nearbyFailure.value = null;
+    }
     isLoading.value = true;
     try {
       Position position = await LocationService.instance
           .getCurrentLocation(isPermissionDialogShow: true);
 
-      List<Post> _post = await PostService.instance.fetchPostsNearBy(
+      List<Post> nearbyPosts = await PostService.instance.fetchPostsNearBy(
           type: PostType.posts,
           placeLat: position.latitude,
           placeLon: position.longitude);
 
-      _addDataInPostList(_post, isEmpty);
+      nearbyFailure.value = null;
+      _addDataInPostList(nearbyPosts, isEmpty);
+    } on LocationFailure catch (e) {
+      Loggers.error('Fetch NearBy Post Error : $e');
+      nearbyFailure.value = e.reason;
+      isLoading.value = false;
     } catch (e) {
       Loggers.error('Fetch NearBy Post Error : $e');
+      nearbyFailure.value = LocationFailureReason.unavailable;
       isLoading.value = false;
     }
   }
@@ -200,12 +217,7 @@ class FeedScreenController extends BaseController {
       case PostCategory.discover:
         await fetchDiscoverPost(isEmpty: true);
       case PostCategory.nearby:
-        try {
-          await _fetchPostsNearBy(isEmpty: true);
-        } catch (e) {
-          selectedPostCategory.value = PostCategory.discover;
-          await fetchDiscoverPost(isEmpty: true);
-        }
+        await _fetchPostsNearBy(isEmpty: true);
       case PostCategory.following:
         await _fetchPostsFollowing(isEmpty: true);
     }
@@ -286,7 +298,10 @@ class FeedScreenController extends BaseController {
         case PostCategory.discover:
           await fetchDiscoverPost();
         case PostCategory.nearby:
-          await _fetchPostsNearBy();
+          // The nearby endpoint is a single distance-sorted list, not a
+          // paginated feed. Re-requesting it on scroll only returns the same
+          // posts, so there is nothing to load here.
+          break;
         case PostCategory.following:
           await _fetchPostsFollowing();
       }

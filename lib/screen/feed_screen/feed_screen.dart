@@ -4,6 +4,7 @@ import 'package:nimiro/common/widget/loader_widget.dart';
 import 'package:nimiro/common/widget/my_refresh_indicator.dart';
 import 'package:nimiro/common/widget/no_data_widget.dart';
 import 'package:nimiro/common/widget/post_list.dart';
+import 'package:nimiro/common/service/location/location_service.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/feed_screen/feed_screen_controller.dart';
@@ -31,12 +32,18 @@ class FeedScreen extends StatelessWidget {
             children: [
               Obx(() {
                 if (!controller.isLoading.value && controller.posts.isEmpty) {
+                  final isNearby = controller.selectedPostCategory.value ==
+                      PostCategory.nearby;
                   return Stack(
                     children: [
                       NoDataView(
                           safeAreaTop: false,
-                          title: LKey.noUserPostsTitle.tr,
-                          description: LKey.noUserPostsDescription.tr),
+                          title: isNearby
+                              ? LKey.noNearbyPostsTitle.tr
+                              : LKey.noUserPostsTitle.tr,
+                          description: isNearby
+                              ? _nearbyDescription(controller)
+                              : LKey.noUserPostsDescription.tr),
                       SingleChildScrollView(
                         child: SizedBox(
                             width: double.infinity, height: Get.height),
@@ -70,5 +77,22 @@ class FeedScreen extends StatelessWidget {
         ))
       ],
     );
+  }
+
+  String _nearbyDescription(FeedScreenController controller) {
+    switch (controller.nearbyFailure.value) {
+      case LocationFailureReason.permissionDenied:
+        return LKey.nearbyPermissionDeniedDescription.tr;
+      case LocationFailureReason.permissionDeniedForever:
+        return LKey.nearbyPermissionForeverDescription.tr;
+      case LocationFailureReason.serviceDisabled:
+        return LKey.nearbyServiceDisabledDescription.tr;
+      case LocationFailureReason.timeout:
+        return LKey.nearbyTimeoutDescription.tr;
+      case LocationFailureReason.unavailable:
+        return LKey.nearbyUnavailableDescription.tr;
+      case null:
+        return LKey.noNearbyPostsDescription.tr;
+    }
   }
 }
