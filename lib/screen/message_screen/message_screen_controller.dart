@@ -47,9 +47,7 @@ class MessageScreenController extends BaseController {
       final rows = await _repo
           .listConversationsForUser(myUser!.id!)
           .timeout(const Duration(seconds: 15));
-      for (var row in rows) {
-        _applyRow(row, isDelete: false);
-      }
+      _replaceRows(rows);
     } catch (error) {
       Loggers.error('Failed to load conversations: $error');
     } finally {
@@ -61,9 +59,7 @@ class MessageScreenController extends BaseController {
       onChange: (event, data) {
         final rows = data['rows'];
         if (rows is List) {
-          for (final row in rows.whereType<Map<String, dynamic>>()) {
-            _applyRow(row, isDelete: row['is_deleted'] == true);
-          }
+          _replaceRows(rows.whereType<Map<String, dynamic>>().toList());
           return;
         }
         final isDeletedFlag = event == 'delete' || data['is_deleted'] == true;
@@ -86,6 +82,36 @@ class MessageScreenController extends BaseController {
     } else {
       requestsUsers.add(chatUser);
     }
+    _sortLists();
+  }
+
+  /// Mirror the server list exactly.
+  ///
+  /// Applying only the rows that still exist was not enough: when the other
+  /// account was deleted, the next poll simply contained fewer rows and the
+  /// stale conversation stayed in the local list. Replacing both lists makes
+  /// a deleted account disappear on the very next refresh.
+  void _replaceRows(List<Map<String, dynamic>> rows) {
+    final chats = <ChatThread>[];
+    final requests = <ChatThread>[];
+    final seen = <int>{};
+
+    for (final row in rows) {
+      final chatUser = ChatThread.fromJson(row);
+      final userId = chatUser.userId;
+      if (userId == null || userId == -1) continue;
+      if (row['is_deleted'] == true || chatUser.isDeleted == true) continue;
+      if (!seen.add(userId)) continue;
+      firebaseFirestoreController.fetchUserIfNeeded(userId);
+      if (chatUser.chatType == ChatType.approved) {
+        chats.add(chatUser);
+      } else {
+        requests.add(chatUser);
+      }
+    }
+
+    chatsUsers.assignAll(chats);
+    requestsUsers.assignAll(requests);
     _sortLists();
   }
 

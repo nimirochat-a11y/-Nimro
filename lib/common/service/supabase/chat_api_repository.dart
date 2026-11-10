@@ -292,7 +292,9 @@ class ChatApiRepository {
     sub.attach(Timer.periodic(interval, (_) async {
       final rows = await listConversationsForUser(userId);
       final snapshot = jsonEncode(rows);
-      if (lastSnapshot != null && snapshot != lastSnapshot) {
+      // Fire on the first poll too: if the conversation was removed between
+      // the initial load and this poll, an empty list must still be applied.
+      if (snapshot != lastSnapshot) {
         onChange('update', {'rows': rows});
       }
       lastSnapshot = snapshot;
