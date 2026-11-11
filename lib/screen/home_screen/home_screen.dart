@@ -92,27 +92,38 @@ class HomeTopCenterWidget extends StatelessWidget {
     final foreground = isSelected
         ? whitePure(context)
         : whitePure(context).withValues(alpha: .72);
+    // Same treatment as the feed tabs (v1.1.32): a short rounded pill that
+    // sits right under the label. The reels screen has a black background, so
+    // the hard accent blue (#237BFF) is replaced by a softer light blue.
+    const indicatorColor = Color(0xFF5FA0FF);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color:
-                    isSelected ? themeAccentSolid(context) : Colors.transparent,
-                width: 2,
+        child: SizedBox(
+          height: 42,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: TextStyleCustom.unboundedBold700(
+                    fontSize: 12, color: foreground),
               ),
-            ),
-          ),
-          child: Text(
-            title.toUpperCase(),
-            style: TextStyleCustom.unboundedBold700(
-                fontSize: 12, color: foreground),
+              const SizedBox(height: 3),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                height: 3,
+                width: isSelected ? 20 : 0,
+                decoration: BoxDecoration(
+                  color: isSelected ? indicatorColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
           ),
         ),
       ),
