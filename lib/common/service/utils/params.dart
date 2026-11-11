@@ -39,6 +39,8 @@ class Params {
   static const String placeTitle = 'place_title';
   static const String placeLat = 'place_lat';
   static const String placeLon = 'place_lon';
+  static const String placeLatExact = 'place_lat_exact';
+  static const String placeLonExact = 'place_lon_exact';
   static const String lat = 'lat';
   static const String lon = 'lon';
   static const String state = 'state';

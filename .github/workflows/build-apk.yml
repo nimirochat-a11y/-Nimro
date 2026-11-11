@@ -87,15 +87,29 @@ jobs:
             done
           done
 
-      - name: Build release APK
-        run: flutter build apk --release --split-per-abi --build-name=1.1.28 --build-number=2038
+      - name: Build arm64-v8a release APK
+        run: |
+          set -euo pipefail
+          flutter build apk --release --target-platform android-arm64 \
+            --build-name=1.1.30 --build-number=4040
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/nimiro-1.1.30-arm64-v8a.apk
+
+      - name: Build armeabi-v7a release APK
+        run: |
+          set -euo pipefail
+          rm -f build/app/outputs/flutter-apk/app-release.apk
+          flutter build apk --release --target-platform android-arm \
+            --build-name=1.1.30 --build-number=3040
+          cp build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/nimiro-1.1.30-armeabi-v7a.apk
 
       - name: Verify signature and checksums
         run: |
           set -uo pipefail
           APKSIGNER=$(ls "$ANDROID_SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)
           echo "apksigner: ${APKSIGNER:-not found}"
-          for apk in build/app/outputs/flutter-apk/*-release.apk; do
+          for apk in build/app/outputs/flutter-apk/nimiro-*.apk; do
             echo "=== $apk ($(du -h "$apk" | cut -f1)) ==="
             sha256sum "$apk"
             if [ -n "${APKSIGNER:-}" ]; then
@@ -107,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nimiro-release-apk-${{ github.run_number }}
-          path: build/app/outputs/flutter-apk/*-release.apk
+          path: build/app/outputs/flutter-apk/nimiro-*.apk
           if-no-files-found: error
           retention-days: 30
 

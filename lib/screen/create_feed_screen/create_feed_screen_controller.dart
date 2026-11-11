@@ -138,8 +138,15 @@ class CreateFeedScreenController extends BaseController {
     _addTextDetections(params, rawDescription);
     _addLocationData(params);
 
-    if (selectedLocation.value == null && createType == CreateFeedType.reel) {
-      await _addCurrentLocationData(params);
+    if (selectedLocation.value == null) {
+      if (createType == CreateFeedType.reel) {
+        await _addCurrentLocationData(params);
+      } else {
+        // Feed posts without a picked place still get a fresh GPS fix for
+        // the distance maths; only the exact pair is sent, so the public
+        // location stays private/rounded on the server.
+        await _addExactCurrentLocationData(params);
+      }
     }
 
     return params;
@@ -202,31 +209,92 @@ class CreateFeedScreenController extends BaseController {
     final location = selectedLocation.value;
     if (location == null) return;
 
+    final lat = location.location?.latitude;
+    final lon = location.location?.longitude;
+
     params.addAll({
       Params.country: location.shortCountry,
       Params.state: location.shortState,
       Params.placeTitle: location.placeTitle,
-      Params.placeLat: '${location.location?.latitude ?? ''}',
-      Params.placeLon: '${location.location?.longitude ?? ''}',
+      if (lat != null) Params.placeLat: '$lat',
+      if (lon != null) Params.placeLon: '$lon',
+      // A place picked from the search sheet is a real, precise coordinate.
+      if (lat != null) Params.placeLatExact: '$lat',
+      if (lon != null) Params.placeLonExact: '$lon',
     });
   }
 
   Future<void> _addCurrentLocationData(Map<String, dynamic> params) async {
     Position? position;
     PlaceDetail? detail;
+
     try {
-      position = await Geolocator.getCurrentPosition();
+      position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+          timeLimit: Duration(seconds: 20),
+        ),
+      );
+    } catch (e) {
+      Loggers.error('_addCurrentLocationData gps $e');
+    }
+
+    try {
       detail = await CommonService.instance.getIPPlaceDetail();
     } catch (e) {
-      Loggers.error('_addCurrentLocationData $e');
+      Loggers.error('_addCurrentLocationData ip $e');
     }
+
     if (detail != null && detail.status == 'success') {
+      if (detail.country != null) params[Params.country] = detail.country;
+      if (detail.region != null) params[Params.state] = detail.region;
+    }
+
+    if (position != null) {
+      // Full GPS precision, sent as the exact pair so Nearby distances are
+      // real metres. The public pair stays the same here: the author chose
+      // to attach the current location to this post.
       params.addAll({
-        Params.country: detail.country,
-        Params.state: detail.region,
-        Params.placeLat: '${position?.latitude ?? detail.lat}',
-        Params.placeLon: '${position?.longitude ?? detail.lon}',
+        Params.placeLat: '${position.latitude}',
+        Params.placeLon: '${position.longitude}',
+        Params.placeLatExact: '${position.latitude}',
+        Params.placeLonExact: '${position.longitude}',
       });
+    } else if (detail != null && detail.status == 'success') {
+      // IP geolocation is city-level. Keep it as the public place only, so
+      // the API marks the distance as approximate instead of pretending.
+      params.addAll({
+        Params.placeLat: '${detail.lat}',
+        Params.placeLon: '${detail.lon}',
+      });
+    }
+  }
+
+  Future<void> _addExactCurrentLocationData(Map<String, dynamic> params) async {
+    try {
+      // Never trigger a permission prompt just because someone is posting.
+      // If location was already granted, attach a fresh exact fix; otherwise
+      // the backend falls back to the user's last known location.
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+      params.addAll({
+        Params.placeLatExact: '${position.latitude}',
+        Params.placeLonExact: '${position.longitude}',
+      });
+    } catch (e) {
+      // No GPS fix: the backend falls back to the user's last known
+      // location, which is still better than dropping the post.
+      Loggers.error('_addExactCurrentLocationData $e');
     }
   }
 

@@ -10,6 +10,7 @@ import 'package:nimiro/common/controller/follow_controller.dart';
 import 'package:nimiro/common/controller/profile_controller.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
+import 'package:nimiro/common/functions/distance_label.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/navigation/navigate_with_controller.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
@@ -210,11 +211,13 @@ class ReelDistanceBadge extends StatelessWidget {
     }
 
     String? label;
-    if (reel.nearbyLayer == 'near' && reel.distanceKm != null) {
-      label = reel.distanceKm! < 1
-          ? LKey.lessThanKmFromYou.tr
-          : LKey.kmFromYou.tr.replaceFirst(
-              '{km}', reel.distanceKm!.toStringAsFixed(1));
+    if (reel.nearbyLayer == 'near' &&
+        (reel.distanceM != null || reel.distanceKm != null)) {
+      label = nearbyDistanceLabel(
+        distanceKm: reel.distanceKm,
+        distanceM: reel.distanceM,
+        approximate: reel.distanceApproximate ?? false,
+      );
     } else if (reel.nearbyLayer == 'governorate') {
       label = LKey.inYourGovernorate.tr;
     } else if (reel.nearbyLayer == 'country') {

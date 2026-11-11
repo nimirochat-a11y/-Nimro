@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:nimiro/common/controller/profile_controller.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
+import 'package:nimiro/common/functions/distance_label.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/navigation/navigate_with_controller.dart';
 import 'package:nimiro/common/widget/custom_popup_menu_button.dart';
@@ -76,7 +77,8 @@ class PostViewInfoHeader extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              if (post.nearbyLayer == 'near' && post.distanceKm != null)
+              if (post.nearbyLayer == 'near' &&
+                  (post.distanceM != null || post.distanceKm != null))
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Row(
@@ -86,10 +88,11 @@ class PostViewInfoHeader extends StatelessWidget {
                           size: 12, color: textLightGrey(context)),
                       const SizedBox(width: 4),
                       Text(
-                        post.distanceKm! < 1
-                            ? LKey.lessThanKmFromYou.tr
-                            : LKey.kmFromYou.tr.replaceFirst(
-                                '{km}', post.distanceKm!.toStringAsFixed(1)),
+                        nearbyDistanceLabel(
+                          distanceKm: post.distanceKm,
+                          distanceM: post.distanceM,
+                          approximate: post.distanceApproximate ?? false,
+                        ),
                         style: TextStyleCustom.outFitLight300(
                             color: textLightGrey(context), fontSize: 12),
                       ),
