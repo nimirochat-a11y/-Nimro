@@ -3,8 +3,20 @@ class AppUser {
     if (value == null) return null;
     if (value is int) return value;
     if (value is num) return value.toInt();
-    if (value is String) return int.tryParse(value);
+    if (value is String) return int.tryParse(value.trim());
     return null;
+  }
+
+  /// Treat the literal strings some older clients wrote into the database
+  /// ("null", "undefined") as absent values. Without this, an avatar path of
+  /// "null" is handed to the image loader and the photo disappears.
+  static String? cleanText(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+    final lower = text.toLowerCase();
+    if (lower == 'null' || lower == 'undefined') return null;
+    return text;
   }
 
   int? userId;
@@ -31,13 +43,16 @@ class AppUser {
     // id and a null photo: host cards were blank, and `getAllUsers()` matched
     // nothing so the live screen fell through to its empty view. Both spellings
     // are now accepted.
-    userId = _toInt(json['user_id'] ?? json['userId'] ?? json['id']);
-    identity = json['identity'];
-    username = json['username'];
-    fullname = json['fullname'];
-    profile = json['profile'] ?? json['image'] ?? json['profile_photo'];
+    userId =
+        _toInt(json['user_id']) ?? _toInt(json['userId']) ?? _toInt(json['id']);
+    identity = cleanText(json['identity']);
+    username = cleanText(json['username']);
+    fullname = cleanText(json['fullname']);
+    profile = cleanText(json['profile']) ??
+        cleanText(json['image']) ??
+        cleanText(json['profile_photo']);
     isVerify = _toInt(json['is_verify'] ?? json['isVerified']);
-    country = json['country'] ?? json['country_code'];
+    country = cleanText(json['country'] ?? json['country_code']);
   }
 
   Map<String, dynamic> toJson() {

@@ -25,7 +25,8 @@ import 'package:nimiro/screen/profile_screen/widget/post_options_sheet.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:zego_express_engine/zego_express_engine.dart';
 
-class DashboardScreenController extends BaseController with GetSingleTickerProviderStateMixin {
+class DashboardScreenController extends BaseController
+    with GetSingleTickerProviderStateMixin {
   List<String> bottomIconList = [
     AssetRes.icPost,
     AssetRes.icReel,
@@ -41,7 +42,6 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
 
   late AnimationController animationController;
 
-
   RxInt unReadCount = 0.obs;
   RxInt requestUnReadCount = 0.obs;
 
@@ -53,12 +53,16 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   void onInit() {
     super.onInit();
     if (selectedPageIndex.value == 0) {
-      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(statusBarBrightness: Brightness.dark));
+      SystemChrome.setSystemUIOverlayStyle(
+          const SystemUiOverlayStyle(statusBarBrightness: Brightness.dark));
     }
     Get.put(GifSheetController());
-    Get.put(FirebaseFirestoreController());
+    if (!Get.isRegistered<FirebaseFirestoreController>()) {
+      Get.put(FirebaseFirestoreController.instance);
+    }
     Get.put(AdsController());
-    animationController = AnimationController(duration: const Duration(milliseconds: 200), vsync: this);
+    animationController = AnimationController(
+        duration: const Duration(milliseconds: 200), vsync: this);
     scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: animationController, curve: Curves.easeInOut),
     )..addListener(() {
@@ -109,8 +113,9 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
       Get.bottomSheet(const PostOptionsSheet(), isScrollControlled: true);
       return;
     }
-    SystemChrome.setSystemUIOverlayStyle(
-        SystemUiOverlayStyle(statusBarBrightness: index == 1 || index == 3 ? Brightness.dark : Brightness.light));
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+        statusBarBrightness:
+            index == 1 || index == 3 ? Brightness.dark : Brightness.light));
     if (index == 0) {
       onFeedPostScrollDown(index);
     }
@@ -133,8 +138,8 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     if (Get.isRegistered<FeedScreenController>()) {
       final controller = Get.find<FeedScreenController>();
       if (controller.posts.isNotEmpty && !controller.isLoading.value) {
-        controller.postScrollController
-            .animateTo(0.0, duration: const Duration(milliseconds: 150), curve: Curves.linear);
+        controller.postScrollController.animateTo(0.0,
+            duration: const Duration(milliseconds: 150), curve: Curves.linear);
         controller.refreshKey.currentState?.show();
       }
     }
@@ -143,7 +148,8 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   void _fetchUnReadCount() async {
     if (user?.id == null) return;
     await _recalculateUnread();
-    _conversationsChannel = ChatApiRepository.instance.subscribeToUserConversations(
+    _conversationsChannel =
+        ChatApiRepository.instance.subscribeToUserConversations(
       userId: user!.id!,
       onChange: (event, data) => _recalculateUnread(),
     );
@@ -152,10 +158,13 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
   Future<void> _recalculateUnread() async {
     if (user?.id == null) return;
     try {
-      final rows = await ChatApiRepository.instance.listConversationsForUser(user!.id!);
+      final rows =
+          await ChatApiRepository.instance.listConversationsForUser(user!.id!);
       final docs = rows.map((r) => ChatThread.fromJson(r)).toList();
       final totalUnread = docs.where((e) => (e.msgCount ?? 0) > 0).length;
-      final requestUnread = docs.where((e) => (e.msgCount ?? 0) > 0 && e.chatType == ChatType.request).length;
+      final requestUnread = docs
+          .where((e) => (e.msgCount ?? 0) > 0 && e.chatType == ChatType.request)
+          .length;
       unReadCount.value = totalUnread;
       requestUnReadCount.value = requestUnread;
     } catch (e) {
@@ -170,8 +179,9 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
       return Loggers.info('The Zego App ID is not configured.');
     }
     try {
-      await ZegoExpressEngine.createEngineWithProfile(
-          ZegoEngineProfile(appId, ZegoScenario.Default, appSign: appSetting?.zegoAppSign));
+      await ZegoExpressEngine.createEngineWithProfile(ZegoEngineProfile(
+          appId, ZegoScenario.Default,
+          appSign: appSetting?.zegoAppSign));
     } on MissingPluginException catch (e) {
       Loggers.error('Create Zego Engine : ${e.message}');
     }
@@ -193,7 +203,9 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     for (int id in (user?.followingIds ?? [])) {
       // Delay slightly to avoid overloading FCM
       await Future.delayed(const Duration(milliseconds: 100));
-      Future.wait([FirebaseNotificationManager.instance.subscribeToTopic(topic: '$id')]);
+      Future.wait([
+        FirebaseNotificationManager.instance.subscribeToTopic(topic: '$id')
+      ]);
     }
   }
 
@@ -201,12 +213,13 @@ class DashboardScreenController extends BaseController with GetSingleTickerProvi
     if (Get.isRegistered<FirebaseFirestoreController>()) {
       Get.find<FirebaseFirestoreController>().addUser(user);
     } else {
-      Get.put(FirebaseFirestoreController()).addUser(user);
+      Get.put(FirebaseFirestoreController.instance).addUser(user);
     }
   }
 
   void updateDummyUsers() {
-    List<DummyLive> dummyLives = SessionManager.instance.getSettings()?.dummyLives ?? [];
+    List<DummyLive> dummyLives =
+        SessionManager.instance.getSettings()?.dummyLives ?? [];
     if (dummyLives.isNotEmpty) {
       final controller = Get.find<FirebaseFirestoreController>();
       for (var element in dummyLives) {
@@ -221,7 +234,10 @@ class PostUploadingProgress {
   final UploadType uploadType;
   final double progress;
 
-  PostUploadingProgress({this.type = CameraScreenType.post, this.progress = 0, this.uploadType = UploadType.none});
+  PostUploadingProgress(
+      {this.type = CameraScreenType.post,
+      this.progress = 0,
+      this.uploadType = UploadType.none});
 }
 
 enum UploadType {
@@ -235,11 +251,15 @@ enum UploadType {
       case UploadType.none:
         return '';
       case UploadType.finish:
-        return type == CameraScreenType.post ? LKey.postUploadSuccessfully.tr : LKey.storyUploadSuccess.tr;
+        return type == CameraScreenType.post
+            ? LKey.postUploadSuccessfully.tr
+            : LKey.storyUploadSuccess.tr;
       case UploadType.error:
         return LKey.uploadingFailed.tr;
       case UploadType.uploading:
-        return type == CameraScreenType.post ? LKey.postIsBeginUploading.tr : LKey.storyIsBeginUploading.tr;
+        return type == CameraScreenType.post
+            ? LKey.postIsBeginUploading.tr
+            : LKey.storyIsBeginUploading.tr;
     }
   }
 }

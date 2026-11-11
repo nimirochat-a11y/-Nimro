@@ -115,16 +115,19 @@ class ChatApiRepository {
     return data is Map<String, dynamic> ? data : null;
   }
 
-  Future<void> upsertConversation({
+  /// Returns true only when the server confirmed the write. Callers that hide
+  /// a conversation locally (the delete flow) must not do so after a failure.
+  Future<bool> upsertConversation({
     required int ownerUserId,
     required int otherUserId,
     required Map<String, dynamic> data,
   }) async {
-    await _post('/upsertConversation', {
+    final decoded = await _post('/upsertConversation', {
       'doc_id': conversationDocId(ownerUserId, otherUserId),
       'other_user_id': '$otherUserId',
       ...data,
     });
+    return decoded != null;
   }
 
   Future<List<Map<String, dynamic>>> listConversationsForUser(
@@ -272,7 +275,9 @@ class ChatApiRepository {
       final seenId = lastSeenId;
       for (final row in rows.reversed) {
         final id = int.tryParse('${row['id']}');
-        if (id != null && (seenId == null || id > seenId)) onEvent('create', row);
+        if (id != null && (seenId == null || id > seenId)) {
+          onEvent('create', row);
+        }
       }
 
       if (newestId != null) lastSeenId = newestId;

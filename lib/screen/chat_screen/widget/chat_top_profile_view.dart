@@ -29,8 +29,10 @@ class ChatTopProfileView extends StatelessWidget {
         bottom: false,
         child: Obx(() {
           ChatThread chatThread = controller.conversationUser.value;
-          chatThread.bindChatUser();
-          AppUser? chatUser = chatThread.chatUser;
+          // `bindChatUser` is idempotent, but it belongs in the controller
+          // lifecycle, not in build: calling it here registered a new listener
+          // on every rebuild.
+          AppUser? chatUser = chatThread.chatUserRx.value;
           bool iBlocked = chatThread.iBlocked ?? false;
           return Row(
             spacing: 10,

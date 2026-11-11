@@ -23,6 +23,10 @@ class MessageScreenController extends BaseController {
   final ChatApiRepository _repo = ChatApiRepository.instance;
   ChatSubscription? _subscription;
 
+  /// Chats the user deleted on this device. Until a genuinely newer message
+  /// arrives, an in-flight poll must not put the chat back on screen.
+  final Map<int, int> _deletedAt = <int, int>{};
+
   @override
   void onInit() {
     super.onInit();
@@ -69,13 +73,18 @@ class MessageScreenController extends BaseController {
   }
 
   void _applyRow(Map<String, dynamic> row, {required bool isDelete}) {
-    final chatUser = ChatThread.fromJson(row);
+    final userIdHint = int.tryParse('${row['user_id']}');
+    final previous = userIdHint == null ? null : _threadFor(userIdHint);
+    previous?.disposeChatUserBinding();
+
+    final chatUser = ChatThread.fromJson(row, chatUser: previous?.chatUser);
     final userId = chatUser.userId;
     chatsUsers.removeWhere((user) => user.userId == userId);
     requestsUsers.removeWhere((user) => user.userId == userId);
-    if (isDelete) return;
-    if (userId != null && userId != -1) {
+    if (isDelete || chatUser.isDeleted == true) return;
+    if (userId != null && userId > 0) {
       firebaseFirestoreController.fetchUserIfNeeded(userId);
+      if (chatUser.chatUser == null) chatUser.bindChatUser();
     }
     if (chatUser.chatType == ChatType.approved) {
       chatsUsers.add(chatUser);
@@ -85,6 +94,26 @@ class MessageScreenController extends BaseController {
     _sortLists();
   }
 
+  ChatThread? _threadFor(int userId) =>
+      chatsUsers.firstWhereOrNull((thread) => thread.userId == userId) ??
+      requestsUsers.firstWhereOrNull((thread) => thread.userId == userId);
+
+  bool _isLocallyDeleted(ChatThread thread) {
+    final userId = thread.userId;
+    if (userId == null) return false;
+    final deletedAt = _deletedAt[userId];
+    if (deletedAt == null) return false;
+
+    // A message newer than the deletion re-opens the chat on the server, so
+    // let it through instead of hiding it forever.
+    final lastActivity = int.tryParse(thread.id ?? '') ?? 0;
+    if (lastActivity > deletedAt) {
+      _deletedAt.remove(userId);
+      return false;
+    }
+    return true;
+  }
+
   /// Mirror the server list exactly.
   ///
   /// Applying only the rows that still exist was not enough: when the other
@@ -92,17 +121,30 @@ class MessageScreenController extends BaseController {
   /// stale conversation stayed in the local list. Replacing both lists makes
   /// a deleted account disappear on the very next refresh.
   void _replaceRows(List<Map<String, dynamic>> rows) {
+    final existing = <int, ChatThread>{};
+    for (final thread in [...chatsUsers, ...requestsUsers]) {
+      final userId = thread.userId;
+      if (userId != null) existing[userId] = thread;
+    }
+    for (final thread in existing.values) {
+      thread.disposeChatUserBinding();
+    }
+
     final chats = <ChatThread>[];
     final requests = <ChatThread>[];
     final seen = <int>{};
 
     for (final row in rows) {
-      final chatUser = ChatThread.fromJson(row);
+      final userIdHint = int.tryParse('${row['user_id']}');
+      final previous = userIdHint == null ? null : existing[userIdHint];
+      final chatUser = ChatThread.fromJson(row, chatUser: previous?.chatUser);
       final userId = chatUser.userId;
-      if (userId == null || userId == -1) continue;
-      if (row['is_deleted'] == true || chatUser.isDeleted == true) continue;
+      if (userId == null || userId <= 0) continue;
+      if (chatUser.isDeleted == true) continue;
+      if (_isLocallyDeleted(chatUser)) continue;
       if (!seen.add(userId)) continue;
       firebaseFirestoreController.fetchUserIfNeeded(userId);
+      if (chatUser.chatUser == null) chatUser.bindChatUser();
       if (chatUser.chatType == ChatType.approved) {
         chats.add(chatUser);
       } else {
@@ -126,23 +168,39 @@ class MessageScreenController extends BaseController {
           .trParams({'user_name': chatConversation.chatUser?.username ?? ''}),
       description: LKey.deleteChatUserDescription.tr,
       onTap: () async {
-        int time = DateTime.now().millisecondsSinceEpoch;
+        final otherUserId = chatConversation.userId;
+        if (myUser?.id == null || otherUserId == null) return;
+
+        final time = DateTime.now().millisecondsSinceEpoch;
         showLoader();
-        if (myUser?.id != null && chatConversation.userId != null) {
-          try {
-            await _repo.upsertConversation(
-              ownerUserId: myUser!.id!,
-              otherUserId: chatConversation.userId!,
-              data: {
-                'deleted_id': time,
-                'is_deleted': true,
-              },
-            );
-          } catch (error) {
-            Loggers.error('USER NOT DELETE : $error');
-          }
+        bool deleted = false;
+        try {
+          deleted = await _repo.upsertConversation(
+            ownerUserId: myUser!.id!,
+            otherUserId: otherUserId,
+            data: {
+              'deleted_id': time,
+              'is_deleted': true,
+            },
+          );
+        } catch (error) {
+          Loggers.error('USER NOT DELETE : $error');
+        } finally {
+          stopLoader();
         }
-        stopLoader();
+
+        if (!deleted) {
+          showSnackBar(LKey.somethingWentWrong.tr);
+          return;
+        }
+
+        // The backend is authoritative, but removing the row immediately makes
+        // the delete feel instant and prevents a stale in-flight poll from
+        // bringing the chat back.
+        _deletedAt[otherUserId] = time;
+        chatConversation.disposeChatUserBinding();
+        chatsUsers.removeWhere((thread) => thread.userId == otherUserId);
+        requestsUsers.removeWhere((thread) => thread.userId == otherUserId);
       },
     ));
   }

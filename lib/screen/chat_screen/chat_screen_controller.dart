@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:nimiro/common/enum/chat_enum.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
+import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/functions/media_picker_helper.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
@@ -86,12 +87,21 @@ class ChatScreenController extends BlockUserController
     if (a == null || b == null) return id;
     return a <= b ? '${a}_$b' : '${b}_$a';
   }
+
   @override
   void onInit() {
     super.onInit();
     chatId = conversationUser.value.conversationId ?? 'No CONVERSATION';
-    otherUserId = conversationUser.value.chatUser?.userId ?? -1;
+    // Opening from a notification/profile can carry only `user_id`; do not
+    // fall back to -1 and lose the peer entirely.
+    final candidate = conversationUser.value.chatUser?.userId ??
+        conversationUser.value.userId ??
+        -1;
+    otherUserId =
+        candidate == myUser?.id ? _peerIdFromConversation() : candidate;
+    conversationUser.value.bindChatUser();
   }
+
   @override
   void onReady() {
     super.onReady();
@@ -107,6 +117,7 @@ class ChatScreenController extends BlockUserController
       _markAsRead();
     });
   }
+
   @override
   void onClose() {
     super.onClose();
@@ -124,11 +135,13 @@ class ChatScreenController extends BlockUserController
     mediaTextController.dispose();
     _markAsRead();
   }
+
   _init() {
     _initAudioAnimationController();
     _initializePlayerStateListener();
     _fetchOtherUser();
   }
+
   _initAudioAnimationController() {
     audioAnimationController = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 400));
@@ -139,6 +152,7 @@ class ChatScreenController extends BlockUserController
     ).animate(CurvedAnimation(
         parent: audioAnimationController, curve: Curves.easeInOut));
   }
+
   _initializePlayerStateListener() {
     playerControllerListen =
         playerController.onPlayerStateChanged.listen((event) {
@@ -146,20 +160,60 @@ class ChatScreenController extends BlockUserController
       Loggers.success('Player State: $event');
     });
   }
+
+  int _peerIdFromConversation() {
+    final parts = (conversationUser.value.conversationId ?? '').split('_');
+    for (final part in parts) {
+      final id = int.tryParse(part);
+      if (id != null && id > 0 && id != myUser?.id) return id;
+    }
+    return -1;
+  }
+
   _fetchOtherUser() async {
-    int userId = conversationUser.value.userId ?? -1;
-    if (userId != -1) {
-      otherUser = await UserService.instance.fetchUserDetails(userId: userId);
-      Loggers.info('Other User Device Token: ${otherUser?.deviceToken}');
+    final userId =
+        otherUserId > 0 ? otherUserId : (conversationUser.value.userId ?? -1);
+    if (userId <= 0 || userId == myUser?.id) return;
+
+    final user = await UserService.instance.fetchUserDetails(userId: userId);
+    otherUser = user;
+    Loggers.info('Other User Device Token: ${user?.deviceToken}');
+    if (user == null) return;
+
+    // Make the full profile available to the header immediately, and keep the
+    // shared cache in sync even if the inbox row only carried an id.
+    conversationUser.value.chatUser = user.appUser;
+    FirebaseFirestoreController.instance.addUser(user);
+    if (otherUserId <= 0 && user.id != null) {
+      otherUserId = user.id!;
     }
   }
+
+  /// The chat screen always wants the row from the caller's perspective:
+  /// `user_id` is the other participant. Older backend builds returned the raw
+  /// own row here, which made the thread point at the caller.
+  Map<String, dynamic> _asPeerRow(Map<String, dynamic> data) {
+    final row = Map<String, dynamic>.from(data);
+    final owner = int.tryParse('${data['user_id']}');
+    if (owner != null && owner == myUser?.id && otherUserId > 0) {
+      row['user_id'] = otherUserId;
+      row['other_user_id'] = myUser?.id;
+    }
+    return row;
+  }
+
   void _listenToChatThreadUser() {
     if (myUser?.id == null) return;
     final otherSub = _repo.subscribeToConversation(
       ownerUserId: myUser!.id!,
       otherUserId: otherUserId,
       onUpdate: (data) {
-        conversationUser.value = ChatThread.fromJson(data);
+        // Merge instead of replacing: the new row has no `chatUser`, so a
+        // replacement made the peer's avatar vanish on every poll/update.
+        conversationUser.update((thread) {
+          thread?.updateFromJson(_asPeerRow(data));
+          thread?.bindChatUser();
+        });
         Loggers.info('Chat Updated: ${conversationUser.value.toJson()}');
       },
       onDelete: () {
@@ -177,6 +231,7 @@ class ChatScreenController extends BlockUserController
     );
     usersStreams.addAll([otherSub, mySub]);
   }
+
   void onSendTextMessage() async {
     String text = textController.text.trim();
     textController.clear();
@@ -187,6 +242,7 @@ class ChatScreenController extends BlockUserController
     }
     sendMessageToFireStore(type: MessageType.text, textMessage: text);
   }
+
   Future<void> sendMessageToFireStore(
       {required MessageType type,
       String? textMessage,
@@ -227,7 +283,8 @@ class ChatScreenController extends BlockUserController
       chatList.sort((a, b) => b.id?.compareTo(a.id ?? 0) ?? 0);
     }
     try {
-      await _repo.createMessage(messageId: time.toString(), data: message.toJson());
+      await _repo.createMessage(
+          messageId: time.toString(), data: message.toJson());
     } catch (error) {
       Loggers.error('Chat Collection ERROR : $error');
     }
@@ -285,6 +342,7 @@ class ChatScreenController extends BlockUserController
     }
     pushNotificationToUser(message);
   }
+
   void pushNotificationToUser(MessageData message) {
     if (otherUser?.notifyChat == 0) return;
     String bodyMessage = '';
@@ -318,6 +376,7 @@ class ChatScreenController extends BlockUserController
         type: NotificationType.chat,
         data: myConversationUser?.toJson());
   }
+
   String getLastMessage(MessageType type, MessageData message,
       {bool isSender = true}) {
     String prefix = isSender ? "You: " : "";
@@ -342,6 +401,7 @@ class ChatScreenController extends BlockUserController
         return '${sentPrefix}a Story Reply';
     }
   }
+
   void onTextFieldChanged(String value) {
     if (value.trim().isNotEmpty) {
       isTextEmpty.value = false;
@@ -349,6 +409,7 @@ class ChatScreenController extends BlockUserController
       isTextEmpty.value = true;
     }
   }
+
   void _getChat() async {
     _listenToChatThreadUser();
     await Future.delayed(const Duration(milliseconds: 100));
@@ -371,29 +432,32 @@ class ChatScreenController extends BlockUserController
       Loggers.error('Initial chat fetch error: $e');
     }
     final sub = _repo.subscribeToMessages(
-      conversationId: chatId,
-      onEvent: (event, payload) {
-      if (_normConv('${payload['conversation_id']}') != _normConv(chatId)) return;
-      final message = MessageData.fromJson(payload);
-      switch (event) {
-        case 'create':
-          if (!chatList.any((m) => m.id == message.id)) {
-            chatList.add(message);
+        conversationId: chatId,
+        onEvent: (event, payload) {
+          if (_normConv('${payload['conversation_id']}') != _normConv(chatId)) {
+            return;
           }
-          break;
-        case 'update':
-          chatList.removeWhere((element) => element.id == message.id);
-          chatList.add(message);
-          break;
-        case 'delete':
-          chatList.removeWhere((element) => element.id == message.id);
-          break;
-      }
-      chatList.sort((a, b) => b.id?.compareTo(a.id ?? 0) ?? 0);
-    });
+          final message = MessageData.fromJson(payload);
+          switch (event) {
+            case 'create':
+              if (!chatList.any((m) => m.id == message.id)) {
+                chatList.add(message);
+              }
+              break;
+            case 'update':
+              chatList.removeWhere((element) => element.id == message.id);
+              chatList.add(message);
+              break;
+            case 'delete':
+              chatList.removeWhere((element) => element.id == message.id);
+              break;
+          }
+          chatList.sort((a, b) => b.id?.compareTo(a.id ?? 0) ?? 0);
+        });
     chatListeners.add(sub);
     chatList.sort((a, b) => b.id?.compareTo(a.id ?? 0) ?? 0);
   }
+
   Future<void> fetchMoreChatList() async {
     if (!hasMore.value || isLoading.value) return;
     isLoading.value = true;
@@ -421,6 +485,7 @@ class ChatScreenController extends BlockUserController
       isLoading.value = false;
     }
   }
+
   RxBool isLoading = false.obs;
   onChatActionTap(ChatAction action) {
     if (conversationUser.value.iAmBlocked ?? false) {
@@ -443,6 +508,7 @@ class ChatScreenController extends BlockUserController
         break;
     }
   }
+
   void onCameraTap() {
     if (conversationUser.value.iAmBlocked ?? false) {
       return showSnackBar(
@@ -456,6 +522,7 @@ class ChatScreenController extends BlockUserController
       },
     ), isScrollControlled: true);
   }
+
   void pickGift() {
     int? userId = conversationUser.value.chatUser?.userId;
     GiftManager.openGiftSheet(
@@ -470,6 +537,7 @@ class ChatScreenController extends BlockUserController
                   : null);
         });
   }
+
   void pickSticker() {
     Get.bottomSheet<String?>(const GifSheet(), isScrollControlled: true)
         .then((value) {
@@ -478,12 +546,14 @@ class ChatScreenController extends BlockUserController
       }
     });
   }
+
   void pickAndSendMedia() async {
     MediaFile? mediaFile = await MediaPickerHelper.shared.pickMedia();
     if (mediaFile == null) return;
     mediaTextController.clear();
     _showSendMediaSheet(mediaFile);
   }
+
   void _showSendMediaSheet(MediaFile mediaFile) {
     Get.bottomSheet(
       SendMediaSheet(
@@ -496,6 +566,7 @@ class ChatScreenController extends BlockUserController
       isScrollControlled: true,
     );
   }
+
   Future<void> _uploadAndSendMessage(MediaFile mediaFile) async {
     showLoader();
     final bool isImageMessage = mediaFile.type == MediaType.image;
@@ -530,8 +601,9 @@ class ChatScreenController extends BlockUserController
           'doc_id': '$time',
           'id': '$time',
           'conversation_id': '${conversationUser.value.conversationId}',
-          'message_type':
-              isImageMessage ? MessageType.image.value : MessageType.video.value,
+          'message_type': isImageMessage
+              ? MessageType.image.value
+              : MessageType.video.value,
           'text_message': mediaTextController.text.trim(),
           if (isImageMessage) 'image_message': '@s0.data',
           if (!isImageMessage) 'video_message': '@s0.data',
@@ -548,13 +620,16 @@ class ChatScreenController extends BlockUserController
     if (response == null ||
         response['__error'] != null ||
         response['status'] != true) {
-      Loggers.error('Background chat media send failed: ${response?['__error'] ?? response?['message']}');
+      Loggers.error(
+          'Background chat media send failed: ${response?['__error'] ?? response?['message']}');
       showSnackBar(LKey.somethingWentWrong.tr);
     }
   }
+
   Future<String> _uploadFile(XFile file) async {
     return (await CommonService.instance.uploadFileGivePath(file)).data ?? '';
   }
+
   void toggleAnimation() {
     if (isExpanded.value) {
       audioAnimationController.reverse();
@@ -563,6 +638,7 @@ class ChatScreenController extends BlockUserController
     }
     isExpanded.value = !isExpanded.value;
   }
+
   void _pickAudio() async {
     recorderController = RecorderController();
     bool isGranted = await recorderController.checkPermission();
@@ -582,11 +658,13 @@ class ChatScreenController extends BlockUserController
           isScrollControlled: true);
     }
   }
+
   void deleteRecordedAudio() async {
     audioAnimationController.reverse();
     recorderController.reset();
     recorderController.dispose();
   }
+
   void sendRecordedAudio() async {
     audioAnimationController.reverse();
     showLoader();
@@ -614,13 +692,16 @@ class ChatScreenController extends BlockUserController
       recorderController.dispose();
     }
   }
+
   void startAudioPlayback() async {
     await playerController.startPlayer();
     playerController.setFinishMode(finishMode: FinishMode.pause);
   }
+
   void pauseAudioPlayback() async {
     await playerController.pausePlayer();
   }
+
   void toggleAudioPlayback(MessageData message) {
     if (playerValue.value.id == message.id) {
       switch (playerValue.value.state) {
@@ -638,6 +719,7 @@ class ChatScreenController extends BlockUserController
       playAudioMessage(message);
     }
   }
+
   void playAudioMessage(MessageData message) async {
     String audioUrl = message.audioMessage?.addBaseURL() ?? '';
     if (audioUrl.isEmpty) return;
@@ -652,6 +734,7 @@ class ChatScreenController extends BlockUserController
       startAudioPlayback();
     });
   }
+
   void onDeleteForYou(MessageData message) async {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
@@ -664,7 +747,8 @@ class ChatScreenController extends BlockUserController
           await _deleteAssociatedFiles(message);
         } else {
           ids.remove(myUser?.id);
-          await _repo.updateMessage(message.id.toString(), {'no_delete_ids': ids});
+          await _repo
+              .updateMessage(message.id.toString(), {'no_delete_ids': ids});
           chatList.removeWhere((element) => element.id == existing.id);
         }
       }
@@ -672,6 +756,7 @@ class ChatScreenController extends BlockUserController
       Loggers.error('On Delete For You error : $e');
     }
   }
+
   void onUnSend(MessageData message) async {
     await Future.delayed(const Duration(milliseconds: 200));
     try {
@@ -681,6 +766,7 @@ class ChatScreenController extends BlockUserController
       Loggers.error('Un-send message error: $e');
     }
   }
+
   Future<void> _deleteAssociatedFiles(MessageData message) async {
     switch (message.messageType) {
       case MessageType.text:
@@ -707,11 +793,13 @@ class ChatScreenController extends BlockUserController
         break;
     }
   }
+
   Future<bool> deleteFile(String file) async {
     StatusModel response = await CommonService.instance.deleteFile(file);
     if (response.status == true) return true;
     return false;
   }
+
   void onChatRequestTap(
       UserRequestAction requestType, ChatThread conversation) async {
     if (myUser?.id == null) return;
@@ -751,6 +839,7 @@ class ChatScreenController extends BlockUserController
         break;
     }
   }
+
   void onPostTap(Post post) async {
     PostType type = post.postType;
     playerController.pausePlayer();
@@ -769,6 +858,7 @@ class ChatScreenController extends BlockUserController
         break;
     }
   }
+
   void fetchPost({required PostType postType, Post? post}) async {
     Post? _post =
         (await PostService.instance.fetchPostById(postId: post?.id ?? -1))
@@ -790,12 +880,14 @@ class ChatScreenController extends BlockUserController
         break;
     }
   }
+
   void onReportUser(ChatThread chatThread) {
     Get.bottomSheet(
         ReportSheet(
             reportType: ReportType.user, id: chatThread.chatUser?.userId),
         isScrollControlled: true);
   }
+
   void toggleBlockUnblock(ChatThread chatThread) {
     if (chatThread.iBlocked ?? false) {
       unblockUser(otherUser, () {});
@@ -803,6 +895,7 @@ class ChatScreenController extends BlockUserController
       blockUser(otherUser, () {});
     }
   }
+
   void sendStoryReply(
       {required Story story, required String textReply, String? imageReply}) {
     sendMessageToFireStore(
@@ -811,17 +904,25 @@ class ChatScreenController extends BlockUserController
         textMessage: textReply,
         storyReplyMessage: jsonEncode(story.toJsonWithUser()));
   }
+
   _markAsRead() async {
     if (myUser?.id == null) return;
     final data = await _repo.getConversation(myUser!.id!, otherUserId);
-    if (data != null) {
-      await _repo.upsertConversation(
-        ownerUserId: myUser!.id!,
-        otherUserId: otherUserId,
-        data: {'msg_count': 0},
-      );
-    }
+    if (data == null) return;
+
+    // Only write when there is something to clear. The old unconditional write
+    // every 15 seconds changed the row and triggered a poll update, which is
+    // what made the header flicker while the chat was open.
+    final unread = int.tryParse('${data['msg_count']}') ?? 0;
+    if (unread <= 0) return;
+
+    await _repo.upsertConversation(
+      ownerUserId: myUser!.id!,
+      otherUserId: otherUserId,
+      data: {'msg_count': 0},
+    );
   }
+
   void removeStoryFromChat(MessageData message) async {
     try {
       final data = await _repo.getMessage(message.id.toString());
@@ -834,6 +935,7 @@ class ChatScreenController extends BlockUserController
       Loggers.error('removeStoryFromChat error: $e');
     }
   }
+
   void onStoryTap(MessageData message, Story story) {
     final createdAtStr = story.createdAt;
     if (createdAtStr == null || createdAtStr.isEmpty) {
@@ -876,6 +978,7 @@ class ChatScreenController extends BlockUserController
       useRootNavigator: true,
     );
   }
+
   void _addUsersFirebaseFireStore() async {
     if (myUser != null) {
       FirebaseFirestoreController.instance.addUser(myUser);
@@ -885,12 +988,14 @@ class ChatScreenController extends BlockUserController
     }
   }
 }
+
 final playerWaveStyle = PlayerWaveStyle(
     fixedWaveColor: ColorRes.bgGrey,
     spacing: 3,
     waveThickness: 1.5,
     scaleFactor: 50,
     liveWaveGradient: StyleRes.wavesGradient);
+
 class PlayerValue {
   PlayerState state;
   int id;
