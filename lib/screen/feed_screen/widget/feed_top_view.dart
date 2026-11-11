@@ -78,25 +78,37 @@ class _CategoryTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = textDarkGrey(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: BorderSide(
-              color: isSelected ? themeAccentSolid(context) : Colors.transparent,
-              width: 2,
-            ),
-          ),
-        ),
-        child: Text(
-          title.toUpperCase(),
-          style: TextStyleCustom.unboundedBold700(
-            color: isSelected ? textDarkGrey(context) : textLightGrey(context),
-            fontSize: 12,
+      child: SizedBox(
+        height: 34,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                title.toUpperCase(),
+                style: TextStyleCustom.unboundedBold700(
+                  color: isSelected ? activeColor : textLightGrey(context),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 3),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                height: 3,
+                width: isSelected ? 20 : 0,
+                decoration: BoxDecoration(
+                  color: isSelected ? activeColor : Colors.transparent,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
           ),
         ),
       ),
