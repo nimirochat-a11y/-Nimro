@@ -46,6 +46,10 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
+          # Pinned on purpose: Flutter 3.47+ requires Gradle >= 9.3.1 while this
+          # project ships Gradle 8.14.3 / AGP 8.13.1 (android/settings.gradle).
+          # Tracking "stable" broke the build when 3.47.4 rolled out.
+          flutter-version: 3.44.0
           channel: stable
           cache: true
 
