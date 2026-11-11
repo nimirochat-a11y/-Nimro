@@ -40,8 +40,11 @@ android {
         minSdk = 26
         targetSdk = 36
         // CI build: signed with the permanent Nimiro release key.
-        versionCode = 4040
-        versionName = '1.1.30'
+        // Read the values from Flutter so `flutter build apk
+        // --build-number=...` can give each ABI its own version code
+        // (arm64 4040, armeabi-v7a 3040) instead of both sharing 4040.
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     signingConfigs {
