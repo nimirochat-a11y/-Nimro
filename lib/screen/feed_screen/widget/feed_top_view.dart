@@ -79,6 +79,9 @@ class _CategoryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeColor = textDarkGrey(context);
+    // v1.1.35: no underline under the tab. The selected tab is indicated by
+    // colour only; the 10dp horizontal padding is kept and mirrored by the
+    // reels tabs so both screens have identical spacing.
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
@@ -86,29 +89,14 @@ class _CategoryTab extends StatelessWidget {
         height: 34,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title.toUpperCase(),
-                style: TextStyleCustom.unboundedBold700(
-                  color: isSelected ? activeColor : textLightGrey(context),
-                  fontSize: 12,
-                ),
+          child: Center(
+            child: Text(
+              title.toUpperCase(),
+              style: TextStyleCustom.unboundedBold700(
+                color: isSelected ? activeColor : textLightGrey(context),
+                fontSize: 12,
               ),
-              const SizedBox(height: 3),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                height: 3,
-                width: isSelected ? 20 : 0,
-                decoration: BoxDecoration(
-                  color: isSelected ? activeColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

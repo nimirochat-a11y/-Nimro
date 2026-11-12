@@ -92,38 +92,21 @@ class HomeTopCenterWidget extends StatelessWidget {
     final foreground = isSelected
         ? whitePure(context)
         : whitePure(context).withValues(alpha: .72);
-    // Same treatment as the feed tabs (v1.1.32): a short rounded pill that
-    // sits right under the label. The reels screen has a black background, so
-    // the hard accent blue (#237BFF) is replaced by a softer light blue.
-    const indicatorColor = Color(0xFF5FA0FF);
+    // v1.1.35: no underline under the tab. The selected tab is indicated by
+    // colour only, and the horizontal spacing matches the feed tabs exactly.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           height: 42,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                title.toUpperCase(),
-                style: TextStyleCustom.unboundedBold700(
-                    fontSize: 12, color: foreground),
-              ),
-              const SizedBox(height: 3),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOut,
-                height: 3,
-                width: isSelected ? 20 : 0,
-                decoration: BoxDecoration(
-                  color: isSelected ? indicatorColor : Colors.transparent,
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ],
+          child: Center(
+            child: Text(
+              title.toUpperCase(),
+              style: TextStyleCustom.unboundedBold700(
+                  fontSize: 12, color: foreground),
+            ),
           ),
         ),
       ),
