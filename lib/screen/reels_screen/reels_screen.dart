@@ -92,7 +92,14 @@ class _ReelsScreenState extends State<ReelsScreen> {
                                   color: textLightGrey(context)));
                         }
                         if (widget.isLoading?.value == false && reels.isEmpty) {
+                          // v1.1.37: the reels empty state stays on the reels
+                          // black background with white text, instead of the
+                          // default light "no data" surface.
                           return NoDataWidgetWithScroll(
+                              bgColor: blackPure(context),
+                              titleColor: whitePure(context),
+                              descriptionColor:
+                                  whitePure(context).withValues(alpha: .7),
                               title:
                                   widget.emptyTitle ?? LKey.reelsEmptyTitle.tr,
                               description: widget.emptyDescription ??
