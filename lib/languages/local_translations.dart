@@ -4,13 +4,16 @@ class LocalTranslations {
       "Language": "Language",
       "FROM AROUND\\nTHE WORLD": "FROM AROUND\\nTHE WORLD",
       "Continue": "Continue",
-      "Share your talent with the\\npeople around the world\\nand build your healthy fanbase.": "Share your talent with the\\npeople around the world\\nand build your healthy fanbase.",
+      "Share your talent with the\\npeople around the world\\nand build your healthy fanbase.":
+          "Share your talent with the\\npeople around the world\\nand build your healthy fanbase.",
       "Next": "Next",
       "GET\\nAPPRECIATED": "GET\\nAPPRECIATED",
       "Select": "Select",
-      "Collect likes and comments\\nfrom your fans, which boosts\\nyou to create more content!": "Collect likes and comments\\nfrom your fans, which boosts\\nyou to create more content!",
+      "Collect likes and comments\\nfrom your fans, which boosts\\nyou to create more content!":
+          "Collect likes and comments\\nfrom your fans, which boosts\\nyou to create more content!",
       "MULTIPLE SOCIAL\\nGATEWAYS": "MULTIPLE SOCIAL\\nGATEWAYS",
-      "Post Reels, Images, Videos, Go\\nLive. Choose any way\\nfits to you & your audience!": "Post Reels, Images, Videos, Go\\nLive. Choose any way\\nfits to you & your audience!",
+      "Post Reels, Images, Videos, Go\\nLive. Choose any way\\nfits to you & your audience!":
+          "Post Reels, Images, Videos, Go\\nLive. Choose any way\\nfits to you & your audience!",
       "Nearby": "Nearby",
       "Following": "Following",
       "Followers Only": "Followers Only",
@@ -46,7 +49,8 @@ class LocalTranslations {
       "Country": "Country",
       "Description": "Description",
       "Submit": "Submit",
-      "By proceeding forward, You agree to the,": "By proceeding forward, You agree to the,",
+      "By proceeding forward, You agree to the,":
+          "By proceeding forward, You agree to the,",
       "Privacy Policy": "Privacy Policy",
       "and": "and",
       "Terms of Use": "Terms of Use",
@@ -93,7 +97,8 @@ class LocalTranslations {
       "Unfollow": "Unfollow",
       "Go Live": "Go Live",
       "Levels": "Levels",
-      "Gather more coins, ascend to new heights, and proudly showcase your badge on your profile for all to admire.": "Gather more coins, ascend to new heights, and proudly showcase your badge on your profile for all to admire.",
+      "Gather more coins, ascend to new heights, and proudly showcase your badge on your profile for all to admire.":
+          "Gather more coins, ascend to new heights, and proudly showcase your badge on your profile for all to admire.",
       "Level": "Level",
       "Collection": "Collection",
       "You": "You",
@@ -119,11 +124,13 @@ class LocalTranslations {
       "Mentions": "Mentions",
       "Gifts Received": "Gifts Received",
       "Chat Message": "Chat Message",
-      "Subscribe to Plus and have \\nad-free experience and verified\\nicon on your profile.": "Subscribe to Plus and have \\nad-free experience and verified\\nicon on your profile.",
+      "Subscribe to Plus and have \\nad-free experience and verified\\nicon on your profile.":
+          "Subscribe to Plus and have \\nad-free experience and verified\\nicon on your profile.",
       "No Ads": "No Ads",
       "Get Verified": "Get Verified",
       "Subscribe Now": "Subscribe Now",
-      "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.": "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.",
+      "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.":
+          "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.",
       "User ID": "User ID",
       "Profile Image": "Profile Image",
       "Username": "Username",
@@ -143,7 +150,8 @@ class LocalTranslations {
       "Unpin": "Unpin",
       "Block": "Block",
       "UnBlock": "UnBlock",
-      "Scan This code\nto check the profile": "Scan This code\nto check the profile",
+      "Scan This code\nto check the profile":
+          "Scan This code\nto check the profile",
       "Balance": "Balance",
       "Collected*": "Collected*",
       "Gifted*": "Gifted*",
@@ -155,7 +163,8 @@ class LocalTranslations {
       "Every coin makes a difference": "Every coin makes a difference",
       "Safe and fast transactions": "Safe and fast transactions",
       "reposted this": "reposted this",
-      "Please add Payment Gateway List in Admin Panel": "Please add Payment Gateway List in Admin Panel",
+      "Please add Payment Gateway List in Admin Panel":
+          "Please add Payment Gateway List in Admin Panel",
       "Your current balance": "Your current balance",
       "Choose a coin package": "Choose a coin package",
       "Use coins to gift creators": "Use coins to gift creators",
@@ -164,14 +173,19 @@ class LocalTranslations {
       "Manage your blocked users list": "Manage your blocked users list",
       "Choose your preferred language": "Choose your preferred language",
       "Control who can see your posts": "Control who can see your posts",
-      "Allow others to see who you follow": "Allow others to see who you follow",
-      "Show the chat button on your profile": "Show the chat button on your profile",
-      "Manage your alerts and preferences": "Manage your alerts and preferences",
+      "Allow others to see who you follow":
+          "Allow others to see who you follow",
+      "Show the chat button on your profile":
+          "Show the chat button on your profile",
+      "Manage your alerts and preferences":
+          "Manage your alerts and preferences",
       "Read the app's terms of use": "Read the app's terms of use",
       "Learn how your data is protected": "Learn how your data is protected",
       "Sign out of your current account": "Sign out of your current account",
-      "All your data will be permanently deleted": "All your data will be permanently deleted",
-      "Recharge your wallet. And\nsend gifts to your favorite creators.": "Recharge your wallet. And\nsend gifts to your favorite creators.",
+      "All your data will be permanently deleted":
+          "All your data will be permanently deleted",
+      "Recharge your wallet. And\nsend gifts to your favorite creators.":
+          "Recharge your wallet. And\nsend gifts to your favorite creators.",
       "Purchase": "Purchase",
       "Withdrawals": "Withdrawals",
       "Request Withdrawal": "Request Withdrawal",
@@ -228,42 +242,66 @@ class LocalTranslations {
       "Go Home": "Go Home",
       "Stream Ended!": "Stream Ended!",
       "Your Stream Ended!": "Your Stream Ended!",
-      "Below is the summary of your stream!": "Below is the summary of your stream!",
+      "Below is the summary of your stream!":
+          "Below is the summary of your stream!",
       "From Battle": "From Battle",
       "Live": "Live",
       "Check Profile": "Check Profile",
-      "You are sending coins to @color Participant": "You are sending coins to @color Participant",
-      "You will be sent back to main view in...": "You will be sent back to main view in...",
-      "The live stream has ended because min. @viewers_count viewers are required to keep it going.": "The live stream has ended because min. @viewers_count viewers are required to keep it going.",
-      "Please enter an email. The email field is empty.": "Please enter an email. The email field is empty.",
-      "Please enter a password. The password field is empty.": "Please enter a password. The password field is empty.",
-      "No user found with that email. Please register with this email.": "No user found with that email. Please register with this email.",
-      "Incorrect password provided for this user.": "Incorrect password provided for this user.",
-      "The password provided is too weak.": "The password provided is too weak.",
-      "The account already exists for that email.": "The account already exists for that email.",
-      "Please enter a full name. The full name field is empty.": "Please enter a full name. The full name field is empty.",
-      "Please enter a username. The username field is empty.": "Please enter a username. The username field is empty.",
-      "Please enter a URL link. The link field is empty.": "Please enter a URL link. The link field is empty.",
+      "You are sending coins to @color Participant":
+          "You are sending coins to @color Participant",
+      "You will be sent back to main view in...":
+          "You will be sent back to main view in...",
+      "The live stream has ended because min. @viewers_count viewers are required to keep it going.":
+          "The live stream has ended because min. @viewers_count viewers are required to keep it going.",
+      "Please enter an email. The email field is empty.":
+          "Please enter an email. The email field is empty.",
+      "Please enter a password. The password field is empty.":
+          "Please enter a password. The password field is empty.",
+      "No user found with that email. Please register with this email.":
+          "No user found with that email. Please register with this email.",
+      "Incorrect password provided for this user.":
+          "Incorrect password provided for this user.",
+      "The password provided is too weak.":
+          "The password provided is too weak.",
+      "The account already exists for that email.":
+          "The account already exists for that email.",
+      "Please enter a full name. The full name field is empty.":
+          "Please enter a full name. The full name field is empty.",
+      "Please enter a username. The username field is empty.":
+          "Please enter a username. The username field is empty.",
+      "Please enter a URL link. The link field is empty.":
+          "Please enter a URL link. The link field is empty.",
       "Please enter a valid URL link": "Please enter a valid URL link",
-      "Please enter a title. The title field is empty.": "Please enter a title. The title field is empty.",
+      "Please enter a title. The title field is empty.":
+          "Please enter a title. The title field is empty.",
       "Please enter a valid username.": "Please enter a valid username.",
-      "This username is already taken. Please choose another one.": "This username is already taken. Please choose another one.",
-      "Please confirm your password. The confirm password field is empty.": "Please confirm your password. The confirm password field is empty.",
-      "The password and confirm password do not match.": "The password and confirm password do not match.",
-      "The email is incorrect. Please enter a valid email.": "The email is incorrect. Please enter a valid email.",
-      "A verification link has been sent to your email. Please verify the link to log in.": "A verification link has been sent to your email. Please verify the link to log in.",
-      "Please verify your email first, then proceed to log in.": "Please verify your email first, then proceed to log in.",
+      "This username is already taken. Please choose another one.":
+          "This username is already taken. Please choose another one.",
+      "Please confirm your password. The confirm password field is empty.":
+          "Please confirm your password. The confirm password field is empty.",
+      "The password and confirm password do not match.":
+          "The password and confirm password do not match.",
+      "The email is incorrect. Please enter a valid email.":
+          "The email is incorrect. Please enter a valid email.",
+      "A verification link has been sent to your email. Please verify the link to log in.":
+          "A verification link has been sent to your email. Please verify the link to log in.",
+      "Please verify your email first, then proceed to log in.":
+          "Please verify your email first, then proceed to log in.",
       "Verification Badge": "Verification Badge",
       "Blue Verification": "Blue Verification",
-      "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.": "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.",
+      "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.":
+          "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.",
       "Green Verification": "Green Verification",
-      "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.": "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.",
+      "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.":
+          "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.",
       "Nimiro Official Verification": "Nimiro Official Verification",
-      "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.": "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.",
+      "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.":
+          "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.",
       "Delete Link?": "Delete Link?",
       "Phone Code": "Phone Code",
       "No Data Found": "No Data Found",
-      "Are you sure you want to delete this link? This action cannot be undone.": "Are you sure you want to delete this link? This action cannot be undone.",
+      "Are you sure you want to delete this link? This action cannot be undone.":
+          "Are you sure you want to delete this link? This action cannot be undone.",
       "Uploading post...": "Uploading post...",
       "Uploading story...": "Uploading story...",
       "Post uploaded successfully.": "Post uploaded successfully.",
@@ -271,15 +309,21 @@ class LocalTranslations {
       "Uploading failed.": "Uploading failed.",
       "Add Filter": "Add Filter",
       "Apply to all": "Apply to all",
-      "An error occurred while applying the video filter.": "An error occurred while applying the video filter.",
-      "An error occurred while compress the video.": "An error occurred while compress the video.",
+      "An error occurred while applying the video filter.":
+          "An error occurred while applying the video filter.",
+      "An error occurred while compress the video.":
+          "An error occurred while compress the video.",
       "Delete Post?": "Delete Post?",
-      "Are you sure you want to delete this post? Once deleted, it cannot be restored.": "Are you sure you want to delete this post? Once deleted, it cannot be restored.",
+      "Are you sure you want to delete this post? Once deleted, it cannot be restored.":
+          "Are you sure you want to delete this post? Once deleted, it cannot be restored.",
       "Your post has been pinned.": "Your post has been pinned.",
       "Your post has been unpinned.": "Your post has been unpinned.",
-      "You can pin maximum @pin_count post.": "You can pin maximum @pin_count post.",
-      "You can pin maximum @pin_comment_count comment.": "You can pin maximum @pin_comment_count comment.",
-      "A reset password link has been sent to your email. Please use it to reset your password.": "A reset password link has been sent to your email. Please use it to reset your password.",
+      "You can pin maximum @pin_count post.":
+          "You can pin maximum @pin_count post.",
+      "You can pin maximum @pin_comment_count comment.":
+          "You can pin maximum @pin_comment_count comment.",
+      "A reset password link has been sent to your email. Please use it to reset your password.":
+          "A reset password link has been sent to your email. Please use it to reset your password.",
       "Copyright Infringement": "Copyright Infringement",
       "Hate Speech": "Hate Speech",
       "Harassment or Bullying": "Harassment or Bullying",
@@ -291,29 +335,38 @@ class LocalTranslations {
       "Impersonation": "Impersonation",
       "Misinformation": "Misinformation",
       "Reason": "Reason",
-      "Please provide a detailed reason for the report.": "Please provide a detailed reason for the report.",
+      "Please provide a detailed reason for the report.":
+          "Please provide a detailed reason for the report.",
       "Report submitted successfully.": "Report submitted successfully.",
       "Block @username!": "Block @username!",
       "UnBlock @username!": "UnBlock @username!",
-      "Are you sure you want to block this user? You will no longer see their followers or following, and they won't be able to view your profile, photos, or posts. Once blocked, this user will no longer be able to chat with you, and you won’t be able to chat with them either.": "Are you sure you want to block this user? You will no longer see their followers or following, and they won't be able to view your profile, photos, or posts. Once blocked, this user will no longer be able to chat with you, and you won’t be able to chat with them either.",
-      "Once unblocked, this user will be able to chat with you again, and you can chat with them as well. They will also be able to see your profile, photos, and posts, and you will be able to view their followers and following.": "Once unblocked, this user will be able to chat with you again, and you can chat with them as well. They will also be able to see your profile, photos, and posts, and you will be able to view their followers and following.",
+      "Are you sure you want to block this user? You will no longer see their followers or following, and they won't be able to view your profile, photos, or posts. Once blocked, this user will no longer be able to chat with you, and you won’t be able to chat with them either.":
+          "Are you sure you want to block this user? You will no longer see their followers or following, and they won't be able to view your profile, photos, or posts. Once blocked, this user will no longer be able to chat with you, and you won’t be able to chat with them either.",
+      "Once unblocked, this user will be able to chat with you again, and you can chat with them as well. They will also be able to see your profile, photos, and posts, and you will be able to view their followers and following.":
+          "Once unblocked, this user will be able to chat with you again, and you can chat with them as well. They will also be able to see your profile, photos, and posts, and you will be able to view their followers and following.",
       "You are bock this user": "You are bock this user",
       "This user is freeze": "This user is freeze",
       "Delete Comment!": "Delete Comment!",
       "Delete Reply Comment!": "Delete Reply Comment!",
-      "Are you sure you want to delete this comment? This action cannot be undone.": "Are you sure you want to delete this comment? This action cannot be undone.",
-      "Do you really want to delete your account? All of your data will be deleted, and you won’t be able to recover it again!": "Do you really want to delete your account? All of your data will be deleted, and you won’t be able to recover it again!",
+      "Are you sure you want to delete this comment? This action cannot be undone.":
+          "Are you sure you want to delete this comment? This action cannot be undone.",
+      "Do you really want to delete your account? All of your data will be deleted, and you won’t be able to recover it again!":
+          "Do you really want to delete your account? All of your data will be deleted, and you won’t be able to recover it again!",
       "Do you really want to proceed?": "Do you really want to proceed?",
-      "Are you sure you want to log out? You will need to log in again to access your account.": "Are you sure you want to log out? You will need to log in again to access your account.",
+      "Are you sure you want to log out? You will need to log in again to access your account.":
+          "Are you sure you want to log out? You will need to log in again to access your account.",
       "Logout!": "Logout!",
       "Delete Your Account!": "Delete Your Account!",
-      "There is nothing we can show you for now.": "There is nothing we can show you for now.",
+      "There is nothing we can show you for now.":
+          "There is nothing we can show you for now.",
       "music": "music",
       "Discard edits?": "Discard edits?",
       "Start Again?": "Start Again?",
       "Start Again": "Start Again",
-      "If you go back now, you'll lose all the edits you've made.": "If you go back now, you'll lose all the edits you've made.",
-      "If you go back now, you'll lose this draft": "If you go back now, you'll lose this draft",
+      "If you go back now, you'll lose all the edits you've made.":
+          "If you go back now, you'll lose all the edits you've made.",
+      "If you go back now, you'll lose this draft":
+          "If you go back now, you'll lose this draft",
       "Discover": "Discover",
       "No location found.": "No location found.",
       "Start searching for a location.": "Start searching for a location.",
@@ -321,15 +374,19 @@ class LocalTranslations {
       "Current Value": "Current Value",
       "Account Details": "Account Details",
       "Select Gateway": "Select Gateway",
-      "You cannot enter more than @coin coins!": "You cannot enter more than @coin coins!",
+      "You cannot enter more than @coin coins!":
+          "You cannot enter more than @coin coins!",
       "Redeem gateway not found.": "Redeem gateway not found.",
       "Record up to @second seconds.": "Record up to @second seconds.",
       "Allow Camera & Microphone Access": "Allow Camera & Microphone Access",
-      "To capture photos, record videos, and use voice features, @app_name needs access to your camera and microphone. Please grant permission in your device settings.": "To capture photos, record videos, and use voice features, @app_name needs access to your camera and microphone. Please grant permission in your device settings.",
+      "To capture photos, record videos, and use voice features, @app_name needs access to your camera and microphone. Please grant permission in your device settings.":
+          "To capture photos, record videos, and use voice features, @app_name needs access to your camera and microphone. Please grant permission in your device settings.",
       "Open setting": "Open setting",
       "Delete Story?": "Delete Story?",
-      "Are you sure you want to delete this story?": "Are you sure you want to delete this story?",
-      "Are you sure you want to delete this text?": "Are you sure you want to delete this text?",
+      "Are you sure you want to delete this story?":
+          "Are you sure you want to delete this story?",
+      "Are you sure you want to delete this text?":
+          "Are you sure you want to delete this text?",
       "Music download failed.": "Music download failed.",
       "View More": "View More",
       "Download completed successfully!": "Download completed successfully!",
@@ -337,8 +394,10 @@ class LocalTranslations {
       "User not found.": "User not found.",
       "Delete Message?": "Delete Message?",
       "Delete @user_name?": "Delete @user_name?",
-      "After deleting this user, you will not be able to restore the chat.": "After deleting this user, you will not be able to restore the chat.",
-      "This message will be deleted only for you. The other person will still be able to see it. Do you want to continue?": "This message will be deleted only for you. The other person will still be able to see it. Do you want to continue?",
+      "After deleting this user, you will not be able to restore the chat.":
+          "After deleting this user, you will not be able to restore the chat.",
+      "This message will be deleted only for you. The other person will still be able to see it. Do you want to continue?":
+          "This message will be deleted only for you. The other person will still be able to see it. Do you want to continue?",
       "Send Media": "Send Media",
       "Select Media": "Select Media",
       "Video": "Video",
@@ -346,97 +405,149 @@ class LocalTranslations {
       "You received a gift!": "You received a gift!",
       "You have sent a gift!": "You have sent a gift!",
       "Enable Microphone Access": "Enable Microphone Access",
-      "Enable Camera and Microphone Access": "Enable Camera and Microphone Access",
+      "Enable Camera and Microphone Access":
+          "Enable Camera and Microphone Access",
       "Enable photos and videos access": "Enable photos and videos access",
-      "To Share photos and videos, @app_name needs access to Storage on your device.": "To Share photos and videos, @app_name needs access to Storage on your device.",
-      "You'll need to enable camera and microphone access in your settings to send a photo or video message.": "You'll need to enable camera and microphone access in your settings to send a photo or video message.",
-      "You'll need to enable microphone access in your settings to send a voice message.": "You'll need to enable microphone access in your settings to send a voice message.",
+      "To Share photos and videos, @app_name needs access to Storage on your device.":
+          "To Share photos and videos, @app_name needs access to Storage on your device.",
+      "You'll need to enable camera and microphone access in your settings to send a photo or video message.":
+          "You'll need to enable camera and microphone access in your settings to send a photo or video message.",
+      "You'll need to enable microphone access in your settings to send a voice message.":
+          "You'll need to enable microphone access in your settings to send a voice message.",
       "Delete for you": "Delete for you",
       "Unsend": "Unsend",
-      "You can share with up to @share_chat_limit chats.": "You can share with up to @share_chat_limit chats.",
-      "@chat_user_name wants to chat with you. Approve it if you want to chat.": "@chat_user_name wants to chat with you. Approve it if you want to chat.",
-      "You cannot send messages to this account unless you unblock them.": "You cannot send messages to this account unless you unblock them.",
-      "You Blocked @block_user_name \\nYou cannot send messages to this account unless you unblock them.": "You Blocked @block_user_name \\nYou cannot send messages to this account unless you unblock them.",
+      "You can share with up to @share_chat_limit chats.":
+          "You can share with up to @share_chat_limit chats.",
+      "@chat_user_name wants to chat with you. Approve it if you want to chat.":
+          "@chat_user_name wants to chat with you. Approve it if you want to chat.",
+      "You cannot send messages to this account unless you unblock them.":
+          "You cannot send messages to this account unless you unblock them.",
+      "You Blocked @block_user_name \\nYou cannot send messages to this account unless you unblock them.":
+          "You Blocked @block_user_name \\nYou cannot send messages to this account unless you unblock them.",
       "You are blocked by this user.": "You are blocked by this user.",
       "Copied to clipboard.": "Copied to clipboard.",
       "Message sent": "Message sent",
       "Story unavailable": "Story unavailable",
       "Delete Music?": "Delete Music?",
-      "Are you sure you want to delete this music? This action cannot be undone.": "Are you sure you want to delete this music? This action cannot be undone.",
-      "Session Expired – Logged in on Another Device": "Session Expired – Logged in on Another Device",
-      "For security reasons, @app_name allows only one active session per account. It looks like you logged in on another device using the same email. To protect your account, we have automatically logged you out from this device.\\n\\nIf this wasn’t you, please log in again. You can change your password from the login screen if needed.": "For security reasons, @app_name allows only one active session per account. It looks like you logged in on another device using the same email. To protect your account, we have automatically logged you out from this device.\\n\\nIf this wasn’t you, please log in again. You can change your password from the login screen if needed.",
+      "Are you sure you want to delete this music? This action cannot be undone.":
+          "Are you sure you want to delete this music? This action cannot be undone.",
+      "Session Expired – Logged in on Another Device":
+          "Session Expired – Logged in on Another Device",
+      "For security reasons, @app_name allows only one active session per account. It looks like you logged in on another device using the same email. To protect your account, we have automatically logged you out from this device.\\n\\nIf this wasn’t you, please log in again. You can change your password from the login screen if needed.":
+          "For security reasons, @app_name allows only one active session per account. It looks like you logged in on another device using the same email. To protect your account, we have automatically logged you out from this device.\\n\\nIf this wasn’t you, please log in again. You can change your password from the login screen if needed.",
       "Your Account Has Been Frozen": "Your Account Has Been Frozen",
       "Request to Unfreeze My Account": "Request to Unfreeze My Account",
-      "We're sorry, but it looks like your account has been temporarily frozen. This might be due to unusual activity or a policy-related concern.\\n\\nFor your security and to ensure proper access, your account has been placed on hold. You won’t be able to use the app until the issue is resolved.\\n\\nTo unfreeze your account or to get more information, please reach out to our support team at @support_mail. We’re here to assist you and will do our best to help you get back up and running as quickly as possible.\\n\\nThank you for your patience and understanding.": "We're sorry, but it looks like your account has been temporarily frozen. This might be due to unusual activity or a policy-related concern.\\n\\nFor your security and to ensure proper access, your account has been placed on hold. You won’t be able to use the app until the issue is resolved.\\n\\nTo unfreeze your account or to get more information, please reach out to our support team at @support_mail. We’re here to assist you and will do our best to help you get back up and running as quickly as possible.\\n\\nThank you for your patience and understanding.",
-      "Text is rejected because it includes such things:": "Text is rejected because it includes such things: ",
-      "Media is rejected because it contains such things:": "Media is rejected because it contains such things: ",
+      "We're sorry, but it looks like your account has been temporarily frozen. This might be due to unusual activity or a policy-related concern.\\n\\nFor your security and to ensure proper access, your account has been placed on hold. You won’t be able to use the app until the issue is resolved.\\n\\nTo unfreeze your account or to get more information, please reach out to our support team at @support_mail. We’re here to assist you and will do our best to help you get back up and running as quickly as possible.\\n\\nThank you for your patience and understanding.":
+          "We're sorry, but it looks like your account has been temporarily frozen. This might be due to unusual activity or a policy-related concern.\\n\\nFor your security and to ensure proper access, your account has been placed on hold. You won’t be able to use the app until the issue is resolved.\\n\\nTo unfreeze your account or to get more information, please reach out to our support team at @support_mail. We’re here to assist you and will do our best to help you get back up and running as quickly as possible.\\n\\nThank you for your patience and understanding.",
+      "Text is rejected because it includes such things:":
+          "Text is rejected because it includes such things: ",
+      "Media is rejected because it contains such things:":
+          "Media is rejected because it contains such things: ",
       "Restrict users requests to join.": "Restrict users requests to join.",
       "End This Stream!": "End This Stream!",
-      "Do you really want to end this streaming?": "Do you really want to end this streaming?",
+      "Do you really want to end this streaming?":
+          "Do you really want to end this streaming?",
       "End Battle?": "End Battle?",
-      "Are you sure you want to stop the battle? This action can’t be undone.": "Are you sure you want to stop the battle? This action can’t be undone.",
+      "Are you sure you want to stop the battle? This action can’t be undone.":
+          "Are you sure you want to stop the battle? This action can’t be undone.",
       "No Join Requests Yet": "No Join Requests Yet",
-      "View and manage audience requests to join the live stream.": "View and manage audience requests to join the live stream.",
+      "View and manage audience requests to join the live stream.":
+          "View and manage audience requests to join the live stream.",
       "No Viewers Yet": "No Viewers Yet",
-      "Audience members will appear here when they join your live stream.": "Audience members will appear here when they join your live stream.",
+      "Audience members will appear here when they join your live stream.":
+          "Audience members will appear here when they join your live stream.",
       "No One Invited": "No One Invited",
-      "You haven’t invited anyone yet. Invited users will be listed here.": "You haven’t invited anyone yet. Invited users will be listed here.",
+      "You haven’t invited anyone yet. Invited users will be listed here.":
+          "You haven’t invited anyone yet. Invited users will be listed here.",
       "No Co-hosts Yet": "No Co-hosts Yet",
-      "Co-hosts will appear here once they accept your invitation.": "Co-hosts will appear here once they accept your invitation.",
-      "You are sending coins to the above user.": "You are sending coins to the above user.",
+      "Co-hosts will appear here once they accept your invitation.":
+          "Co-hosts will appear here once they accept your invitation.",
+      "You are sending coins to the above user.":
+          "You are sending coins to the above user.",
       "No Live Streams Yet": "No Live Streams Yet",
-      "Live streams will appear here when someone goes live.": "Live streams will appear here when someone goes live.",
+      "Live streams will appear here when someone goes live.":
+          "Live streams will appear here when someone goes live.",
       "No Reels Yet": "No Reels Yet",
-      "This user hasn’t posted any reels so far.": "This user hasn’t posted any reels so far.",
+      "This user hasn’t posted any reels so far.":
+          "This user hasn’t posted any reels so far.",
       "You Haven’t Shared Any Posts": "You Haven’t Shared Any Posts",
-      "Start posting to share your moments with the community.": "Start posting to share your moments with the community.",
+      "Start posting to share your moments with the community.":
+          "Start posting to share your moments with the community.",
       "No Posts Yet": "No Posts Yet",
-      "This user hasn’t shared any posts so far.": "This user hasn’t shared any posts so far.",
+      "This user hasn’t shared any posts so far.":
+          "This user hasn’t shared any posts so far.",
       "Start a Conversation": "Start a Conversation",
-      "Your chats will show up here once you start messaging someone.": "Your chats will show up here once you start messaging someone.",
+      "Your chats will show up here once you start messaging someone.":
+          "Your chats will show up here once you start messaging someone.",
       "No Requests Right Now": "No Requests Right Now",
-      "New chat requests will appear here when someone messages you.": "New chat requests will appear here when someone messages you.",
-      "Your request to join the live stream is pending approval.": "Your request to join the live stream is pending approval.",
+      "New chat requests will appear here when someone messages you.":
+          "New chat requests will appear here when someone messages you.",
+      "Your request to join the live stream is pending approval.":
+          "Your request to join the live stream is pending approval.",
       "Joined the stream": "Joined the stream",
       "Join": "Join",
-      "wants you to be in this live video": "wants you to be in this live video",
+      "wants you to be in this live video":
+          "wants you to be in this live video",
       "requesting to join the stream.": "requesting to join the stream.",
-      "The host has declined your request to join the live stream.": "The host has declined your request to join the live stream.",
-      "Your request to join the live stream has been sent to the host.": "Your request to join the live stream has been sent to the host.",
+      "The host has declined your request to join the live stream.":
+          "The host has declined your request to join the live stream.",
+      "Your request to join the live stream has been sent to the host.":
+          "Your request to join the live stream has been sent to the host.",
       "Exit live stream?": "Exit live stream?",
-      "If you check this profile, you will exit the live stream.": "If you check this profile, you will exit the live stream.",
-      "You can’t leave the live stream while a battle is in progress.": "You can’t leave the live stream while a battle is in progress.",
+      "If you check this profile, you will exit the live stream.":
+          "If you check this profile, you will exit the live stream.",
+      "You can’t leave the live stream while a battle is in progress.":
+          "You can’t leave the live stream while a battle is in progress.",
       "Get Back": "Get Back",
       "Exit Live Stream?": "Exit Live Stream?",
-      "Are you sure you want to leave the live stream?\\nIf the stream has ended, you won't be able to join again.": "Are you sure you want to leave the live stream?\\nIf the stream has ended, you won't be able to join again. ",
+      "Are you sure you want to leave the live stream?\\nIf the stream has ended, you won't be able to join again.":
+          "Are you sure you want to leave the live stream?\\nIf the stream has ended, you won't be able to join again. ",
       "Scan QR Code": "Scan QR Code",
-      "Scan the QR of the profile you want to search.": "Scan the QR of the profile you want to search.",
+      "Scan the QR of the profile you want to search.":
+          "Scan the QR of the profile you want to search.",
       "Upload From Gallery": "Upload From Gallery",
       "Nothing to Watch Yet": "Nothing to Watch Yet",
-      "Reels will appear here once new content is shared.": "Reels will appear here once new content is shared.",
+      "Share crash log": "Share crash log",
+      "Send us the latest app crash report":
+          "Send us the latest app crash report",
+      "No crash log yet": "No crash log yet",
+      "There is no crash log to share right now.":
+          "There is no crash log to share right now.",
+      "Reels will appear here once new content is shared.":
+          "Reels will appear here once new content is shared.",
       "Nothing to Show Yet": "Nothing to Show Yet",
-      "Explore content by entering keywords in the search bar above.": "Explore content by entering keywords in the search bar above.",
+      "Explore content by entering keywords in the search bar above.":
+          "Explore content by entering keywords in the search bar above.",
       "km": "km",
-      "an artist based in Portland. I find inspiration in nature and urban life. Let’s connect and create something beautiful! 🌿🖌️": "an artist based in Portland. I find inspiration in nature and urban life. Let’s connect and create something beautiful! 🌿🖌️",
+      "an artist based in Portland. I find inspiration in nature and urban life. Let’s connect and create something beautiful! 🌿🖌️":
+          "an artist based in Portland. I find inspiration in nature and urban life. Let’s connect and create something beautiful! 🌿🖌️",
       "Video path not found.": "Video path not found.",
       "has liked your post": "has liked your post",
       "liked your comment.": "liked your comment.",
-      "has commented on your post : @comment_description": "has commented on your post : @comment_description",
-      "has commented on your post with a GIF.": "has commented on your post with a GIF.",
-      "@username replied to your comment : @comment_description": "@username replied to your comment : @comment_description",
+      "has commented on your post : @comment_description":
+          "has commented on your post : @comment_description",
+      "has commented on your post with a GIF.":
+          "has commented on your post with a GIF.",
+      "@username replied to your comment : @comment_description":
+          "@username replied to your comment : @comment_description",
       "has mentioned you in post.": "has mentioned you in post.",
       "Mentioned you in comment": "Mentioned you in comment",
       "has started following you": "has started following you",
-      "has reply mentioned you in comment : @comment_description": "has reply mentioned you in comment : @comment_description",
+      "has reply mentioned you in comment : @comment_description":
+          "has reply mentioned you in comment : @comment_description",
       "has sent you gift": "has sent you gift",
       "No Comments Yet": "No Comments Yet",
-      "This post doesn’t have any comments. Join in and share your thoughts.": "This post doesn’t have any comments. Join in and share your thoughts.",
+      "This post doesn’t have any comments. Join in and share your thoughts.":
+          "This post doesn’t have any comments. Join in and share your thoughts.",
       "Post sent successfully": "Post sent successfully",
       "Search @brand_name": "Search @brand_name",
       "Find Reels Around You": "Find Reels Around You",
-      "Allow location access to explore reels shared by people near you.": "Allow location access to explore reels shared by people near you.",
-      "Location Services Are Still Disabled": "Location Services Are Still Disabled",
-      "To see nearby reels, please turn on location services in your device settings.": "To see nearby reels, please turn on location services in your device settings.",
+      "Allow location access to explore reels shared by people near you.":
+          "Allow location access to explore reels shared by people near you.",
+      "Location Services Are Still Disabled":
+          "Location Services Are Still Disabled",
+      "To see nearby reels, please turn on location services in your device settings.":
+          "To see nearby reels, please turn on location services in your device settings.",
       "Less than 1 km from you": "Less than 1 km from you",
       "{km} km from you": "{km} km from you",
       "{m} m from you": "{m} m from you",
@@ -446,29 +557,43 @@ class LocalTranslations {
       "From {name} governorate": "From {name} governorate",
       "In your country": "In your country",
       "No Posts Near You": "No Posts Near You",
-      "There are no posts within 100 km of your location. Pull down to try again.": "There are no posts within 100 km of your location. Pull down to try again.",
+      "There are no posts within 100 km of your location. Pull down to try again.":
+          "There are no posts within 100 km of your location. Pull down to try again.",
       "No Reels Near You": "No Reels Near You",
-      "There are no reels within 100 km of your location. Pull down to try again.": "There are no reels within 100 km of your location. Pull down to try again.",
-      "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.": "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.",
-      "Location permission is blocked. Open the app settings, allow location, then try again.": "Location permission is blocked. Open the app settings, allow location, then try again.",
-      "Location services are off. Turn them on from your device settings to see posts near you.": "Location services are off. Turn them on from your device settings to see posts near you.",
-      "We could not determine your location in time. Move to an open area and try again.": "We could not determine your location in time. Move to an open area and try again.",
-      "We could not access your location. Check your connection and location settings, then try again.": "We could not access your location. Check your connection and location settings, then try again.",
+      "There are no reels within 100 km of your location. Pull down to try again.":
+          "There are no reels within 100 km of your location. Pull down to try again.",
+      "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.":
+          "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.",
+      "Location permission is blocked. Open the app settings, allow location, then try again.":
+          "Location permission is blocked. Open the app settings, allow location, then try again.",
+      "Location services are off. Turn them on from your device settings to see posts near you.":
+          "Location services are off. Turn them on from your device settings to see posts near you.",
+      "We could not determine your location in time. Move to an open area and try again.":
+          "We could not determine your location in time. Move to an open area and try again.",
+      "We could not access your location. Check your connection and location settings, then try again.":
+          "We could not access your location. Check your connection and location settings, then try again.",
       "Location Unavailable": "Location Unavailable",
-      "We could not access your location. Please allow location access and try again.": "We could not access your location. Please allow location access and try again.",
+      "We could not access your location. Please allow location access and try again.":
+          "We could not access your location. Please allow location access and try again.",
       "See places near you.": "See places near you.",
-      "To include nearby places, turn on location services.": "To include nearby places, turn on location services.",
+      "To include nearby places, turn on location services.":
+          "To include nearby places, turn on location services.",
       "Turn on Location Services": "Turn on Location Services",
       "Nothing To Show Here": "Nothing To Show Here",
-      "This user has decided not to show their followings.": "This user has decided not to show their followings.",
+      "This user has decided not to show their followings.":
+          "This user has decided not to show their followings.",
       "No Blocked Users": "No Blocked Users",
-      "Users you block will appear here. You haven’t blocked anyone yet.": "Users you block will appear here. You haven’t blocked anyone yet.",
-      "You need to reach the minimum coin amount before you can redeem.": "You need to reach the minimum coin amount before you can redeem.",
+      "Users you block will appear here. You haven’t blocked anyone yet.":
+          "Users you block will appear here. You haven’t blocked anyone yet.",
+      "You need to reach the minimum coin amount before you can redeem.":
+          "You need to reach the minimum coin amount before you can redeem.",
       "No Users Found": "No Users Found",
-      "Users will appear here when available.": "Users will appear here when available.",
+      "Users will appear here when available.":
+          "Users will appear here when available.",
       "Freeze": "Freeze",
       "UnFreeze": "UnFreeze",
-      "This profile has been temporarily frozen due to policy violations or suspicious activity. Access is restricted until review is complete.": "This profile has been temporarily frozen due to policy violations or suspicious activity. Access is restricted until review is complete.",
+      "This profile has been temporarily frozen due to policy violations or suspicious activity. Access is restricted until review is complete.":
+          "This profile has been temporarily frozen due to policy violations or suspicious activity. Access is restricted until review is complete.",
       "Profile Unavailable": "Profile Unavailable",
       "Admin": "Admin",
       "Days": "Days",
@@ -486,34 +611,44 @@ class LocalTranslations {
       "2 Month": "2 Month",
       "Monthly": "Monthly",
       "Weekly": "Weekly",
-      "@price / Month. Billed @unit_label": "@price / Month. Billed @unit_label",
+      "@price / Month. Billed @unit_label":
+          "@price / Month. Billed @unit_label",
       "Give it a try": "Give it a try",
       "@count @get_period Free trial": "@count @get_period Free trial",
       "Annually": "Annually",
       "Semi Annually": "Semi Annually",
       "Three Months": "Three Months",
       "Two Months": "Two Months",
-      "The host has cancelled your invitation. You can no longer join the live stream.": "The host has cancelled your invitation. You can no longer join the live stream.",
+      "The host has cancelled your invitation. You can no longer join the live stream.":
+          "The host has cancelled your invitation. You can no longer join the live stream.",
       "joined as a co-host": "joined as a co-host",
-      "Min. @count Followers needed to go Live": "Min. @count Followers needed to go Live",
-      "You can add only @limit links in the profile.": "You can add only @limit links in the profile.",
+      "Min. @count Followers needed to go Live":
+          "Min. @count Followers needed to go Live",
+      "You can add only @limit links in the profile.":
+          "You can add only @limit links in the profile.",
       "Refresh": "Refresh",
       "Lost": "Lost",
       "Connection": "Connection",
       "No internet connection": "No internet connection",
       "Retry": "Retry",
       "Your account has been restricted.": "Your account has been restricted.",
-      "You can only review your settings right now.": "You can only review your settings right now.",
-      "This user is not receiving messages right now.": "This user is not receiving messages right now.",
-      "It looks like you are not\\nconnected to the internet": "It looks like you are not\\nconnected to the internet",
+      "You can only review your settings right now.":
+          "You can only review your settings right now.",
+      "This user is not receiving messages right now.":
+          "This user is not receiving messages right now.",
+      "It looks like you are not\\nconnected to the internet":
+          "It looks like you are not\\nconnected to the internet",
       "Download failed.": "Download failed.",
       "From": "From",
       "Something went wrong.": "Something went wrong.",
-      "🎉 Welcome Bonus Credited to Your Wallet!": "🎉 Welcome Bonus Credited to Your Wallet!",
-      "You've earned your registration bonus! Enjoy your coins and start exploring now!": "You've earned your registration bonus! Enjoy your coins and start exploring now!",
+      "🎉 Welcome Bonus Credited to Your Wallet!":
+          "🎉 Welcome Bonus Credited to Your Wallet!",
+      "You've earned your registration bonus! Enjoy your coins and start exploring now!":
+          "You've earned your registration bonus! Enjoy your coins and start exploring now!",
       "You are": "You are",
       "member": "member",
-      "Oops!! Battle Ended Please wait for a while..": "Oops!! Battle Ended Please wait for a while..",
+      "Oops!! Battle Ended Please wait for a while..":
+          "Oops!! Battle Ended Please wait for a while..",
       "Hey, @name is now live": "Hey, @name is now live",
       "Hurry up and join before it ends.": "Hurry up and join before it ends.",
       "Livestream has ended.": "Livestream has ended.",
@@ -522,13 +657,16 @@ class LocalTranslations {
       "Language": "لغة",
       "FROM AROUND\\nTHE WORLD": "من جميع أنحاء\\nالعالم",
       "Continue": "متابعة",
-      "Share your talent with the\\npeople around the world\\nand build your healthy fanbase.": "شارك موهبتك مع\\nالناس حول العالم\\nوابنِ قاعدة معجبين نشطة.",
+      "Share your talent with the\\npeople around the world\\nand build your healthy fanbase.":
+          "شارك موهبتك مع\\nالناس حول العالم\\nوابنِ قاعدة معجبين نشطة.",
       "Next": "التالي",
       "GET\\nAPPRECIATED": "احصل على\\nالتقدير",
       "Select": "تحديد",
-      "Collect likes and comments\\nfrom your fans, which boosts\\nyou to create more content!": "اجمع الإعجابات والتعليقات\\nمن معجبيك، مما يحفزك\\nعلى إنشاء المزيد من المحتوى!",
+      "Collect likes and comments\\nfrom your fans, which boosts\\nyou to create more content!":
+          "اجمع الإعجابات والتعليقات\\nمن معجبيك، مما يحفزك\\nعلى إنشاء المزيد من المحتوى!",
       "MULTIPLE SOCIAL\\nGATEWAYS": "بوابات تواصل اجتماعي\\nمتعددة",
-      "Post Reels, Images, Videos, Go\\nLive. Choose any way\\nfits to you & your audience!": "انشر ريلز، صور، فيديوهات، بث\\nمباشر. اختر أي طريقة\\nتناسبك وتناسب جمهورك!",
+      "Post Reels, Images, Videos, Go\\nLive. Choose any way\\nfits to you & your audience!":
+          "انشر ريلز، صور، فيديوهات، بث\\nمباشر. اختر أي طريقة\\nتناسبك وتناسب جمهورك!",
       "Nearby": "بالقرب",
       "Following": "يتابع",
       "Followers Only": "المتابِعون فقط",
@@ -611,7 +749,8 @@ class LocalTranslations {
       "Unfollow": "إلغاء المتابعة",
       "Go Live": "بث مباشر",
       "Levels": "المستويات",
-      "Gather more coins, ascend to new heights, and proudly showcase your badge on your profile for all to admire.": "اجمع المزيد من العملات، ارتقِ إلى مستويات جديدة، وعرض شارتك بفخر على ملفك الشخصي ليراها الجميع.",
+      "Gather more coins, ascend to new heights, and proudly showcase your badge on your profile for all to admire.":
+          "اجمع المزيد من العملات، ارتقِ إلى مستويات جديدة، وعرض شارتك بفخر على ملفك الشخصي ليراها الجميع.",
       "Level": "مستوى",
       "Collection": "المجموعة",
       "You": "أنت",
@@ -637,11 +776,13 @@ class LocalTranslations {
       "Mentions": "الإشارات",
       "Gifts Received": "الهدايا المستلمة",
       "Chat Message": "رسالة الدردشة",
-      "Subscribe to Plus and have \\nad-free experience and verified\\nicon on your profile.": "اشترك في Plus واستمتع بتجربة خالية من الإعلانات وعلامة التحقق على ملفك الشخصي.",
+      "Subscribe to Plus and have \\nad-free experience and verified\\nicon on your profile.":
+          "اشترك في Plus واستمتع بتجربة خالية من الإعلانات وعلامة التحقق على ملفك الشخصي.",
       "No Ads": "بدون إعلانات",
       "Get Verified": "احصل على التحقق",
       "Subscribe Now": "اشترك الآن",
-      "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.": "يتم تجديد الاشتراك تلقائيًا وفقًا للخطة ما لم يتم الإلغاء خلال 24 ساعة قبل نهاية الفترة الحالية. يمكنك إدارة الاشتراكات وإلغاؤها في أي وقت من إعدادات متجر التطبيقات/متجر Play.",
+      "The subscription renews automatically as per the plan unless cancelled within 24 hours before the end of the current period. You can manage and cancel subscriptions anytime from the app store/play store settings.":
+          "يتم تجديد الاشتراك تلقائيًا وفقًا للخطة ما لم يتم الإلغاء خلال 24 ساعة قبل نهاية الفترة الحالية. يمكنك إدارة الاشتراكات وإلغاؤها في أي وقت من إعدادات متجر التطبيقات/متجر Play.",
       "User ID": "معرف المستخدم",
       "Profile Image": "صورة الملف الشخصي",
       "Username": "اسم المستخدم",
@@ -661,7 +802,8 @@ class LocalTranslations {
       "Unpin": "إلغاء التثبيت",
       "Block": "حظر",
       "UnBlock": "إلغاء الحظر",
-      "Scan This code\nto check the profile": "امسح هذا الرمز\nللتحقق من الملف الشخصي",
+      "Scan This code\nto check the profile":
+          "امسح هذا الرمز\nللتحقق من الملف الشخصي",
       "Balance": "الرصيد",
       "Collected*": "المجموع*",
       "Gifted*": "الهدايا المرسلة*",
@@ -673,10 +815,12 @@ class LocalTranslations {
       "Every coin makes a difference": "كل عملة تصنع فرقاً",
       "Safe and fast transactions": "عمليات آمنة وسريعة",
       "reposted this": "أعاد نشر هذا",
-      "Please add Payment Gateway List in Admin Panel": "لا توجد بوابات دفع متاحة حالياً",
+      "Please add Payment Gateway List in Admin Panel":
+          "لا توجد بوابات دفع متاحة حالياً",
       "Your current balance": "رصيدك الحالي",
       "Choose a coin package": "اختر باقة العملات",
-      "Use coins to gift creators": "استخدم العملات لإرسال الهدايا ودعم المبدعين",
+      "Use coins to gift creators":
+          "استخدم العملات لإرسال الهدايا ودعم المبدعين",
       "Manage your balance and purchases": "إدارة رصيدك وعمليات الشراء",
       "View posts you have saved": "مشاهدة المنشورات التي حفظتها",
       "Manage your blocked users list": "إدارة قائمة المستخدمين المحظورين",
@@ -688,8 +832,10 @@ class LocalTranslations {
       "Read the app's terms of use": "اقرأ شروط استخدام التطبيق",
       "Learn how your data is protected": "تعرف على كيفية حماية بياناتك",
       "Sign out of your current account": "تسجيل خروج من حسابك الحالي",
-      "All your data will be permanently deleted": "سيتم حذف جميع بياناتك بشكل نهائي",
-      "Recharge your wallet. And\nsend gifts to your favorite creators.": "اشحن محفظتك.\nوأرسل الهدايا إلى منشئي المحتوى المفضلين لديك.",
+      "All your data will be permanently deleted":
+          "سيتم حذف جميع بياناتك بشكل نهائي",
+      "Recharge your wallet. And\nsend gifts to your favorite creators.":
+          "اشحن محفظتك.\nوأرسل الهدايا إلى منشئي المحتوى المفضلين لديك.",
       "Purchase": "شراء",
       "Withdrawals": "السحوبات",
       "Request Withdrawal": "طلب سحب",
@@ -750,38 +896,60 @@ class LocalTranslations {
       "From Battle": "من المعركة",
       "Live": "مباشر",
       "Check Profile": "تحقق من الملف الشخصي",
-      "You are sending coins to @color Participant": "أنت ترسل عملات إلى @color المشارك",
-      "You will be sent back to main view in...": "سيتم إعادتك إلى العرض الرئيسي خلال...",
-      "The live stream has ended because min. @viewers_count viewers are required to keep it going.": "انتهى البث المباشر لأن الحد الأدنى المطلوب من المشاهدين @viewers_count للحفاظ عليه غير متوفر.",
-      "Please enter an email. The email field is empty.": "الرجاء إدخال بريد إلكتروني. حقل البريد الإلكتروني فارغ.",
-      "Please enter a password. The password field is empty.": "الرجاء إدخال كلمة مرور. حقل كلمة المرور فارغ.",
-      "No user found with that email. Please register with this email.": "لم يتم العثور على مستخدم بهذا البريد الإلكتروني. يرجى التسجيل بهذا البريد.",
-      "Incorrect password provided for this user.": "كلمة المرور المقدمة غير صحيحة لهذا المستخدم.",
+      "You are sending coins to @color Participant":
+          "أنت ترسل عملات إلى @color المشارك",
+      "You will be sent back to main view in...":
+          "سيتم إعادتك إلى العرض الرئيسي خلال...",
+      "The live stream has ended because min. @viewers_count viewers are required to keep it going.":
+          "انتهى البث المباشر لأن الحد الأدنى المطلوب من المشاهدين @viewers_count للحفاظ عليه غير متوفر.",
+      "Please enter an email. The email field is empty.":
+          "الرجاء إدخال بريد إلكتروني. حقل البريد الإلكتروني فارغ.",
+      "Please enter a password. The password field is empty.":
+          "الرجاء إدخال كلمة مرور. حقل كلمة المرور فارغ.",
+      "No user found with that email. Please register with this email.":
+          "لم يتم العثور على مستخدم بهذا البريد الإلكتروني. يرجى التسجيل بهذا البريد.",
+      "Incorrect password provided for this user.":
+          "كلمة المرور المقدمة غير صحيحة لهذا المستخدم.",
       "The password provided is too weak.": "كلمة المرور المقدمة ضعيفة جدًا.",
-      "The account already exists for that email.": "يوجد حساب بالفعل لهذا البريد الإلكتروني.",
-      "Please enter a full name. The full name field is empty.": "الرجاء إدخال اسم كامل. حقل الاسم الكامل فارغ.",
-      "Please enter a username. The username field is empty.": "الرجاء إدخال اسم مستخدم. حقل اسم المستخدم فارغ.",
-      "Please enter a URL link. The link field is empty.": "الرجاء إدخال رابط URL. حقل الرابط فارغ.",
+      "The account already exists for that email.":
+          "يوجد حساب بالفعل لهذا البريد الإلكتروني.",
+      "Please enter a full name. The full name field is empty.":
+          "الرجاء إدخال اسم كامل. حقل الاسم الكامل فارغ.",
+      "Please enter a username. The username field is empty.":
+          "الرجاء إدخال اسم مستخدم. حقل اسم المستخدم فارغ.",
+      "Please enter a URL link. The link field is empty.":
+          "الرجاء إدخال رابط URL. حقل الرابط فارغ.",
       "Please enter a valid URL link": "الرجاء إدخال رابط URL صالح.",
-      "Please enter a title. The title field is empty.": "الرجاء إدخال عنوان. حقل العنوان فارغ.",
+      "Please enter a title. The title field is empty.":
+          "الرجاء إدخال عنوان. حقل العنوان فارغ.",
       "Please enter a valid username.": "الرجاء إدخال اسم مستخدم صالح.",
-      "This username is already taken. Please choose another one.": "اسم المستخدم هذا مستخدم بالفعل. الرجاء اختيار اسم آخر.",
-      "Please confirm your password. The confirm password field is empty.": "الرجاء تأكيد كلمة المرور. حقل تأكيد كلمة المرور فارغ.",
-      "The password and confirm password do not match.": "كلمة المرور وتأكيد كلمة المرور غير متطابقين.",
-      "The email is incorrect. Please enter a valid email.": "البريد الإلكتروني غير صحيح. الرجاء إدخال بريد إلكتروني صالح.",
-      "A verification link has been sent to your email. Please verify the link to log in.": "تم إرسال رابط التحقق إلى بريدك الإلكتروني. يرجى التحقق من الرابط لتسجيل الدخول.",
-      "Please verify your email first, then proceed to log in.": "الرجاء التحقق من بريدك الإلكتروني أولاً، ثم تابع تسجيل الدخول.",
+      "This username is already taken. Please choose another one.":
+          "اسم المستخدم هذا مستخدم بالفعل. الرجاء اختيار اسم آخر.",
+      "Please confirm your password. The confirm password field is empty.":
+          "الرجاء تأكيد كلمة المرور. حقل تأكيد كلمة المرور فارغ.",
+      "The password and confirm password do not match.":
+          "كلمة المرور وتأكيد كلمة المرور غير متطابقين.",
+      "The email is incorrect. Please enter a valid email.":
+          "البريد الإلكتروني غير صحيح. الرجاء إدخال بريد إلكتروني صالح.",
+      "A verification link has been sent to your email. Please verify the link to log in.":
+          "تم إرسال رابط التحقق إلى بريدك الإلكتروني. يرجى التحقق من الرابط لتسجيل الدخول.",
+      "Please verify your email first, then proceed to log in.":
+          "الرجاء التحقق من بريدك الإلكتروني أولاً، ثم تابع تسجيل الدخول.",
       "Verification Badge": "علامة التوثيق",
       "Blue Verification": "التوثيق الأزرق",
-      "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.": "هذا الحساب موثّق باعتباره شخصية معروفة أو مشهورة أو صانع محتوى بارز. تمت مراجعة هوية صاحب الحساب من إدارة Nimiro.",
+      "This account is verified as a well-known public figure, celebrity, or prominent content creator. The account owner's identity has been reviewed by the Nimiro administration.":
+          "هذا الحساب موثّق باعتباره شخصية معروفة أو مشهورة أو صانع محتوى بارز. تمت مراجعة هوية صاحب الحساب من إدارة Nimiro.",
       "Green Verification": "التوثيق الأخضر",
-      "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.": "هذا الحساب موثّق كمؤسسة أو شركة أو جهة رسمية. تمت مراجعة بيانات الجهة من إدارة Nimiro.",
+      "This account is verified as an organization, company, or official entity. Its information has been reviewed by the Nimiro administration.":
+          "هذا الحساب موثّق كمؤسسة أو شركة أو جهة رسمية. تمت مراجعة بيانات الجهة من إدارة Nimiro.",
       "Nimiro Official Verification": "التوثيق الرسمي من Nimiro",
-      "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.": "هذا الحساب موثّق رسميًا من إدارة Nimiro. تؤكد هذه العلامة أن الحساب موثوق ومعتمد رسميًا من المنصة.",
+      "This account is officially verified by the Nimiro administration. This badge confirms that the account is trusted and officially recognized by the platform.":
+          "هذا الحساب موثّق رسميًا من إدارة Nimiro. تؤكد هذه العلامة أن الحساب موثوق ومعتمد رسميًا من المنصة.",
       "Delete Link?": "حذف الرابط؟",
       "Phone Code": "رمز الهاتف",
       "No Data Found": "لا توجد بيانات",
-      "Are you sure you want to delete this link? This action cannot be undone.": "هل أنت متأكد أنك تريد حذف هذا الرابط؟ لا يمكن التراجع عن هذا الإجراء.",
+      "Are you sure you want to delete this link? This action cannot be undone.":
+          "هل أنت متأكد أنك تريد حذف هذا الرابط؟ لا يمكن التراجع عن هذا الإجراء.",
       "Uploading post...": "جاري رفع المنشور...",
       "Uploading story...": "جاري رفع الستوري...",
       "Post uploaded successfully.": "تم رفع المنشور بنجاح.",
@@ -789,15 +957,21 @@ class LocalTranslations {
       "Uploading failed.": "فشل الرفع.",
       "Add Filter": "إضافة فلتر",
       "Apply to all": "تطبيق على الكل",
-      "An error occurred while applying the video filter.": "حدث خطأ أثناء تطبيق فلتر الفيديو.",
-      "An error occurred while compress the video.": "حدث خطأ أثناء ضغط الفيديو.",
+      "An error occurred while applying the video filter.":
+          "حدث خطأ أثناء تطبيق فلتر الفيديو.",
+      "An error occurred while compress the video.":
+          "حدث خطأ أثناء ضغط الفيديو.",
       "Delete Post?": "حذف المنشور؟",
-      "Are you sure you want to delete this post? Once deleted, it cannot be restored.": "هل أنت متأكد أنك تريد حذف هذا المنشور؟ بمجرد الحذف، لا يمكن استعادته.",
+      "Are you sure you want to delete this post? Once deleted, it cannot be restored.":
+          "هل أنت متأكد أنك تريد حذف هذا المنشور؟ بمجرد الحذف، لا يمكن استعادته.",
       "Your post has been pinned.": "تم تثبيت منشورك.",
       "Your post has been unpinned.": "تم إلغاء تثبيت منشورك.",
-      "You can pin maximum @pin_count post.": "يمكنك تثبيت حد أقصى @pin_count منشور.",
-      "You can pin maximum @pin_comment_count comment.": "يمكنك تثبيت حد أقصى @pin_comment_count تعليق.",
-      "A reset password link has been sent to your email. Please use it to reset your password.": "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى استخدامه لإعادة تعيين كلمة المرور.",
+      "You can pin maximum @pin_count post.":
+          "يمكنك تثبيت حد أقصى @pin_count منشور.",
+      "You can pin maximum @pin_comment_count comment.":
+          "يمكنك تثبيت حد أقصى @pin_comment_count تعليق.",
+      "A reset password link has been sent to your email. Please use it to reset your password.":
+          "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى استخدامه لإعادة تعيين كلمة المرور.",
       "Copyright Infringement": "انتهاك حقوق النشر",
       "Hate Speech": "خطاب كراهية",
       "Harassment or Bullying": "تحرش أو تنمر",
@@ -809,29 +983,38 @@ class LocalTranslations {
       "Impersonation": "انتحال شخصية",
       "Misinformation": "معلومات مضللة",
       "Reason": "السبب",
-      "Please provide a detailed reason for the report.": "الرجاء تقديم سبب مفصل للإبلاغ.",
+      "Please provide a detailed reason for the report.":
+          "الرجاء تقديم سبب مفصل للإبلاغ.",
       "Report submitted successfully.": "تم تقديم الإبلاغ بنجاح.",
       "Block @username!": "حظر @username!",
       "UnBlock @username!": "إلغاء حظر @username!",
-      "Are you sure you want to block this user? You will no longer see their followers or following, and they won't be able to view your profile, photos, or posts. Once blocked, this user will no longer be able to chat with you, and you won’t be able to chat with them either.": "هل أنت متأكد أنك تريد حظر هذا المستخدم؟ لن تتمكن من رؤية متابعيه أو متابعاته، ولن يتمكن من عرض ملفك الشخصي أو صورك أو منشوراتك. بمجرد الحظر، لن يتمكن هذا المستخدم من الدردشة معك، ولن تتمكن من الدردشة معه أيضًا.",
-      "Once unblocked, this user will be able to chat with you again, and you can chat with them as well. They will also be able to see your profile, photos, and posts, and you will be able to view their followers and following.": "بمجرد إلغاء الحظر، سيتمكن هذا المستخدم من الدردشة معك مرة أخرى، ويمكنك الدردشة معه أيضًا. سيتمكن أيضًا من رؤية ملفك الشخصي وصورك ومنشوراتك، وستتمكن من رؤية متابعيه ومتابعاته.",
+      "Are you sure you want to block this user? You will no longer see their followers or following, and they won't be able to view your profile, photos, or posts. Once blocked, this user will no longer be able to chat with you, and you won’t be able to chat with them either.":
+          "هل أنت متأكد أنك تريد حظر هذا المستخدم؟ لن تتمكن من رؤية متابعيه أو متابعاته، ولن يتمكن من عرض ملفك الشخصي أو صورك أو منشوراتك. بمجرد الحظر، لن يتمكن هذا المستخدم من الدردشة معك، ولن تتمكن من الدردشة معه أيضًا.",
+      "Once unblocked, this user will be able to chat with you again, and you can chat with them as well. They will also be able to see your profile, photos, and posts, and you will be able to view their followers and following.":
+          "بمجرد إلغاء الحظر، سيتمكن هذا المستخدم من الدردشة معك مرة أخرى، ويمكنك الدردشة معه أيضًا. سيتمكن أيضًا من رؤية ملفك الشخصي وصورك ومنشوراتك، وستتمكن من رؤية متابعيه ومتابعاته.",
       "You are bock this user": "لقد حظرت هذا المستخدم",
       "This user is freeze": "هذا المستخدم مجمد",
       "Delete Comment!": "حذف التعليق!",
       "Delete Reply Comment!": "حذف رد التعليق!",
-      "Are you sure you want to delete this comment? This action cannot be undone.": "هل أنت متأكد أنك تريد حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء.",
-      "Do you really want to delete your account? All of your data will be deleted, and you won’t be able to recover it again!": "هل تريد حقًا حذف حسابك؟ سيتم حذف جميع بياناتك، ولن تتمكن من استعادتها مرة أخرى!",
+      "Are you sure you want to delete this comment? This action cannot be undone.":
+          "هل أنت متأكد أنك تريد حذف هذا التعليق؟ لا يمكن التراجع عن هذا الإجراء.",
+      "Do you really want to delete your account? All of your data will be deleted, and you won’t be able to recover it again!":
+          "هل تريد حقًا حذف حسابك؟ سيتم حذف جميع بياناتك، ولن تتمكن من استعادتها مرة أخرى!",
       "Do you really want to proceed?": "هل تريد حقًا المتابعة؟",
-      "Are you sure you want to log out? You will need to log in again to access your account.": "هل أنت متأكد أنك تريد تسجيل الخروج؟ ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.",
+      "Are you sure you want to log out? You will need to log in again to access your account.":
+          "هل أنت متأكد أنك تريد تسجيل الخروج؟ ستحتاج إلى تسجيل الدخول مرة أخرى للوصول إلى حسابك.",
       "Logout!": "تسجيل الخروج!",
       "Delete Your Account!": "حذف حسابك!",
-      "There is nothing we can show you for now.": "لا يوجد شيء لنعرضه لك الآن.",
+      "There is nothing we can show you for now.":
+          "لا يوجد شيء لنعرضه لك الآن.",
       "music": "موسيقى",
       "Discard edits?": "تجاهل التعديلات؟",
       "Start Again?": "البدء من جديد؟",
       "Start Again": "البدء من جديد",
-      "If you go back now, you'll lose all the edits you've made.": "إذا عدت الآن، فستفقد جميع التعديلات التي أجريتها.",
-      "If you go back now, you'll lose this draft": "إذا عدت الآن، فستفقد هذا المسودة.",
+      "If you go back now, you'll lose all the edits you've made.":
+          "إذا عدت الآن، فستفقد جميع التعديلات التي أجريتها.",
+      "If you go back now, you'll lose this draft":
+          "إذا عدت الآن، فستفقد هذا المسودة.",
       "Discover": "اكتشف",
       "No location found.": "لم يتم العثور على موقع.",
       "Start searching for a location.": "ابدأ البحث عن موقع.",
@@ -839,15 +1022,20 @@ class LocalTranslations {
       "Current Value": "القيمة الحالية",
       "Account Details": "تفاصيل الحساب",
       "Select Gateway": "اختر بوابة",
-      "You cannot enter more than @coin coins!": "لا يمكنك إدخال أكثر من @coin عملة!",
+      "You cannot enter more than @coin coins!":
+          "لا يمكنك إدخال أكثر من @coin عملة!",
       "Redeem gateway not found.": "لم يتم العثور على بوابة استرداد.",
       "Record up to @second seconds.": "سجل حتى @second ثانية.",
-      "Allow Camera & Microphone Access": "السماح بالوصول إلى الكاميرا والميكروفون",
-      "To capture photos, record videos, and use voice features, @app_name needs access to your camera and microphone. Please grant permission in your device settings.": "لالتقاط الصور، تسجيل الفيديوهات، واستخدام ميزات الصوت، يحتاج @app_name إلى الوصول إلى الكاميرا والميكروفون. يرجى منح الإذن في إعدادات جهازك.",
+      "Allow Camera & Microphone Access":
+          "السماح بالوصول إلى الكاميرا والميكروفون",
+      "To capture photos, record videos, and use voice features, @app_name needs access to your camera and microphone. Please grant permission in your device settings.":
+          "لالتقاط الصور، تسجيل الفيديوهات، واستخدام ميزات الصوت، يحتاج @app_name إلى الوصول إلى الكاميرا والميكروفون. يرجى منح الإذن في إعدادات جهازك.",
       "Open setting": "فتح الإعدادات",
       "Delete Story?": "حذف الستوري؟",
-      "Are you sure you want to delete this story?": "هل أنت متأكد أنك تريد حذف هذه الستوري؟",
-      "Are you sure you want to delete this text?": "هل أنت متأكد أنك تريد حذف هذا النص؟",
+      "Are you sure you want to delete this story?":
+          "هل أنت متأكد أنك تريد حذف هذه الستوري؟",
+      "Are you sure you want to delete this text?":
+          "هل أنت متأكد أنك تريد حذف هذا النص؟",
       "Music download failed.": "فشل تنزيل الموسيقى.",
       "View More": "عرض المزيد",
       "Download completed successfully!": "تم التنزيل بنجاح!",
@@ -855,8 +1043,10 @@ class LocalTranslations {
       "User not found.": "لم يتم العثور على المستخدم.",
       "Delete Message?": "حذف الرسالة؟",
       "Delete @user_name?": "حذف @user_name؟",
-      "After deleting this user, you will not be able to restore the chat.": "بعد حذف هذا المستخدم، لن تتمكن من استعادة الدردشة.",
-      "This message will be deleted only for you. The other person will still be able to see it. Do you want to continue?": "سيتم حذف هذه الرسالة لك فقط. سيظل الشخص الآخر قادرًا على رؤيتها. هل تريد المتابعة؟",
+      "After deleting this user, you will not be able to restore the chat.":
+          "بعد حذف هذا المستخدم، لن تتمكن من استعادة الدردشة.",
+      "This message will be deleted only for you. The other person will still be able to see it. Do you want to continue?":
+          "سيتم حذف هذه الرسالة لك فقط. سيظل الشخص الآخر قادرًا على رؤيتها. هل تريد المتابعة؟",
       "Send Media": "إرسال وسائط",
       "Select Media": "اختر وسائط",
       "Video": "فيديو",
@@ -864,97 +1054,147 @@ class LocalTranslations {
       "You received a gift!": "لقد تلقيت هدية!",
       "You have sent a gift!": "لقد أرسلت هدية!",
       "Enable Microphone Access": "تمكين الوصول إلى الميكروفون",
-      "Enable Camera and Microphone Access": "تمكين الوصول إلى الكاميرا والميكروفون",
+      "Enable Camera and Microphone Access":
+          "تمكين الوصول إلى الكاميرا والميكروفون",
       "Enable photos and videos access": "تمكين الوصول إلى الصور والفيديوهات",
-      "To Share photos and videos, @app_name needs access to Storage on your device.": "لمشاركة الصور والفيديوهات، يحتاج @app_name إلى الوصول إلى التخزين على جهازك.",
-      "You'll need to enable camera and microphone access in your settings to send a photo or video message.": "ستحتاج إلى تمكين الوصول إلى الكاميرا والميكروفون في إعداداتك لإرسال رسالة بصورة أو فيديو.",
-      "You'll need to enable microphone access in your settings to send a voice message.": "ستحتاج إلى تمكين الوصول إلى الميكروفون في إعداداتك لإرسال رسالة صوتية.",
+      "To Share photos and videos, @app_name needs access to Storage on your device.":
+          "لمشاركة الصور والفيديوهات، يحتاج @app_name إلى الوصول إلى التخزين على جهازك.",
+      "You'll need to enable camera and microphone access in your settings to send a photo or video message.":
+          "ستحتاج إلى تمكين الوصول إلى الكاميرا والميكروفون في إعداداتك لإرسال رسالة بصورة أو فيديو.",
+      "You'll need to enable microphone access in your settings to send a voice message.":
+          "ستحتاج إلى تمكين الوصول إلى الميكروفون في إعداداتك لإرسال رسالة صوتية.",
       "Delete for you": "حذف لك فقط",
       "Unsend": "إلغاء الإرسال",
-      "You can share with up to @share_chat_limit chats.": "يمكنك المشاركة مع حد أقصى @share_chat_limit دردشة.",
-      "@chat_user_name wants to chat with you. Approve it if you want to chat.": "@chat_user_name يريد الدردشة معك. قم بالموافقة إذا كنت ترغب في الدردشة.",
-      "You cannot send messages to this account unless you unblock them.": "لا يمكنك إرسال رسائل إلى هذا الحساب إلا إذا قمت بإلغاء حظره.",
-      "You Blocked @block_user_name \\nYou cannot send messages to this account unless you unblock them.": "لقد حظرت @block_user_name \\nلا يمكنك إرسال رسائل إلى هذا الحساب إلا إذا قمت بإلغاء حظره.",
+      "You can share with up to @share_chat_limit chats.":
+          "يمكنك المشاركة مع حد أقصى @share_chat_limit دردشة.",
+      "@chat_user_name wants to chat with you. Approve it if you want to chat.":
+          "@chat_user_name يريد الدردشة معك. قم بالموافقة إذا كنت ترغب في الدردشة.",
+      "You cannot send messages to this account unless you unblock them.":
+          "لا يمكنك إرسال رسائل إلى هذا الحساب إلا إذا قمت بإلغاء حظره.",
+      "You Blocked @block_user_name \\nYou cannot send messages to this account unless you unblock them.":
+          "لقد حظرت @block_user_name \\nلا يمكنك إرسال رسائل إلى هذا الحساب إلا إذا قمت بإلغاء حظره.",
       "You are blocked by this user.": "تم حظرك بواسطة هذا المستخدم.",
       "Copied to clipboard.": "تم النسخ إلى الحافظة.",
       "Message sent": "تم إرسال الرسالة",
       "Story unavailable": "الستوري غير متوفرة",
       "Delete Music?": "حذف الموسيقى؟",
-      "Are you sure you want to delete this music? This action cannot be undone.": "هل أنت متأكد أنك تريد حذف هذه الموسيقى؟ لا يمكن التراجع عن هذا الإجراء.",
-      "Session Expired – Logged in on Another Device": "انتهت الجلسة – تم تسجيل الدخول من جهاز آخر",
-      "For security reasons, @app_name allows only one active session per account. It looks like you logged in on another device using the same email. To protect your account, we have automatically logged you out from this device.\\n\\nIf this wasn’t you, please log in again. You can change your password from the login screen if needed.": "لأسباب أمنية، يسمح @app_name بجلسة نشطة واحدة فقط لكل حساب. يبدو أنك سجلت الدخول من جهاز آخر باستخدام نفس البريد الإلكتروني. لحماية حسابك، قمنا بتسجيل خروجك تلقائيًا من هذا الجهاز.\\n\\nإذا لم تكن أنت، يرجى تسجيل الدخول مرة أخرى. يمكنك تغيير كلمة المرور من شاشة تسجيل الدخول إذا لزم الأمر.",
+      "Are you sure you want to delete this music? This action cannot be undone.":
+          "هل أنت متأكد أنك تريد حذف هذه الموسيقى؟ لا يمكن التراجع عن هذا الإجراء.",
+      "Session Expired – Logged in on Another Device":
+          "انتهت الجلسة – تم تسجيل الدخول من جهاز آخر",
+      "For security reasons, @app_name allows only one active session per account. It looks like you logged in on another device using the same email. To protect your account, we have automatically logged you out from this device.\\n\\nIf this wasn’t you, please log in again. You can change your password from the login screen if needed.":
+          "لأسباب أمنية، يسمح @app_name بجلسة نشطة واحدة فقط لكل حساب. يبدو أنك سجلت الدخول من جهاز آخر باستخدام نفس البريد الإلكتروني. لحماية حسابك، قمنا بتسجيل خروجك تلقائيًا من هذا الجهاز.\\n\\nإذا لم تكن أنت، يرجى تسجيل الدخول مرة أخرى. يمكنك تغيير كلمة المرور من شاشة تسجيل الدخول إذا لزم الأمر.",
       "Your Account Has Been Frozen": "تم تجميد حسابك",
       "Request to Unfreeze My Account": "طلب فك تجميد حسابي",
-      "We're sorry, but it looks like your account has been temporarily frozen. This might be due to unusual activity or a policy-related concern.\\n\\nFor your security and to ensure proper access, your account has been placed on hold. You won’t be able to use the app until the issue is resolved.\\n\\nTo unfreeze your account or to get more information, please reach out to our support team at @support_mail. We’re here to assist you and will do our best to help you get back up and running as quickly as possible.\\n\\nThank you for your patience and understanding.": "نأسف، ولكن يبدو أن حسابك قد تم تجميده مؤقتًا. قد يكون هذا بسبب نشاط غير معتاد أو مخالفة للسياسات.\\n\\nلحمايتك ولضمان الوصول المناسب، تم تعليق حسابك. لن تتمكن من استخدام التطبيق حتى يتم حل المشكلة.\\n\\nلفك تجميد حسابك أو للحصول على مزيد من المعلومات، يرجى التواصل مع فريق الدعم على @support_mail. نحن هنا لمساعدتك وسنبذل قصارى جهدنا لمساعدتك في العودة إلى العمل في أسرع وقت ممكن.\\n\\nنشكرك على صبرك وتفهمك.",
-      "Text is rejected because it includes such things:": "تم رفض النص لأنه يتضمن أشياء مثل:",
-      "Media is rejected because it contains such things:": "تم رفض الوسائط لأنها تحتوي على أشياء مثل:",
+      "We're sorry, but it looks like your account has been temporarily frozen. This might be due to unusual activity or a policy-related concern.\\n\\nFor your security and to ensure proper access, your account has been placed on hold. You won’t be able to use the app until the issue is resolved.\\n\\nTo unfreeze your account or to get more information, please reach out to our support team at @support_mail. We’re here to assist you and will do our best to help you get back up and running as quickly as possible.\\n\\nThank you for your patience and understanding.":
+          "نأسف، ولكن يبدو أن حسابك قد تم تجميده مؤقتًا. قد يكون هذا بسبب نشاط غير معتاد أو مخالفة للسياسات.\\n\\nلحمايتك ولضمان الوصول المناسب، تم تعليق حسابك. لن تتمكن من استخدام التطبيق حتى يتم حل المشكلة.\\n\\nلفك تجميد حسابك أو للحصول على مزيد من المعلومات، يرجى التواصل مع فريق الدعم على @support_mail. نحن هنا لمساعدتك وسنبذل قصارى جهدنا لمساعدتك في العودة إلى العمل في أسرع وقت ممكن.\\n\\nنشكرك على صبرك وتفهمك.",
+      "Text is rejected because it includes such things:":
+          "تم رفض النص لأنه يتضمن أشياء مثل:",
+      "Media is rejected because it contains such things:":
+          "تم رفض الوسائط لأنها تحتوي على أشياء مثل:",
       "Restrict users requests to join.": "تقييد طلبات المستخدمين للانضمام.",
       "End This Stream!": "إنهاء هذا البث!",
-      "Do you really want to end this streaming?": "هل تريد حقًا إنهاء هذا البث؟",
+      "Do you really want to end this streaming?":
+          "هل تريد حقًا إنهاء هذا البث؟",
       "End Battle?": "إنهاء المعركة؟",
-      "Are you sure you want to stop the battle? This action can’t be undone.": "هل أنت متأكد أنك تريد إيقاف المعركة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "Are you sure you want to stop the battle? This action can’t be undone.":
+          "هل أنت متأكد أنك تريد إيقاف المعركة؟ لا يمكن التراجع عن هذا الإجراء.",
       "No Join Requests Yet": "لا توجد طلبات انضمام بعد",
-      "View and manage audience requests to join the live stream.": "عرض وإدارة طلبات الجمهور للانضمام إلى البث المباشر.",
+      "View and manage audience requests to join the live stream.":
+          "عرض وإدارة طلبات الجمهور للانضمام إلى البث المباشر.",
       "No Viewers Yet": "لا يوجد مشاهدون بعد",
-      "Audience members will appear here when they join your live stream.": "سيظهر أعضاء الجمهور هنا عند انضمامهم إلى بثك المباشر.",
+      "Audience members will appear here when they join your live stream.":
+          "سيظهر أعضاء الجمهور هنا عند انضمامهم إلى بثك المباشر.",
       "No One Invited": "لم تتم دعوة أحد بعد",
-      "You haven’t invited anyone yet. Invited users will be listed here.": "لم تدعُ أي شخص بعد. سيظهر المستخدمون المدعوون هنا.",
+      "You haven’t invited anyone yet. Invited users will be listed here.":
+          "لم تدعُ أي شخص بعد. سيظهر المستخدمون المدعوون هنا.",
       "No Co-hosts Yet": "لا يوجد مشاركون في البث بعد",
-      "Co-hosts will appear here once they accept your invitation.": "سيظهر المشاركون في البث هنا بمجرد قبول دعوتك.",
-      "You are sending coins to the above user.": "أنت ترسل عملات إلى المستخدم أعلاه.",
+      "Co-hosts will appear here once they accept your invitation.":
+          "سيظهر المشاركون في البث هنا بمجرد قبول دعوتك.",
+      "You are sending coins to the above user.":
+          "أنت ترسل عملات إلى المستخدم أعلاه.",
       "No Live Streams Yet": "لا يوجد بث مباشر بعد",
-      "Live streams will appear here when someone goes live.": "ستظهر البثوث المباشرة هنا عندما يبدأ أحدهم البث.",
+      "Live streams will appear here when someone goes live.":
+          "ستظهر البثوث المباشرة هنا عندما يبدأ أحدهم البث.",
       "No Reels Yet": "لا يوجد ريلز بعد",
-      "This user hasn’t posted any reels so far.": "لم ينشر هذا المستخدم أي ريلز حتى الآن.",
+      "This user hasn’t posted any reels so far.":
+          "لم ينشر هذا المستخدم أي ريلز حتى الآن.",
       "You Haven’t Shared Any Posts": "لم تشارك أي منشورات بعد",
-      "Start posting to share your moments with the community.": "ابدأ النشر لمشاركة لحظاتك مع المجتمع.",
+      "Start posting to share your moments with the community.":
+          "ابدأ النشر لمشاركة لحظاتك مع المجتمع.",
       "No Posts Yet": "لا توجد منشورات بعد",
-      "This user hasn’t shared any posts so far.": "لم يشارك هذا المستخدم أي منشورات حتى الآن.",
+      "This user hasn’t shared any posts so far.":
+          "لم يشارك هذا المستخدم أي منشورات حتى الآن.",
       "Start a Conversation": "ابدأ محادثة",
-      "Your chats will show up here once you start messaging someone.": "ستظهر دردشاتك هنا بمجرد بدء المراسلة مع شخص ما.",
+      "Your chats will show up here once you start messaging someone.":
+          "ستظهر دردشاتك هنا بمجرد بدء المراسلة مع شخص ما.",
       "No Requests Right Now": "لا توجد طلبات الآن",
-      "New chat requests will appear here when someone messages you.": "ستظهر طلبات الدردشة الجديدة هنا عندما يراسلك أحد.",
-      "Your request to join the live stream is pending approval.": "طلبك للانضمام إلى البث المباشر قيد الانتظار للموافقة.",
+      "New chat requests will appear here when someone messages you.":
+          "ستظهر طلبات الدردشة الجديدة هنا عندما يراسلك أحد.",
+      "Your request to join the live stream is pending approval.":
+          "طلبك للانضمام إلى البث المباشر قيد الانتظار للموافقة.",
       "Joined the stream": "انضم إلى البث",
       "Join": "انضم",
-      "wants you to be in this live video": "يريدك أن تكون في هذا الفيديو المباشر",
+      "wants you to be in this live video":
+          "يريدك أن تكون في هذا الفيديو المباشر",
       "requesting to join the stream.": "يطلب الانضمام إلى البث.",
-      "The host has declined your request to join the live stream.": "رفض المضيف طلبك للانضمام إلى البث المباشر.",
-      "Your request to join the live stream has been sent to the host.": "تم إرسال طلبك للانضمام إلى البث المباشر إلى المضيف.",
+      "The host has declined your request to join the live stream.":
+          "رفض المضيف طلبك للانضمام إلى البث المباشر.",
+      "Your request to join the live stream has been sent to the host.":
+          "تم إرسال طلبك للانضمام إلى البث المباشر إلى المضيف.",
       "Exit live stream?": "الخروج من البث المباشر؟",
-      "If you check this profile, you will exit the live stream.": "إذا قمت بالتحقق من هذا الملف الشخصي، ستخرج من البث المباشر.",
-      "You can’t leave the live stream while a battle is in progress.": "لا يمكنك مغادرة البث المباشر أثناء المعركة.",
+      "If you check this profile, you will exit the live stream.":
+          "إذا قمت بالتحقق من هذا الملف الشخصي، ستخرج من البث المباشر.",
+      "You can’t leave the live stream while a battle is in progress.":
+          "لا يمكنك مغادرة البث المباشر أثناء المعركة.",
       "Get Back": "العودة",
       "Exit Live Stream?": "الخروج من البث المباشر؟",
-      "Are you sure you want to leave the live stream?\\nIf the stream has ended, you won't be able to join again.": "هل أنت متأكد أنك تريد مغادرة البث المباشر؟\\nإذا انتهى البث، لن تتمكن من الانضمام مرة أخرى.",
+      "Are you sure you want to leave the live stream?\\nIf the stream has ended, you won't be able to join again.":
+          "هل أنت متأكد أنك تريد مغادرة البث المباشر؟\\nإذا انتهى البث، لن تتمكن من الانضمام مرة أخرى.",
       "Scan QR Code": "مسح رمز QR",
-      "Scan the QR of the profile you want to search.": "امسح رمز QR للملف الشخصي الذي تريد البحث عنه.",
+      "Scan the QR of the profile you want to search.":
+          "امسح رمز QR للملف الشخصي الذي تريد البحث عنه.",
       "Upload From Gallery": "رفع من المعرض",
       "Nothing to Watch Yet": "لا شيء لمشاهدته بعد",
-      "Reels will appear here once new content is shared.": "ستظهر الريلز هنا بمجرد مشاركة محتوى جديد.",
+      "Share crash log": "مشاركة سجل الأعطال",
+      "Send us the latest app crash report":
+          "أرسل لنا تقرير آخر عطل في التطبيق",
+      "No crash log yet": "مفيش سجل أعطال لسه",
+      "There is no crash log to share right now.":
+          "مفيش سجل أعطال للمشاركة حاليًا.",
+      "Reels will appear here once new content is shared.":
+          "ستظهر الريلز هنا بمجرد مشاركة محتوى جديد.",
       "Nothing to Show Yet": "لا شيء لعرضه بعد",
-      "Explore content by entering keywords in the search bar above.": "استكشف المحتوى عن طريق إدخال كلمات رئيسية في شريط البحث أعلاه.",
+      "Explore content by entering keywords in the search bar above.":
+          "استكشف المحتوى عن طريق إدخال كلمات رئيسية في شريط البحث أعلاه.",
       "km": "كم",
-      "an artist based in Portland. I find inspiration in nature and urban life. Let’s connect and create something beautiful! 🌿🖌️": "فنان مقيم في بورتلاند. أجد الإلهام في الطبيعة والحياة الحضرية. دعونا نتواصل ونخلق شيئًا جميلًا! 🌿🖌️",
+      "an artist based in Portland. I find inspiration in nature and urban life. Let’s connect and create something beautiful! 🌿🖌️":
+          "فنان مقيم في بورتلاند. أجد الإلهام في الطبيعة والحياة الحضرية. دعونا نتواصل ونخلق شيئًا جميلًا! 🌿🖌️",
       "Video path not found.": "لم يتم العثور على مسار الفيديو.",
       "has liked your post": "أعجب بمنشورك",
       "liked your comment.": "أعجب بتعليقك.",
-      "has commented on your post : @comment_description": "علق على منشورك: @comment_description",
+      "has commented on your post : @comment_description":
+          "علق على منشورك: @comment_description",
       "has commented on your post with a GIF.": "علق على منشورك باستخدام GIF.",
-      "@username replied to your comment : @comment_description": "@username رد على تعليقك: @comment_description",
+      "@username replied to your comment : @comment_description":
+          "@username رد على تعليقك: @comment_description",
       "has mentioned you in post.": "أشار إليك في منشور.",
       "Mentioned you in comment": "أشار إليك في تعليق",
       "has started following you": "بدأ متابعتك",
-      "has reply mentioned you in comment : @comment_description": "أشار إليك بالرد في تعليق: @comment_description",
+      "has reply mentioned you in comment : @comment_description":
+          "أشار إليك بالرد في تعليق: @comment_description",
       "has sent you gift": "أرسل لك هدية",
       "No Comments Yet": "لا توجد تعليقات بعد",
-      "This post doesn’t have any comments. Join in and share your thoughts.": "لا يحتوي هذا المنشور على أي تعليقات. انضم وشارك أفكارك.",
+      "This post doesn’t have any comments. Join in and share your thoughts.":
+          "لا يحتوي هذا المنشور على أي تعليقات. انضم وشارك أفكارك.",
       "Post sent successfully": "تم إرسال المنشور بنجاح",
       "Search @brand_name": "ابحث عن @brand_name",
       "Find Reels Around You": "ابحث عن ريلز بالقرب منك",
-      "Allow location access to explore reels shared by people near you.": "السماح بالوصول إلى الموقع لاستكشاف الريلز التي يشاركها الأشخاص بالقرب منك.",
+      "Allow location access to explore reels shared by people near you.":
+          "السماح بالوصول إلى الموقع لاستكشاف الريلز التي يشاركها الأشخاص بالقرب منك.",
       "Location Services Are Still Disabled": "خدمات الموقع لا تزال معطلة",
-      "To see nearby reels, please turn on location services in your device settings.": "لمشاهدة الريلز القريبة، يرجى تشغيل خدمات الموقع في إعدادات جهازك.",
+      "To see nearby reels, please turn on location services in your device settings.":
+          "لمشاهدة الريلز القريبة، يرجى تشغيل خدمات الموقع في إعدادات جهازك.",
       "Less than 1 km from you": "أقل من 1 كم منك",
       "{km} km from you": "{km} كم منك",
       "{m} m from you": "{m} م منك",
@@ -964,29 +1204,43 @@ class LocalTranslations {
       "From {name} governorate": "من محافظة {name}",
       "In your country": "في بلدك",
       "No Posts Near You": "لا توجد منشورات قريبة منك",
-      "There are no posts within 100 km of your location. Pull down to try again.": "لا توجد منشورات ضمن 100 كم من موقعك. اسحب لأسفل لإعادة المحاولة.",
+      "There are no posts within 100 km of your location. Pull down to try again.":
+          "لا توجد منشورات ضمن 100 كم من موقعك. اسحب لأسفل لإعادة المحاولة.",
       "No Reels Near You": "لا توجد ريلز قريبة منك",
-      "There are no reels within 100 km of your location. Pull down to try again.": "لا توجد ريلز ضمن 100 كم من موقعك. اسحب لأسفل لإعادة المحاولة.",
-      "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.": "لم يتم منح إذن الموقع. اضغط على «بالقرب» مرة أخرى واختر «سماح» لرؤية المنشورات حولك.",
-      "Location permission is blocked. Open the app settings, allow location, then try again.": "إذن الموقع محظور. افتح إعدادات التطبيق واسمح بالوصول إلى الموقع ثم حاول مرة أخرى.",
-      "Location services are off. Turn them on from your device settings to see posts near you.": "خدمات الموقع مغلقة. شغّلها من إعدادات جهازك لرؤية المنشورات القريبة منك.",
-      "We could not determine your location in time. Move to an open area and try again.": "لم نتمكن من تحديد موقعك في الوقت المناسب. انتقل إلى مكان مفتوح وحاول مرة أخرى.",
-      "We could not access your location. Check your connection and location settings, then try again.": "لم نتمكن من الوصول إلى موقعك. تحقق من اتصالك وإعدادات الموقع ثم حاول مرة أخرى.",
+      "There are no reels within 100 km of your location. Pull down to try again.":
+          "لا توجد ريلز ضمن 100 كم من موقعك. اسحب لأسفل لإعادة المحاولة.",
+      "Location permission was not granted. Tap Nearby again and choose Allow to see posts around you.":
+          "لم يتم منح إذن الموقع. اضغط على «بالقرب» مرة أخرى واختر «سماح» لرؤية المنشورات حولك.",
+      "Location permission is blocked. Open the app settings, allow location, then try again.":
+          "إذن الموقع محظور. افتح إعدادات التطبيق واسمح بالوصول إلى الموقع ثم حاول مرة أخرى.",
+      "Location services are off. Turn them on from your device settings to see posts near you.":
+          "خدمات الموقع مغلقة. شغّلها من إعدادات جهازك لرؤية المنشورات القريبة منك.",
+      "We could not determine your location in time. Move to an open area and try again.":
+          "لم نتمكن من تحديد موقعك في الوقت المناسب. انتقل إلى مكان مفتوح وحاول مرة أخرى.",
+      "We could not access your location. Check your connection and location settings, then try again.":
+          "لم نتمكن من الوصول إلى موقعك. تحقق من اتصالك وإعدادات الموقع ثم حاول مرة أخرى.",
       "Location Unavailable": "الموقع غير متاح",
-      "We could not access your location. Please allow location access and try again.": "لم نتمكن من الوصول إلى موقعك. يرجى السماح بالوصول إلى الموقع والمحاولة مرة أخرى.",
+      "We could not access your location. Please allow location access and try again.":
+          "لم نتمكن من الوصول إلى موقعك. يرجى السماح بالوصول إلى الموقع والمحاولة مرة أخرى.",
       "See places near you.": "شاهد الأماكن القريبة منك.",
-      "To include nearby places, turn on location services.": "لتضمين الأماكن القريبة، قم بتشغيل خدمات الموقع.",
+      "To include nearby places, turn on location services.":
+          "لتضمين الأماكن القريبة، قم بتشغيل خدمات الموقع.",
       "Turn on Location Services": "تشغيل خدمات الموقع",
       "Nothing To Show Here": "لا شيء لعرضه هنا",
-      "This user has decided not to show their followings.": "قرر هذا المستخدم عدم إظهار متابعاته.",
+      "This user has decided not to show their followings.":
+          "قرر هذا المستخدم عدم إظهار متابعاته.",
       "No Blocked Users": "لا يوجد مستخدمون محظورون",
-      "Users you block will appear here. You haven’t blocked anyone yet.": "سيظهر المستخدمون الذين تحظرهم هنا. لم تحظر أي أحد بعد.",
-      "You need to reach the minimum coin amount before you can redeem.": "يجب أن تصل إلى الحد الأدنى من العملات قبل أن تتمكن من الاسترداد.",
+      "Users you block will appear here. You haven’t blocked anyone yet.":
+          "سيظهر المستخدمون الذين تحظرهم هنا. لم تحظر أي أحد بعد.",
+      "You need to reach the minimum coin amount before you can redeem.":
+          "يجب أن تصل إلى الحد الأدنى من العملات قبل أن تتمكن من الاسترداد.",
       "No Users Found": "لم يتم العثور على مستخدمين",
-      "Users will appear here when available.": "سيظهر المستخدمون هنا عند توفرهم.",
+      "Users will appear here when available.":
+          "سيظهر المستخدمون هنا عند توفرهم.",
       "Freeze": "تجميد",
       "UnFreeze": "إلغاء التجميد",
-      "This profile has been temporarily frozen due to policy violations or suspicious activity. Access is restricted until review is complete.": "تم تجميد هذا الملف الشخصي مؤقتًا بسبب انتهاكات السياسة أو نشاط مشبوه. الوصول مقيد حتى اكتمال المراجعة.",
+      "This profile has been temporarily frozen due to policy violations or suspicious activity. Access is restricted until review is complete.":
+          "تم تجميد هذا الملف الشخصي مؤقتًا بسبب انتهاكات السياسة أو نشاط مشبوه. الوصول مقيد حتى اكتمال المراجعة.",
       "Profile Unavailable": "الملف الشخصي غير متاح",
       "Admin": "المشرف",
       "Days": "أيام",
@@ -1011,27 +1265,37 @@ class LocalTranslations {
       "Semi Annually": "نصف سنوي",
       "Three Months": "ثلاثة أشهر",
       "Two Months": "شهران",
-      "The host has cancelled your invitation. You can no longer join the live stream.": "ألغى المضيف دعوتك. لم يعد بإمكانك الانضمام إلى البث المباشر.",
+      "The host has cancelled your invitation. You can no longer join the live stream.":
+          "ألغى المضيف دعوتك. لم يعد بإمكانك الانضمام إلى البث المباشر.",
       "joined as a co-host": "انضم كمشارك في البث",
-      "Min. @count Followers needed to go Live": "الحد الأدنى @count متابع مطلوب للبث المباشر",
-      "You can add only @limit links in the profile.": "يمكنك إضافة حد أقصى @limit روابط في الملف الشخصي.",
+      "Min. @count Followers needed to go Live":
+          "الحد الأدنى @count متابع مطلوب للبث المباشر",
+      "You can add only @limit links in the profile.":
+          "يمكنك إضافة حد أقصى @limit روابط في الملف الشخصي.",
       "Refresh": "تحديث",
       "Lost": "خسارة",
       "Connection": "اتصال",
       "No internet connection": "لا يوجد اتصال بالإنترنت",
       "Retry": "إعادة المحاولة",
-      "Your account has been restricted.": "حسابك مقيَّد حاليًا، لا يمكنك التفاعل.",
-      "You can only review your settings right now.": "يمكنك مراجعة الإعدادات فقط في الوقت الحالي.",
-      "This user is not receiving messages right now.": "هذا المستخدم لا يستقبل الرسائل حاليًا.",
-      "It looks like you are not\\nconnected to the internet": "يبدو أنك غير\\nمتصل بالإنترنت",
+      "Your account has been restricted.":
+          "حسابك مقيَّد حاليًا، لا يمكنك التفاعل.",
+      "You can only review your settings right now.":
+          "يمكنك مراجعة الإعدادات فقط في الوقت الحالي.",
+      "This user is not receiving messages right now.":
+          "هذا المستخدم لا يستقبل الرسائل حاليًا.",
+      "It looks like you are not\\nconnected to the internet":
+          "يبدو أنك غير\\nمتصل بالإنترنت",
       "Download failed.": "فشل التنزيل.",
       "From": "من",
       "Something went wrong.": "حدث خطأ ما.",
-      "🎉 Welcome Bonus Credited to Your Wallet!": "🎉 تم إضافة مكافأة الترحيب إلى محفظتك!",
-      "You've earned your registration bonus! Enjoy your coins and start exploring now!": "لقد ربحت مكافأة تسجيلك! استمتع بعملاتك وابدأ الاستكشاف الآن!",
+      "🎉 Welcome Bonus Credited to Your Wallet!":
+          "🎉 تم إضافة مكافأة الترحيب إلى محفظتك!",
+      "You've earned your registration bonus! Enjoy your coins and start exploring now!":
+          "لقد ربحت مكافأة تسجيلك! استمتع بعملاتك وابدأ الاستكشاف الآن!",
       "You are": "أنت",
       "member": "عضو",
-      "Oops!! Battle Ended Please wait for a while..": "عفوًا!! انتهت المعركة. يرجى الانتظار قليلاً..",
+      "Oops!! Battle Ended Please wait for a while..":
+          "عفوًا!! انتهت المعركة. يرجى الانتظار قليلاً..",
       "Hey, @name is now live": "مرحبًا، @name الآن على الهواء",
       "Hurry up and join before it ends.": "أسرع وانضم قبل أن ينتهي.",
       "Livestream has ended.": "انتهى البث المباشر.",

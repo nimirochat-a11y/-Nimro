@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:nimiro/common/manager/crash_log_service.dart';
 import 'package:nimiro/common/widget/custom_app_bar.dart';
 import 'package:nimiro/common/widget/custom_drop_down.dart';
 import 'package:nimiro/common/widget/custom_toggle.dart';
@@ -32,8 +33,8 @@ class SettingsScreen extends StatelessWidget {
         CustomAppBar(title: LKey.settings.tr),
         Expanded(
             child: SingleChildScrollView(
-          padding: EdgeInsets.only(
-              top: 8, bottom: AppBar().preferredSize.height),
+          padding:
+              EdgeInsets.only(top: 8, bottom: AppBar().preferredSize.height),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -111,8 +112,8 @@ class SettingsScreen extends StatelessWidget {
                       title: LKey.showMyFollowings,
                       subtitle: 'Allow others to see who you follow',
                       trailing: CustomToggle(
-                        isOn: (controller.myUser.value?.showMyFollowing == 1)
-                            .obs,
+                        isOn:
+                            (controller.myUser.value?.showMyFollowing == 1).obs,
                         onChanged: (value) {
                           controller.onChangedToggle(
                               value, SettingToggle.showMyFollowings);
@@ -127,8 +128,7 @@ class SettingsScreen extends StatelessWidget {
                       subtitle: 'Show the chat button on your profile',
                       trailing: CustomToggle(
                         isOn:
-                            (controller.myUser.value?.receiveMessage == 1)
-                                .obs,
+                            (controller.myUser.value?.receiveMessage == 1).obs,
                         onChanged: (value) async {
                           controller.onChangedToggle(
                               value, SettingToggle.receiveMessage);
@@ -173,6 +173,14 @@ class SettingsScreen extends StatelessWidget {
                       Get.to(() => const TermAndPrivacyScreen(
                           type: TermAndPrivacyType.privacyPolicy));
                     },
+                  ),
+                  // v1.1.38: diagnostics - share the local crash log so the
+                  // user can send us a real stack trace when Sentry cannot.
+                  SettingsTile(
+                    icon: Icons.bug_report_rounded,
+                    title: LKey.shareCrashLog,
+                    subtitle: 'Send us the latest app crash report',
+                    onTap: CrashLogService.instance.shareLatest,
                   ),
                 ],
               ),
