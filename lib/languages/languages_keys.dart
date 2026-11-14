@@ -486,11 +486,6 @@ class LKey {
   static const String reelsEmptyTitle = "Nothing to Watch Yet";
   static const String reelsEmptyDescription =
       "Reels will appear here once new content is shared.";
-  static const String shareCrashLog = "Share crash log";
-  static const String shareCrashLogDesc = "Send us the latest app crash report";
-  static const String noCrashLog = "No crash log yet";
-  static const String noCrashLogDesc =
-      "There is no crash log to share right now.";
   static const String searchPageEmptyTitle = "Nothing to Show Yet";
   static const String searchPageEmptyDescription =
       "Explore content by entering keywords in the search bar above.";

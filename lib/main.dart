@@ -56,8 +56,8 @@ Future<void> main() async {
       options.tracesSampleRate = 0.1;
     },
     appRunner: () async {
-      // Local belt-and-braces log, readable from Settings -> Share crash log
-      // for the case where the device network cannot reach Sentry.
+      // Local belt-and-braces log: every fatal error is queued and uploaded
+      // automatically to the admin panel (v1.1.41), even if Sentry is blocked.
       CrashLogService.instance.install();
       try {
         await _runStartupSequence();
@@ -97,6 +97,10 @@ Future<void> _runStartupSequence() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await GetStorage.init('nimiro');
+
+  // v1.1.41: retry any crash reports that could not be uploaded on a previous
+  // run (offline / server down). Runs in the background - never blocks startup.
+  unawaited(CrashLogService.instance.flush());
 
   // Initialize notification listeners after local storage is ready and
   // before the first screen is shown.

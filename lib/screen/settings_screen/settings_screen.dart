@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:nimiro/common/manager/crash_log_service.dart';
 import 'package:nimiro/common/widget/custom_app_bar.dart';
 import 'package:nimiro/common/widget/custom_drop_down.dart';
 import 'package:nimiro/common/widget/custom_toggle.dart';
@@ -173,14 +172,6 @@ class SettingsScreen extends StatelessWidget {
                       Get.to(() => const TermAndPrivacyScreen(
                           type: TermAndPrivacyType.privacyPolicy));
                     },
-                  ),
-                  // v1.1.38: diagnostics - share the local crash log so the
-                  // user can send us a real stack trace when Sentry cannot.
-                  SettingsTile(
-                    icon: Icons.bug_report_rounded,
-                    title: LKey.shareCrashLog,
-                    subtitle: 'Send us the latest app crash report',
-                    onTap: CrashLogService.instance.shareLatest,
                   ),
                 ],
               ),

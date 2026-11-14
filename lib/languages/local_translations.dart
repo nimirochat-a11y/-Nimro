@@ -507,12 +507,6 @@ class LocalTranslations {
           "Scan the QR of the profile you want to search.",
       "Upload From Gallery": "Upload From Gallery",
       "Nothing to Watch Yet": "Nothing to Watch Yet",
-      "Share crash log": "Share crash log",
-      "Send us the latest app crash report":
-          "Send us the latest app crash report",
-      "No crash log yet": "No crash log yet",
-      "There is no crash log to share right now.":
-          "There is no crash log to share right now.",
       "Reels will appear here once new content is shared.":
           "Reels will appear here once new content is shared.",
       "Nothing to Show Yet": "Nothing to Show Yet",
@@ -1156,12 +1150,6 @@ class LocalTranslations {
           "امسح رمز QR للملف الشخصي الذي تريد البحث عنه.",
       "Upload From Gallery": "رفع من المعرض",
       "Nothing to Watch Yet": "لا شيء لمشاهدته بعد",
-      "Share crash log": "مشاركة سجل الأعطال",
-      "Send us the latest app crash report":
-          "أرسل لنا تقرير آخر عطل في التطبيق",
-      "No crash log yet": "مفيش سجل أعطال لسه",
-      "There is no crash log to share right now.":
-          "مفيش سجل أعطال للمشاركة حاليًا.",
       "Reels will appear here once new content is shared.":
           "ستظهر الريلز هنا بمجرد مشاركة محتوى جديد.",
       "Nothing to Show Yet": "لا شيء لعرضه بعد",
