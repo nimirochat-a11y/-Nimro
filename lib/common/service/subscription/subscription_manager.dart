@@ -9,26 +9,52 @@ import 'package:nimiro/utilities/const_res.dart';
 bool isPurchaseConfig = false;
 RxBool isSubscribe = false.obs;
 
+/// RevenueCat public keys look like `goog_...`, `appl_...`, `amzn_...` or
+/// `test_...`. The project ships placeholder keys (for example `______`);
+/// configuring the SDK with one of those produces `InvalidCredentialsError`
+/// on every login, so placeholders must be treated as "not configured".
+bool _hasValidRevenueCatKey(String key) {
+  final value = key.trim();
+  if (value.isEmpty) return false;
+  return RegExp(r'^(?:goog|appl|amzn|test)_[A-Za-z0-9_-]+$').hasMatch(value);
+}
+
 class SubscriptionManager {
   static var shared = SubscriptionManager();
   List<Package> packages = [];
   List<Package> offering = [];
 
-  Future<void> initPlatformState() async {
-    PurchasesConfiguration configuration;
+  /// True only when a real RevenueCat public key is configured for the
+  /// current platform. When false the SDK is never configured or called, so
+  /// the app keeps working (coin catalogue + ads) without credential errors.
+  bool get isEnabled {
     if (Platform.isAndroid) {
-      if (revenueCatAndroidApiKey.isNotEmpty) {
-        configuration = PurchasesConfiguration(revenueCatAndroidApiKey);
-        Purchases.setLogLevel(LogLevel.debug);
-        await Purchases.configure(configuration);
-      }
-    } else if (Platform.isIOS) {
-      if (revenueCatAppleApiKey.isNotEmpty) {
-        configuration = PurchasesConfiguration(revenueCatAppleApiKey);
-        Purchases.setLogLevel(LogLevel.debug);
-        await Purchases.configure(configuration);
-      }
+      return _hasValidRevenueCatKey(revenueCatAndroidApiKey);
     }
+    if (Platform.isIOS) {
+      return _hasValidRevenueCatKey(revenueCatAppleApiKey);
+    }
+    return false;
+  }
+
+  /// True once the SDK is configured and safe to call.
+  bool get isConfigured => isPurchaseConfig && isEnabled;
+
+  Future<void> initPlatformState() async {
+    if (!isEnabled) {
+      isPurchaseConfig = false;
+      isSubscribe.value = false;
+      log('RevenueCat disabled: no valid API key configured for this platform.');
+      return;
+    }
+
+    final String apiKey =
+        Platform.isAndroid ? revenueCatAndroidApiKey : revenueCatAppleApiKey;
+    final PurchasesConfiguration configuration =
+        PurchasesConfiguration(apiKey);
+    Purchases.setLogLevel(LogLevel.debug);
+    await Purchases.configure(configuration);
+
     await checkIsConfigured();
     await fetchOfferings();
   }
@@ -58,6 +84,8 @@ class SubscriptionManager {
   }
 
   Future<void> subscriptionListener() async {
+    if (!isConfigured) return;
+
     try {
       Purchases.addCustomerInfoUpdateListener((customerInfo) async {
         checkSubscription(customerInfo);
@@ -69,15 +97,37 @@ class SubscriptionManager {
   }
 
   Future<void> checkIsConfigured() async {
-    isPurchaseConfig = await Purchases.isConfigured;
+    if (!isEnabled) {
+      isPurchaseConfig = false;
+      return;
+    }
+
+    try {
+      isPurchaseConfig = await Purchases.isConfigured;
+    } on PlatformException catch (e) {
+      isPurchaseConfig = false;
+      log('RevenueCat isConfigured error: ${e.message}');
+    }
     log('isPurchaseConfig  :$isPurchaseConfig');
   }
 
-  Future<LogInResult> login(String appUserID) async {
-    return await Purchases.logIn(appUserID);
+  Future<LogInResult?> login(String appUserID) async {
+    if (!isConfigured) {
+      log('RevenueCat login skipped: SDK is not configured.');
+      return null;
+    }
+
+    try {
+      return await Purchases.logIn(appUserID);
+    } on PlatformException catch (e) {
+      log('RevenueCat login error: ${e.message}');
+      return null;
+    }
   }
 
   Future<(Offering?, String?)> fetchOfferings() async {
+    if (!isConfigured) return (null, null);
+
     try {
       Offerings offerings = await Purchases.getOfferings();
       // Display current offering with offerings.current
@@ -100,6 +150,8 @@ class SubscriptionManager {
   }
 
   Future<bool?> checkSubscriptionStatus() async {
+    if (!isConfigured) return null;
+
     try {
       CustomerInfo customerInfo = await Purchases.getCustomerInfo();
       return checkSubscription(customerInfo);
@@ -111,6 +163,8 @@ class SubscriptionManager {
   }
 
   Future<bool?> makePurchase(Package package) async {
+    if (!isConfigured) return null;
+
     try {
       CustomerInfo customerInfo =
           (await Purchases.purchase(PurchaseParams.storeProduct(package.storeProduct))).customerInfo;
@@ -123,6 +177,8 @@ class SubscriptionManager {
   }
 
   Future<CustomerInfo?> makePurchaseCustom(Package package) async {
+    if (!isConfigured) return null;
+
     try {
       CustomerInfo info = (await Purchases.purchase(PurchaseParams.storeProduct(package.storeProduct))).customerInfo;
       return info;
@@ -133,6 +189,8 @@ class SubscriptionManager {
   }
 
   Future<bool?> restorePurchase() async {
+    if (!isConfigured) return null;
+
     try {
       CustomerInfo restoredInfo = await Purchases.restorePurchases();
       return checkSubscription(restoredInfo);

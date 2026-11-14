@@ -266,6 +266,7 @@ class AuthScreenController extends BaseController {
 
   Future<void> _loginToSubscriptionsSafely(int? userId) async {
     if (userId == null) return;
+    if (!SubscriptionManager.shared.isConfigured) return;
     try {
       await SubscriptionManager.shared.login('$userId');
     } catch (e) {

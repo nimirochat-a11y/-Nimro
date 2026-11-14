@@ -106,7 +106,7 @@ Future<void> _runStartupSequence() async {
   // before the first screen is shown.
   FirebaseNotificationManager.instance;
 
-  // Init RevenueCat (handle errors gracefully)
+  // Init RevenueCat (automatically skipped when no real API key is set)
   try {
     await SubscriptionManager.shared.initPlatformState();
   } catch (e, st) {

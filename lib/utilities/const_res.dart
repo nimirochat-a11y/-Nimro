@@ -5,5 +5,7 @@ const String apiKey = '96dc536390951bf3a6bfc46a1d536ca0493cb58637390ff8faf410ea0
 // If you change this topic you also change backend .env file
 String notificationTopic = "nimiro";
 
-String revenueCatAndroidApiKey = "______"; // revenueCat android api
-String revenueCatAppleApiKey = "________"; // revenueCat apple api
+// RevenueCat is disabled while these values are empty or placeholders.
+// Add real public keys (goog_... for Android, appl_... for iOS) to enable it.
+String revenueCatAndroidApiKey = "";
+String revenueCatAppleApiKey = "";
