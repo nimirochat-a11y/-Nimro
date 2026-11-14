@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
@@ -32,8 +33,11 @@ class CrashLogService {
 
   bool _installed = false;
   bool _flushing = false;
+  bool _reportingMessage = false;
+  final Map<String, DateTime> _recentMessages = {};
 
-  /// Hook Flutter framework errors and uncaught platform errors.
+  /// Hook Flutter framework errors, uncaught platform errors and handled
+  /// errors logged through [Loggers.error].
   void install() {
     if (_installed) return;
     _installed = true;
@@ -48,6 +52,12 @@ class CrashLogService {
         write('platformError', error, stack);
         return originalOnError?.call(error, stack) ?? false;
       };
+      // Handled errors (API failures, caught Firestore exceptions...) are
+      // logged through Loggers.error; mirror them to the panel as well.
+      Loggers.onError = reportMessage;
+      try {
+        WidgetsBinding.instance.addObserver(_CrashLifecycleObserver());
+      } catch (_) {}
     } catch (e) {
       Loggers.error('CrashLogService install failed: $e');
     }
@@ -68,7 +78,49 @@ class CrashLogService {
   Future<void> write(String source, Object? error, StackTrace? stack) async {
     try {
       await _appendLocalLog(source, error, stack);
+      await _enqueue(source, error, stack);
+    } catch (e) {
+      Loggers.error('CrashLogService write failed: $e');
+    }
+  }
 
+  /// Called for every handled error logged through [Loggers.error].
+  ///
+  /// Identical messages are deduplicated for 5 minutes so a failing endpoint
+  /// or an offline device cannot flood the admin panel. Never throws.
+  void reportMessage(Object? message) {
+    if (_reportingMessage) return;
+    _reportingMessage = true;
+    try {
+      final text = (message ?? 'Unknown error').toString();
+      if (text.trim().isEmpty) return;
+      // Guard against feedback loops from this service's own log calls.
+      if (text.contains('CrashLogService')) return;
+
+      final key = _limit(text, 200);
+      final now = DateTime.now();
+      final last = _recentMessages[key];
+      if (last != null && now.difference(last) < const Duration(minutes: 5)) {
+        return;
+      }
+      _recentMessages[key] = now;
+      if (_recentMessages.length > 100) {
+        final cutoff = now.subtract(const Duration(minutes: 5));
+        _recentMessages.removeWhere((_, time) => time.isBefore(cutoff));
+        if (_recentMessages.length > 100) {
+          _recentMessages.remove(_recentMessages.keys.first);
+        }
+      }
+
+      unawaited(_enqueue('app:error', text, StackTrace.current));
+    } catch (_) {
+    } finally {
+      _reportingMessage = false;
+    }
+  }
+
+  Future<void> _enqueue(String source, Object? error, StackTrace? stack) async {
+    try {
       final report = await _buildReport(source, error, stack);
       final queue = await _queueFile();
       await queue.writeAsString(
@@ -81,7 +133,7 @@ class CrashLogService {
       // Fire-and-forget: uploading must never delay error propagation.
       unawaited(flush());
     } catch (e) {
-      Loggers.error('CrashLogService write failed: $e');
+      Loggers.error('CrashLogService enqueue failed: $e');
     }
   }
 
@@ -264,6 +316,17 @@ class CrashLogService {
       await queue.writeAsString('${kept.join('\n')}\n', flush: true);
     } catch (e) {
       Loggers.error('CrashLogService trim failed: $e');
+    }
+  }
+}
+
+/// Retries queued crash reports whenever the app comes back to the foreground
+/// (e.g. after the network was restored while the app was in background).
+class _CrashLifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(CrashLogService.instance.flush());
     }
   }
 }
