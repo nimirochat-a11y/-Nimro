@@ -3,22 +3,13 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/extensions/user_extension.dart';
 import 'package:nimiro/common/manager/logger.dart';
-import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' hide User;
 
 class FirebaseFirestoreController extends BaseController {
   RxList<AppUser> users = <AppUser>[].obs;
   static final instance = FirebaseFirestoreController();
   final Set<int> _fetchingUserIds = <int>{};
-
-  SupabaseClient get _db {
-    if (!SupabaseService.instance.isInitialized) {
-      SupabaseService.instance.initialize();
-    }
-    return SupabaseService.instance.client;
-  }
 
   /// Add or merge a user into the local cache without hitting the network.
   ///
@@ -124,10 +115,10 @@ class FirebaseFirestoreController extends BaseController {
     // Remove locally as well; otherwise `fetchUserIfNeeded` keeps finding the
     // deleted row and never asks the server for a fresh profile.
     users.removeWhere((element) => element.userId == userId);
-    try {
-      await _db.from('app_users').delete().eq('doc_id', '$userId');
-    } catch (e) {
-      Loggers.error('[DELETE_USER] Failed to delete user $userId — $e');
-    }
+
+    // The backend's deleteMyAccount endpoint already removes the Supabase chat
+    // mirror (app_users), conversations and messages with the service_role
+    // key. Calling PostgREST directly from the app is both redundant and
+    // forbidden: the publishable key has no DELETE grant (error 42501).
   }
 }
