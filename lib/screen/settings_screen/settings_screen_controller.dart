@@ -6,8 +6,9 @@ import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/firebase_firestore_controller.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
+import 'package:nimiro/common/service/supabase/supabase_service.dart';
+import 'package:nimiro/common/service/support/crisp_support_service.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
@@ -79,6 +80,15 @@ class SettingsScreenController extends BaseController {
     myUser.value = SessionManager.instance.getUser();
   }
 
+  Future<void> onSupport() async {
+    try {
+      await CrispSupportService.instance.openSupportChat();
+    } catch (e) {
+      Loggers.error('Support chat error: $e');
+      showSnackBar(LKey.supportUnavailable.tr);
+    }
+  }
+
   void onDeleteAccount() {
     Get.bottomSheet(ConfirmationSheet(
         onTap: () async {
@@ -86,6 +96,7 @@ class SettingsScreenController extends BaseController {
           StatusModel model = await UserService.instance.deleteMyAccount();
           stopLoader();
           if (model.status == true) {
+            await CrispSupportService.instance.resetSession();
             FirebaseFirestoreController.instance.deleteUser(myUser.value?.id);
             SessionManager.instance.clear();
             deleteCurrentUser();
@@ -148,6 +159,7 @@ class SettingsScreenController extends BaseController {
         try {
           StatusModel result = await UserService.instance.logoutUser();
           if (result.status == true) {
+            await CrispSupportService.instance.resetSession();
             await SupabaseService.instance.signOut();
             await GoogleSignIn.instance.signOut();
             await auth.FirebaseAuth.instance.signOut();

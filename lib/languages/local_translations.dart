@@ -84,6 +84,10 @@ class LocalTranslations {
       "Followers": "Followers",
       "LVL": "LVL",
       "Settings": "Settings",
+      "Support": "Support",
+      "Chat with our support team": "Chat with our support team",
+      "Support is currently unavailable. Please try again later.":
+          "Support is currently unavailable. Please try again later.",
       "Open Setting": "Open Setting",
       "Publish": "Publish",
       "Website": "Website",
@@ -730,6 +734,10 @@ class LocalTranslations {
       "Followers": "المتابعون",
       "LVL": "مستوى",
       "Settings": "الإعدادات",
+      "Support": "الدعم",
+      "Chat with our support team": "تواصل مع فريق الدعم",
+      "Support is currently unavailable. Please try again later.":
+          "الدعم غير متاح حاليًا. يُرجى المحاولة لاحقًا.",
       "Open Setting": "فتح الإعدادات",
       "Publish": "نشر",
       "Website": "موقع الويب",

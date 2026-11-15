@@ -5,6 +5,7 @@ import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
+import 'package:nimiro/common/service/support/crisp_support_service.dart';
 import 'package:nimiro/common/widget/text_button_custom.dart';
 import 'package:nimiro/common/widget/theme_blur_bg.dart';
 import 'package:nimiro/languages/languages_keys.dart';
@@ -83,12 +84,13 @@ class _SessionExpiredScreenState extends State<SessionExpiredScreen> {
                     ),
                   )),
                   TextButtonCustom(
-                    onTap: () {
+                    onTap: () async {
                       switch (widget.type) {
                         case SessionType.freeze:
-                          logOutUser();
+                          await logOutUser();
                           break;
                         case SessionType.unauthorized:
+                          await CrispSupportService.instance.resetSession();
                           SessionManager.instance.clear();
                           Get.off(() => const LoginScreen());
                           break;
@@ -108,15 +110,15 @@ class _SessionExpiredScreenState extends State<SessionExpiredScreen> {
     );
   }
 
-  void logOutUser() {
-    UserService.instance.logoutUser().then((value) {
-      if (value.status == true) {
-        SessionManager.instance.clear();
-        Get.off(() => const LoginScreen());
-      } else {
-        Loggers.error(value.message);
-      }
-    });
+  Future<void> logOutUser() async {
+    final value = await UserService.instance.logoutUser();
+    if (value.status == true) {
+      await CrispSupportService.instance.resetSession();
+      SessionManager.instance.clear();
+      Get.off(() => const LoginScreen());
+    } else {
+      Loggers.error(value.message);
+    }
   }
 }
 

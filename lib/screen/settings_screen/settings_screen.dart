@@ -156,6 +156,12 @@ class SettingsScreen extends StatelessWidget {
               SettingsGroup(
                 children: [
                   SettingsTile(
+                    icon: Icons.support_agent_rounded,
+                    title: LKey.support,
+                    subtitle: LKey.supportSubtitle,
+                    onTap: controller.onSupport,
+                  ),
+                  SettingsTile(
                     icon: Icons.description_rounded,
                     title: LKey.termsOfUse,
                     subtitle: "Read the app's terms of use",

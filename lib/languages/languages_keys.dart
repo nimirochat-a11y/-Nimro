@@ -82,6 +82,10 @@ class LKey {
   static const String followers = "Followers";
   static const String lvl = "LVL";
   static const String settings = "Settings";
+  static const String support = "Support";
+  static const String supportSubtitle = "Chat with our support team";
+  static const String supportUnavailable =
+      "Support is currently unavailable. Please try again later.";
   static const String openSettings = "Open Setting";
   static const String publish = "Publish";
   static const String website = "Website";
