@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/controller/follow_controller.dart';
+import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/model/user_model/follower_model.dart';
 import 'package:nimiro/model/user_model/following_model.dart';
@@ -11,7 +12,6 @@ import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/follow_following_screen/follow_following_screen.dart';
 
 class FollowFollowingScreenController extends BaseController {
-  RxInt selectedTabIndex = 0.obs;
   RxInt followerCount = 0.obs;
   RxInt followingCount = 0.obs;
   User? user;
@@ -34,29 +34,35 @@ class FollowFollowingScreenController extends BaseController {
 
   ScrollController followerController = ScrollController();
   ScrollController followingController = ScrollController();
-  PageController pageController = PageController();
+
+  bool get isFollowersPage =>
+      followFollowingType == FollowFollowingType.follower;
+
+  bool get isMyProfile =>
+      user?.id?.toInt() == SessionManager.instance.getUserID();
 
   @override
   void onInit() {
     super.onInit();
-    selectedTabIndex.value =
-        followFollowingType == FollowFollowingType.follower ? 0 : 1;
     _initData();
   }
 
   @override
   void onReady() {
     super.onReady();
-    pageController.animateToPage(selectedTabIndex.value,
-        duration: const Duration(milliseconds: 250), curve: Curves.linear);
     fetchScrollData();
   }
 
   Future<void> _initData() async {
-    Future.wait({fetchFollowers(), fetchFollowings()});
+    if (isFollowersPage) {
+      await fetchFollowers();
+    } else {
+      await fetchFollowings();
+    }
   }
 
   Future<void> fetchFollowers() async {
+    if (isFollowers.value) return;
     isFollowers.value = true;
     int lastId = followers.isEmpty ? -1 : followers.last.id ?? -1;
 
@@ -69,6 +75,7 @@ class FollowFollowingScreenController extends BaseController {
   }
 
   Future<void> fetchFollowings() async {
+    if (isFollowings.value) return;
     isFollowings.value = true;
     int lastId = followings.isEmpty ? -1 : followings.last.id ?? -1;
 
@@ -80,19 +87,8 @@ class FollowFollowingScreenController extends BaseController {
     isFollowings.value = false;
   }
 
-  void onChangeTab(int value) {
-    selectedTabIndex.value = value;
-    if (value == 0) {
-      followFollowingType = FollowFollowingType.follower;
-    } else {
-      followFollowingType = FollowFollowingType.following;
-    }
-    pageController.animateToPage(value,
-        duration: const Duration(milliseconds: 250), curve: Curves.linear);
-  }
-
   Future<void> onFollowUnFollow(dynamic item) async {
-    if (selectedTabIndex.value == 0) {
+    if (isFollowersPage) {
       await _handleFollowerAction(item as Follower);
     } else {
       await _handleFollowingAction(item as Following);
@@ -109,18 +105,14 @@ class FollowFollowingScreenController extends BaseController {
           Get.put(FollowController(data.fromUser.obs), tag: userId.toString());
     }
 
-    User? user = await followController.followUnFollowUser();
-    if (user?.isFollowing ?? false) {
-      for (var element in followers) {
-        if (element.fromUserId == userId) {
-          element.fromUser?.isFollowing = true;
-        }
-      }
-    } else {
-      for (var element in followers) {
-        if (element.fromUserId == userId) {
-          element.fromUser?.isFollowing = false;
-        }
+    User? updatedUser = await followController.followUnFollowUser();
+    if (updatedUser == null) return;
+
+    for (var element in followers) {
+      if (element.fromUserId == userId) {
+        element.fromUser?.isFollowing = updatedUser.isFollowing;
+        element.fromUser?.followerCount = updatedUser.followerCount;
+        element.fromUser?.followStatus = updatedUser.followStatus;
       }
     }
     followers.refresh();
@@ -138,25 +130,30 @@ class FollowFollowingScreenController extends BaseController {
           Get.put(FollowController(data.toUser.obs), tag: userId.toString());
     }
 
-    User? user = await followController.followUnFollowUser();
-    if (user?.isFollowing ?? false) {
-      for (var element in followings) {
-        if (element.toUserId == userId) {
-          element.toUser?.isFollowing = true;
-        }
-      }
-    } else {
-      for (var element in followings) {
-        if (element.toUserId == userId) {
-          element.toUser?.isFollowing = false;
-        }
+    User? updatedUser = await followController.followUnFollowUser();
+    if (updatedUser == null) return;
+
+    // On my own following list, unfollowing removes the person from the list.
+    // On someone else's list the row stays because it is their following list.
+    if (isMyProfile && updatedUser.isFollowing == false) {
+      followings.removeWhere((element) => element.toUserId == userId);
+      followingCount.value =
+          (followingCount.value - 1).clamp(0, double.infinity).toInt();
+      return;
+    }
+
+    for (var element in followings) {
+      if (element.toUserId == userId) {
+        element.toUser?.isFollowing = updatedUser.isFollowing;
+        element.toUser?.followerCount = updatedUser.followerCount;
+        element.toUser?.followStatus = updatedUser.followStatus;
       }
     }
     followings.refresh();
   }
 
   void fetchScrollData() {
-    if (selectedTabIndex.value == 0) {
+    if (isFollowersPage) {
       followerController.addListener(() {
         if (followerController.position.pixels ==
             followerController.position.maxScrollExtent) {

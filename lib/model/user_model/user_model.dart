@@ -438,6 +438,10 @@ class User {
         .toInt(); // followerCount not less then 0
   }
 
+  /// True when this user follows the current user but the current user does
+  /// not follow them back (TikTok-style "Follow back").
+  bool get isFollowBack => isFollowing != true && followStatus == 2;
+
   void updateBlockStatus(bool isBlock) {
     this.isBlock = isBlock;
   }

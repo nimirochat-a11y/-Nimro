@@ -106,6 +106,7 @@ class _FollowButtonState extends State<FollowButton> {
     RxBool isLoading = false.obs;
     return Obx(() {
       bool isFollow = followController.user.value?.isFollowing ?? false;
+      bool showFollowBack = followController.user.value?.isFollowBack ?? false;
       if (followController.user.value?.id ==
           SessionManager.instance.getUserID()) {
         return const SizedBox.shrink();
@@ -142,7 +143,7 @@ class _FollowButtonState extends State<FollowButton> {
                     color: whitePure(context).withValues(alpha: .05),
                   ),
                   child: Text(
-                    LKey.follow.tr,
+                    showFollowBack ? LKey.followBack.tr : LKey.follow.tr,
                     style: TextStyleCustom.outFitRegular400(
                         fontSize: 13, color: whitePure(context)),
                   ),
@@ -222,8 +223,7 @@ class ReelDistanceBadge extends StatelessWidget {
       label = LKey.inYourGovernorate.tr;
     } else if (reel.nearbyLayer == 'country') {
       label = (reel.governorateName ?? '').isNotEmpty
-          ? LKey.fromGovernorateName
-              .tr
+          ? LKey.fromGovernorateName.tr
               .replaceFirst('{name}', reel.governorateName!)
           : LKey.inYourCountry.tr;
     }

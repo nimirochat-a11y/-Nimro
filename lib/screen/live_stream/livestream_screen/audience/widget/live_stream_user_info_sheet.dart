@@ -119,6 +119,7 @@ class _LiveStreamUserInfoSheetState extends State<LiveStreamUserInfoSheet> {
             child: Obx(() {
               User? user = this.user.value;
               bool isFollow = user?.isFollowing ?? false;
+              bool showFollowBack = user?.isFollowBack ?? false;
               List<StatItem> statItems = [
                 StatItem(
                     value: user?.totalPostLikesCount ?? 0,
@@ -229,7 +230,9 @@ class _LiveStreamUserInfoSheetState extends State<LiveStreamUserInfoSheet> {
                                               onTap: followUnFollowUser,
                                               title: isFollow
                                                   ? LKey.unFollow.tr
-                                                  : LKey.follow.tr,
+                                                  : showFollowBack
+                                                      ? LKey.followBack.tr
+                                                      : LKey.follow.tr,
                                               titleColor: isFollow
                                                   ? textLightGrey(context)
                                                   : whitePure(context),

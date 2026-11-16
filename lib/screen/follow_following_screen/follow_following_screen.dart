@@ -7,7 +7,6 @@ import 'package:nimiro/common/service/navigation/navigate_with_controller.dart';
 import 'package:nimiro/common/widget/custom_back_button.dart';
 import 'package:nimiro/common/widget/custom_divider.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
-import 'package:nimiro/common/widget/custom_tab_switcher.dart';
 import 'package:nimiro/common/widget/full_name_with_blue_tick.dart';
 import 'package:nimiro/common/widget/load_more_widget.dart';
 import 'package:nimiro/common/widget/loader_widget.dart';
@@ -71,13 +70,15 @@ class FollowFollowingScreen extends StatelessWidget {
                     ],
                   ),
                   Obx(
-                    () => CustomTabSwitcher(
-                      items: [
-                        '${controller.followerCount} ${LKey.followers.tr}',
-                        '${controller.followingCount} ${LKey.following.tr}'
-                      ],
-                      selectedIndex: controller.selectedTabIndex,
-                      onTap: controller.onChangeTab,
+                    () => Padding(
+                      padding: const EdgeInsets.only(top: 14, bottom: 12),
+                      child: Text(
+                        type == FollowFollowingType.follower
+                            ? '${controller.followerCount.value} ${LKey.followers.tr}'
+                            : '${controller.followingCount.value} ${LKey.following.tr}',
+                        style: TextStyleCustom.outFitRegular400(
+                            color: textDarkGrey(context), fontSize: 16),
+                      ),
                     ),
                   )
                 ],
@@ -86,50 +87,34 @@ class FollowFollowingScreen extends StatelessWidget {
           ),
           Expanded(
             child: Obx(() {
-              final isFollowersEmpty = controller.followers.isEmpty;
-              final isFollowingsEmpty = controller.followings.isEmpty;
-              final showFollowersLoader =
-                  controller.isFollowers.value && isFollowersEmpty;
-              final showFollowingsLoader =
-                  controller.isFollowings.value && isFollowingsEmpty;
-              final showFollowersNoData =
-                  !controller.isFollowers.value && isFollowersEmpty;
-              final showFollowingsNoData =
-                  !controller.isFollowings.value && isFollowingsEmpty;
+              final isFollowers = type == FollowFollowingType.follower;
+              final users =
+                  isFollowers ? controller.followers : controller.followings;
+              final isLoading = isFollowers
+                  ? controller.isFollowers.value
+                  : controller.isFollowings.value;
+              final isEmpty = users.isEmpty;
 
-              return PageView(
-                controller: controller.pageController,
-                onPageChanged: (value) =>
-                    controller.selectedTabIndex.value = value,
-                children: [
-                  // Followers Page
-                  _buildUserList(
-                      showLoader: showFollowersLoader,
-                      showNoData: showFollowersNoData,
-                      noDataTitle: null,
-                      noDataDescription: null,
-                      users: controller.followers,
-                      userExtractor: (item) => item.fromUser,
-                      onItemTap: controller.onFollowUnFollow,
-                      loadMore: controller.fetchFollowers,
-                      controller: controller.followerController),
-
-                  // Followings Page
-                  _buildUserList(
-                      showLoader: showFollowingsLoader,
-                      showNoData: showFollowingsNoData,
-                      noDataTitle: user?.showMyFollowing == 1
-                          ? LKey.nothingToShowHere.tr
-                          : null,
-                      noDataDescription: user?.showMyFollowing == 1
-                          ? LKey.userHidFollowings.tr
-                          : null,
-                      users: controller.followings,
-                      userExtractor: (item) => item.toUser,
-                      onItemTap: controller.onFollowUnFollow,
-                      loadMore: controller.fetchFollowings,
-                      controller: controller.followingController),
-                ],
+              return _buildUserList(
+                showLoader: isLoading && isEmpty,
+                showNoData: !isLoading && isEmpty,
+                noDataTitle: !isFollowers && user?.showMyFollowing == 1
+                    ? LKey.nothingToShowHere.tr
+                    : null,
+                noDataDescription: !isFollowers && user?.showMyFollowing == 1
+                    ? LKey.userHidFollowings.tr
+                    : null,
+                users: users,
+                userExtractor: isFollowers
+                    ? (item) => item.fromUser
+                    : (item) => item.toUser,
+                onItemTap: controller.onFollowUnFollow,
+                loadMore: isFollowers
+                    ? controller.fetchFollowers
+                    : controller.fetchFollowings,
+                controller: isFollowers
+                    ? controller.followerController
+                    : controller.followingController,
               );
             }),
           )
@@ -166,15 +151,14 @@ class FollowFollowingScreen extends StatelessWidget {
           final isFollow =
               user?.isFollowing == null ? true : user?.isFollowing ?? false;
 
-          // TikTok-style "Follow back": shown on followers lists when the
-          // person follows the current user but the current user does not
-          // follow them back. On my own followers list everyone follows me,
-          // so any unfollowed person is a follow-back candidate.
+          // TikTok-style "Follow back": shown whenever the person follows the
+          // current user but the current user does not follow them back.
+          // On my own followers list everyone follows me, so any unfollowed
+          // person is a follow-back candidate even if follow_status is absent.
           final isMyFollowerList = type == FollowFollowingType.follower &&
               this.user?.id?.toInt() == SessionManager.instance.getUserID();
-          final showFollowBack = type == FollowFollowingType.follower &&
-              !isFollow &&
-              (isMyFollowerList || user?.followStatus == 2);
+          final showFollowBack =
+              !isFollow && (isMyFollowerList || user?.isFollowBack == true);
 
           return UserProfileTile(
             actionName: ActionName.follow,
