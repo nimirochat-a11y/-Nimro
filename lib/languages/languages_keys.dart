@@ -17,6 +17,7 @@ class LKey {
   static const String followersOnly = "Followers Only";
   static const String everyone = "Everyone";
   static const String follow = "Follow";
+  static const String followBack = "Follow back";
   static const String more = "More";
   static const String less = "Less";
   static const String comments = "Comments";

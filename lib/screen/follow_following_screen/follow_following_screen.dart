@@ -104,30 +104,30 @@ class FollowFollowingScreen extends StatelessWidget {
                 children: [
                   // Followers Page
                   _buildUserList(
-                    showLoader: showFollowersLoader,
-                    showNoData: showFollowersNoData,
-                    noDataTitle: null,
-                    noDataDescription: null,
-                    users: controller.followers,
-                    userExtractor: (item) => item.fromUser,
-                    onItemTap: controller.onFollowUnFollow,
-                    loadMore: controller.fetchFollowers,
+                      showLoader: showFollowersLoader,
+                      showNoData: showFollowersNoData,
+                      noDataTitle: null,
+                      noDataDescription: null,
+                      users: controller.followers,
+                      userExtractor: (item) => item.fromUser,
+                      onItemTap: controller.onFollowUnFollow,
+                      loadMore: controller.fetchFollowers,
                       controller: controller.followerController),
 
                   // Followings Page
                   _buildUserList(
-                    showLoader: showFollowingsLoader,
-                    showNoData: showFollowingsNoData,
-                    noDataTitle: user?.showMyFollowing == 1
-                        ? LKey.nothingToShowHere.tr
-                        : null,
-                    noDataDescription: user?.showMyFollowing == 1
-                        ? LKey.userHidFollowings.tr
-                        : null,
-                    users: controller.followings,
-                    userExtractor: (item) => item.toUser,
-                    onItemTap: controller.onFollowUnFollow,
-                    loadMore: controller.fetchFollowings,
+                      showLoader: showFollowingsLoader,
+                      showNoData: showFollowingsNoData,
+                      noDataTitle: user?.showMyFollowing == 1
+                          ? LKey.nothingToShowHere.tr
+                          : null,
+                      noDataDescription: user?.showMyFollowing == 1
+                          ? LKey.userHidFollowings.tr
+                          : null,
+                      users: controller.followings,
+                      userExtractor: (item) => item.toUser,
+                      onItemTap: controller.onFollowUnFollow,
+                      loadMore: controller.fetchFollowings,
                       controller: controller.followingController),
                 ],
               );
@@ -166,10 +166,21 @@ class FollowFollowingScreen extends StatelessWidget {
           final isFollow =
               user?.isFollowing == null ? true : user?.isFollowing ?? false;
 
+          // TikTok-style "Follow back": shown on followers lists when the
+          // person follows the current user but the current user does not
+          // follow them back. On my own followers list everyone follows me,
+          // so any unfollowed person is a follow-back candidate.
+          final isMyFollowerList = type == FollowFollowingType.follower &&
+              this.user?.id?.toInt() == SessionManager.instance.getUserID();
+          final showFollowBack = type == FollowFollowingType.follower &&
+              !isFollow &&
+              (isMyFollowerList || user?.followStatus == 2);
+
           return UserProfileTile(
             actionName: ActionName.follow,
             onTap: () => onItemTap(item),
             isFollowOrIsBlock: isFollow,
+            showFollowBack: showFollowBack,
             user: user,
             loadMore: index == users.length - 1 ? loadMore : null,
           );
@@ -184,6 +195,7 @@ enum ActionName { follow, block }
 class UserProfileTile extends StatefulWidget {
   final ActionName actionName;
   final bool isFollowOrIsBlock;
+  final bool showFollowBack;
   final Future Function() onTap;
   final User? user;
   final Future<void> Function()? loadMore;
@@ -193,6 +205,7 @@ class UserProfileTile extends StatefulWidget {
       required this.actionName,
       required this.isFollowOrIsBlock,
       required this.onTap,
+      this.showFollowBack = false,
       this.user,
       this.loadMore});
 
@@ -262,7 +275,9 @@ class _UserProfileTileState extends State<UserProfileTile> {
                       title: widget.actionName == ActionName.follow
                           ? (widget.isFollowOrIsBlock
                               ? LKey.unFollow.tr
-                              : LKey.follow.tr)
+                              : widget.showFollowBack
+                                  ? LKey.followBack.tr
+                                  : LKey.follow.tr)
                           : (widget.isFollowOrIsBlock
                               ? LKey.unBlock.tr
                               : LKey.block.tr),
