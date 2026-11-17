@@ -643,6 +643,7 @@ class LKey {
       "Your Profile is already in use for Dummy Live from admin panel. So you can't start livestreaming now.";
   static const String shareProfile = "Share Profile";
   static const String noPost = "No Post";
+  static const String commentsAreOff = "Comments are off";
   static const String appName = "Nimiro";
   static const String appTagline = "Watch, enjoy and share your moments";
   static const String signInWithApple = "Sign in with Apple";

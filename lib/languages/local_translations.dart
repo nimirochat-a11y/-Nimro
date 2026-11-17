@@ -139,6 +139,7 @@ class LocalTranslations {
       "User ID": "User ID",
       "Profile Image": "Profile Image",
       "Cover Photo": "Cover Photo",
+      "Comments are off": "Comments are off",
       "Nimiro": "Nimiro",
       "Watch, enjoy and share your moments":
           "Watch, enjoy and share your moments",
@@ -799,6 +800,7 @@ class LocalTranslations {
           "يتم تجديد الاشتراك تلقائيًا وفقًا للخطة ما لم يتم الإلغاء خلال 24 ساعة قبل نهاية الفترة الحالية. يمكنك إدارة الاشتراكات وإلغاؤها في أي وقت من إعدادات متجر التطبيقات/متجر Play.",
       "User ID": "معرف المستخدم",
       "Profile Image": "صورة الملف الشخصي",
+      "Comments are off": "التعليقات مغلقة على هذا المنشور",
       "Nimiro": "نيميرو",
       "Watch, enjoy and share your moments": "شاهد واستمتع وشارك لحظاتك",
       "Sign in with Apple": "تسجيل الدخول مع Apple",

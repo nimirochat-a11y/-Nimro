@@ -6,6 +6,7 @@ import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/common/widget/gradient_icon.dart';
+import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/post_story/music/music_model.dart';
 import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/screen/reels_screen/reel/reel_page_controller.dart';
@@ -54,12 +55,19 @@ class SideBarList extends StatelessWidget {
                     ? AssetRes.icFillHeart
                     : AssetRes.icHeart,
                 text: isPlaceholder ? '1' : (reel.likes ?? 0).toString()),
-            if (reel.canComment == 1)
-              IconWithLabel(
-                onTap: isPlaceholder ? () {} : controller.onCommentTap,
-                image: AssetRes.icComment,
-                text: isPlaceholder ? '1' : (reel.comments ?? 0).toString(),
-              ),
+            // Always keep the comment button in the sidebar. When the reel
+            // author turned comments off we show it dimmed and explain on tap,
+            // instead of hiding it and leaving a gap that exposes the video.
+            IconWithLabel(
+              onTap: isPlaceholder
+                  ? () {}
+                  : reel.canComment == 1
+                      ? controller.onCommentTap
+                      : () => controller.showSnackBar(LKey.commentsAreOff.tr),
+              image: AssetRes.icComment,
+              text: isPlaceholder ? '1' : (reel.comments ?? 0).toString(),
+              isDisabled: reel.canComment != 1,
+            ),
             IconWithLabel(
               onTap: isPlaceholder ? () {} : controller.onSaved,
               image: (reel.isSaved ?? false)
@@ -154,6 +162,7 @@ class IconWithLabel extends StatelessWidget {
   final String text;
   final Color? iconColor;
   final Key? likeKey;
+  final bool isDisabled;
 
   const IconWithLabel({
     super.key,
@@ -162,10 +171,14 @@ class IconWithLabel extends StatelessWidget {
     required this.text,
     this.iconColor,
     this.likeKey,
+    this.isDisabled = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final Color labelColor = isDisabled
+        ? whitePure(context).withValues(alpha: .45)
+        : whitePure(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7.5),
       child: Column(
@@ -173,19 +186,23 @@ class IconWithLabel extends StatelessWidget {
           InkWell(
               onTap: onTap,
               key: likeKey,
-              child:
-                  Image.asset(image, width: 34, height: 34, color: iconColor)),
+              child: Image.asset(image,
+                  width: 34,
+                  height: 34,
+                  color: isDisabled ? labelColor : iconColor)),
           if (text.isNotEmpty)
             Text(
               text,
               style: TextStyleCustom.outFitMedium500(
-                      fontSize: 13, color: whitePure(context))
+                      fontSize: 13, color: labelColor)
                   .copyWith(
                 shadows: <Shadow>[
+                  // A black halo keeps the white numbers crisp on top of busy
+                  // video frames; the old blue-grey shadow looked like a cloud.
                   Shadow(
                     offset: const Offset(0.0, 1.0),
-                    blurRadius: 3.0,
-                    color: textLightGrey(context),
+                    blurRadius: 4.0,
+                    color: Colors.black.withValues(alpha: .8),
                   )
                 ],
               ),
