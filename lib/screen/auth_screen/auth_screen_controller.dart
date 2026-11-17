@@ -42,49 +42,49 @@ class AuthScreenController extends BaseController {
     if (_isLoggingIn) return;
     _isLoggingIn = true;
     try {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
 
-    if (email.isEmpty) {
-      return showSnackBar(LKey.enterEmail.tr);
-    }
-    if (password.isEmpty) {
-      return showSnackBar(LKey.enterAPassword.tr);
-    }
+      if (email.isEmpty) {
+        return showSnackBar(LKey.enterEmail.tr);
+      }
+      if (password.isEmpty) {
+        return showSnackBar(LKey.enterAPassword.tr);
+      }
 
-    showLoader();
+      showLoader();
 
-    if (GetUtils.isEmail(email)) {
-      final UserCredential? credential = await signInWithEmailAndPassword();
+      if (GetUtils.isEmail(email)) {
+        final UserCredential? credential = await signInWithEmailAndPassword();
 
-      if (credential == null) {
+        if (credential == null) {
+          stopLoader();
+          return showSnackBar(LKey.userNotFound.tr);
+        }
+
+        if (credential.user?.emailVerified == false) {
+          stopLoader();
+          return showSnackBar(LKey.verifyEmailFirst.tr);
+        }
+
+        String fullname = credential.user?.displayName ?? email.split('@')[0];
+        final firebaseIdToken = await credential.user?.getIdToken();
+        final user.User? data = await _registration(
+            identity: email,
+            loginMethod: LoginMethod.email,
+            fullname: fullname,
+            loginVia: LoginVia.loginInUser,
+            idToken: firebaseIdToken);
         stopLoader();
-        return showSnackBar(LKey.userNotFound.tr);
-      }
 
-      if (credential.user?.emailVerified == false) {
+        if (data != null) {
+          _navigateScreen(data);
+        }
+      } else {
         stopLoader();
-        return showSnackBar(LKey.verifyEmailFirst.tr);
+        return showSnackBar(LKey.invalidEmail.tr);
       }
-
-      String fullname = credential.user?.displayName ?? email.split('@')[0];
-      final firebaseIdToken = await credential.user?.getIdToken();
-      final user.User? data = await _registration(
-          identity: email,
-          loginMethod: LoginMethod.email,
-          fullname: fullname,
-          loginVia: LoginVia.loginInUser,
-          idToken: firebaseIdToken);
-      stopLoader();
-
-      if (data != null) {
-        _navigateScreen(data);
-      }
-    } else {
-      stopLoader();
-      return showSnackBar(LKey.invalidEmail.tr);
-    }
-  } finally {
+    } finally {
       _isLoggingIn = false;
     }
   }
@@ -154,7 +154,9 @@ class AuthScreenController extends BaseController {
       final user.User? data = await _registration(
         identity: profile.email,
         loginMethod: LoginMethod.google,
-        fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
+        fullname: profile.name.isNotEmpty
+            ? profile.name
+            : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
         idToken: profile.accessToken,
         // FIX: the 'supabase:<uuid>' placeholder was never a real FCM token,
@@ -166,7 +168,7 @@ class AuthScreenController extends BaseController {
     } catch (e) {
       Loggers.error('Google OAuth failed: $e');
       stopLoader();
-      showSnackBar('خطأ تسجيل الدخول: $e');
+      showSnackBar('${LKey.loginFailed.tr}: $e');
     } finally {
       _isLoggingIn = false;
     }
@@ -180,7 +182,9 @@ class AuthScreenController extends BaseController {
       final user.User? data = await _registration(
         identity: profile.email,
         loginMethod: LoginMethod.apple,
-        fullname: profile.name.isNotEmpty ? profile.name : profile.email.split('@')[0],
+        fullname: profile.name.isNotEmpty
+            ? profile.name
+            : profile.email.split('@')[0],
         loginVia: LoginVia.loginInUser,
         idToken: profile.accessToken,
         // FIX: the 'supabase:<uuid>' placeholder was never a real FCM token,
@@ -246,7 +250,9 @@ class AuthScreenController extends BaseController {
     }
 
     Setting? setting = SessionManager.instance.getSettings();
-    if (userData?.isDummy == 0 && userData?.newRegister == true && setting?.registrationBonusStatus == 1) {
+    if (userData?.isDummy == 0 &&
+        userData?.newRegister == true &&
+        setting?.registrationBonusStatus == 1) {
       _sendRegistrationBonusSafely(userData);
     }
     if (userData != null) {
@@ -281,8 +287,10 @@ class AuthScreenController extends BaseController {
       final languageData = translations.keys[userData.appLanguage] ?? {};
       await NotificationService.instance
           .pushNotification(
-            title: languageData[LKey.registrationBonusTitle] ?? LKey.registrationBonusTitle.tr,
-            body: languageData[LKey.registrationBonusDescription] ?? LKey.registrationBonusDescription.tr,
+            title: languageData[LKey.registrationBonusTitle] ??
+                LKey.registrationBonusTitle.tr,
+            body: languageData[LKey.registrationBonusDescription] ??
+                LKey.registrationBonusDescription.tr,
             type: NotificationType.other,
             deviceType: userData.device,
             toUserId: userData.id?.toString(),
@@ -297,7 +305,9 @@ class AuthScreenController extends BaseController {
   Future<UserCredential?> createUserWithEmailAndPassword() async {
     try {
       final credential = await FirebaseAuth.instance
-          .createUserWithEmailAndPassword(email: emailController.text.trim(), password: passwordController.text.trim());
+          .createUserWithEmailAndPassword(
+              email: emailController.text.trim(),
+              password: passwordController.text.trim());
       SessionManager.instance.setPassword(passwordController.text.trim());
       return credential;
     } on FirebaseAuthException catch (e) {
@@ -316,8 +326,9 @@ class AuthScreenController extends BaseController {
 
   Future<UserCredential?> signInWithEmailAndPassword() async {
     try {
-      final credential = await FirebaseAuth.instance
-          .signInWithEmailAndPassword(email: emailController.text.trim(), password: passwordController.text.trim());
+      final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim());
       return credential;
     } on FirebaseAuthException catch (e) {
       stopLoader();
@@ -336,11 +347,14 @@ class AuthScreenController extends BaseController {
 
   Future<UserCredential> signInWithGoogle() async {
     final GoogleSignIn googleSignIn = GoogleSignIn.instance;
-    await googleSignIn.initialize(serverClientId: '28441059803-78ro06cusr82bc0d9ksf3eoo12rvhat1.apps.googleusercontent.com');
+    await googleSignIn.initialize(
+        serverClientId:
+            '28441059803-78ro06cusr82bc0d9ksf3eoo12rvhat1.apps.googleusercontent.com');
     GoogleSignInAccount account = await googleSignIn.authenticate();
 
     // Create a new credential
-    final credential = GoogleAuthProvider.credential(idToken: account.authentication.idToken);
+    final credential =
+        GoogleAuthProvider.credential(idToken: account.authentication.idToken);
 
     // Once signed in, return the UserCredential
     return await FirebaseAuth.instance.signInWithCredential(credential);
@@ -349,12 +363,16 @@ class AuthScreenController extends BaseController {
   Future<UserCredential> signInWithApple() async {
     // Request credential for the currently signed in Apple account.
     final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+      scopes: [
+        AppleIDAuthorizationScopes.email,
+        AppleIDAuthorizationScopes.fullName
+      ],
     );
 
     // Create an `OAuthCredential` from the credential returned by Apple.
-    final oauthCredential = OAuthProvider("apple.com")
-        .credential(idToken: appleCredential.identityToken, accessToken: appleCredential.authorizationCode);
+    final oauthCredential = OAuthProvider("apple.com").credential(
+        idToken: appleCredential.identityToken,
+        accessToken: appleCredential.authorizationCode);
 
     return await FirebaseAuth.instance.signInWithCredential(oauthCredential);
   }

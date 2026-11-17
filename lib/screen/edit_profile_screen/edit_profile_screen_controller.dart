@@ -166,8 +166,9 @@ class EditProfileScreenController extends BaseController {
           profilePhoto: fileProfileImage.value,
           coverPhoto: fileCoverImage.value,
           phoneNumber: phoneNumberController.text.trim(),
-          mobileCountryCode: int.parse(
-              phoneController.selectedCode.value!.phoneCode.replaceAll('+', '')),
+          mobileCountryCode: int.parse(phoneController
+              .selectedCode.value!.phoneCode
+              .replaceAll('+', '')),
           country: phoneController.selectedCode.value?.countryName,
           countryCode: phoneController.selectedCode.value?.countryCode);
       if (userData == null) return;
@@ -184,9 +185,9 @@ class EditProfileScreenController extends BaseController {
       }
       Get.back();
     } on TimeoutException {
-      showSnackBar('انتهت مهلة الاتصال، حاول مرة أخرى.');
+      showSnackBar(LKey.connectionTimedOutTryAgain.tr);
     } catch (e) {
-      showSnackBar('حدث خطأ أثناء الحفظ: $e');
+      showSnackBar('${LKey.errorWhileSaving.tr}: $e');
     } finally {
       stopLoader();
     }

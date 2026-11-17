@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:nimiro/common/widget/privacy_policy_text.dart';
 import 'package:nimiro/common/widget/theme_blur_bg.dart';
+import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/screen/auth_screen/auth_screen_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
@@ -17,6 +18,11 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(AuthScreenController());
+    final isArabic = Get.locale?.languageCode == 'ar';
+    final brandShadow = Shadow(
+      color: const Color(0xFF18D6F5).withValues(alpha: .45),
+      blurRadius: 18,
+    );
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Container(
@@ -36,25 +42,24 @@ class LoginScreen extends StatelessWidget {
                   children: [
                     const SizedBox(height: 155),
                     Text(
-                      'نيميرو',
-                      textDirection: TextDirection.rtl,
-                      style: GoogleFonts.getFont(
-                        'Aref Ruqaa',
-                        fontSize: 56,
-                        fontWeight: FontWeight.w700,
-                        color: whitePure(context),
-                        shadows: [
-                          Shadow(
-                            color: const Color(0xFF18D6F5).withValues(alpha: .45),
-                            blurRadius: 18,
-                          ),
-                        ],
-                      ),
+                      LKey.appName.tr,
+                      textDirection:
+                          isArabic ? TextDirection.rtl : TextDirection.ltr,
+                      style: isArabic
+                          ? GoogleFonts.getFont(
+                              'Aref Ruqaa',
+                              fontSize: 56,
+                              fontWeight: FontWeight.w700,
+                              color: whitePure(context),
+                              shadows: [brandShadow],
+                            )
+                          : TextStyleCustom.outFitBold700(
+                                  fontSize: 56, color: whitePure(context))
+                              .copyWith(shadows: [brandShadow]),
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      'شاهد واستمتع وشارك لحظاتك',
-                      textDirection: TextDirection.rtl,
+                      LKey.appTagline.tr,
                       style: TextStyleCustom.outFitRegular400(
                         fontSize: 16,
                         color: whitePure(context).withValues(alpha: .82),
@@ -77,8 +82,8 @@ class LoginScreen extends StatelessWidget {
                                     ? AssetRes.icApple
                                     : AssetRes.icGoogle,
                                 label: Platform.isIOS
-                                    ? 'تسجيل الدخول مع Apple'
-                                    : 'تسجيل الدخول مع Google',
+                                    ? LKey.signInWithApple.tr
+                                    : LKey.signInWithGoogle.tr,
                               ),
                             ],
                           ),
@@ -88,9 +93,9 @@ class LoginScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: PrivacyPolicyText(
-                      boldTextColor: whitePure(context),
-                      regularTextColor:
-                          whitePure(context).withValues(alpha: .8),
+                        boldTextColor: whitePure(context),
+                        regularTextColor:
+                            whitePure(context).withValues(alpha: .8),
                       ),
                     ),
                   ],

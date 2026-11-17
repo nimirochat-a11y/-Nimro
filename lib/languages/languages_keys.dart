@@ -643,4 +643,12 @@ class LKey {
       "Your Profile is already in use for Dummy Live from admin panel. So you can't start livestreaming now.";
   static const String shareProfile = "Share Profile";
   static const String noPost = "No Post";
+  static const String appName = "Nimiro";
+  static const String appTagline = "Watch, enjoy and share your moments";
+  static const String signInWithApple = "Sign in with Apple";
+  static const String signInWithGoogle = "Sign in with Google";
+  static const String loginFailed = "Login failed";
+  static const String connectionTimedOutTryAgain =
+      "Connection timed out, please try again.";
+  static const String errorWhileSaving = "An error occurred while saving";
 }
