@@ -176,20 +176,23 @@ class IconWithLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color labelColor = isDisabled
-        ? whitePure(context).withValues(alpha: .45)
-        : whitePure(context);
+    // Keep the count fully opaque even when comments are disabled. Dimming the
+    // number itself made it look like a grey cloud over the video; only the
+    // glyph should show the disabled state.
+    final Color labelColor = whitePure(context);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7.5),
       child: Column(
         children: [
           InkWell(
-              onTap: onTap,
-              key: likeKey,
-              child: Image.asset(image,
-                  width: 34,
-                  height: 34,
-                  color: isDisabled ? labelColor : iconColor)),
+            onTap: onTap,
+            key: likeKey,
+            child: Opacity(
+              opacity: isDisabled ? .45 : 1,
+              child:
+                  Image.asset(image, width: 34, height: 34, color: iconColor),
+            ),
+          ),
           if (text.isNotEmpty)
             Text(
               text,
@@ -197,12 +200,12 @@ class IconWithLabel extends StatelessWidget {
                       fontSize: 13, color: labelColor)
                   .copyWith(
                 shadows: <Shadow>[
-                  // A black halo keeps the white numbers crisp on top of busy
-                  // video frames; the old blue-grey shadow looked like a cloud.
+                  // A tight black halo keeps the white numbers crisp on top of
+                  // busy video frames without looking like a smudge.
                   Shadow(
                     offset: const Offset(0.0, 1.0),
-                    blurRadius: 4.0,
-                    color: Colors.black.withValues(alpha: .8),
+                    blurRadius: 2.5,
+                    color: Colors.black.withValues(alpha: .75),
                   )
                 ],
               ),
