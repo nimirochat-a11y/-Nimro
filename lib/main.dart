@@ -15,6 +15,7 @@ import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/subscription/subscription_manager.dart';
+import 'package:nimiro/common/service/upload/upload_queue_service.dart';
 import 'package:nimiro/common/widget/restart_widget.dart';
 import 'package:nimiro/languages/dynamic_translations.dart';
 import 'package:nimiro/screen/splash_screen/splash_screen.dart';
@@ -122,6 +123,11 @@ Future<void> _runStartupSequence() async {
 
   // Load Translations
   Get.put(DynamicTranslations());
+
+  // v1.1.53: finish any upload that was still queued when the app was last
+  // closed or killed. Never blocks startup; on Android this only starts the
+  // foreground service, which owns the actual upload.
+  unawaited(UploadQueueService.instance.resumePending());
 
   runApp(SentryWidget(child: const RestartWidget(child: MyApp())));
 }

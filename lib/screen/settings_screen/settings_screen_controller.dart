@@ -1,5 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart' as auth;
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
@@ -9,6 +8,7 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/service/supabase/supabase_service.dart';
 import 'package:nimiro/common/service/support/crisp_support_service.dart';
+import 'package:nimiro/common/service/upload/upload_queue_service.dart';
 import 'package:nimiro/common/widget/confirmation_dialog.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
@@ -99,6 +99,7 @@ class SettingsScreenController extends BaseController {
             await CrispSupportService.instance.resetSession();
             FirebaseFirestoreController.instance.deleteUser(myUser.value?.id);
             SessionManager.instance.clear();
+            await UploadQueueService.instance.clearQueue();
             deleteCurrentUser();
             Get.offAll(() => const LoginScreen());
           } else {
@@ -164,6 +165,7 @@ class SettingsScreenController extends BaseController {
             await GoogleSignIn.instance.signOut();
             await auth.FirebaseAuth.instance.signOut();
             SessionManager.instance.clearSomeKey();
+            await UploadQueueService.instance.clearQueue();
             Get.offAll(() => const LoginScreen());
           } else {
             showSnackBar(result.message);
