@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
+import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/location/location_service.dart';
 import 'package:nimiro/common/widget/bottom_sheet_top_view.dart';
@@ -28,6 +29,8 @@ class _LocationSheetState extends State<LocationSheet> {
   RxList<Places> places = <Places>[].obs;
   RxBool isLocationLoading = true.obs;
   RxBool isLocationError = false.obs;
+  Rx<Position?> currentPosition = Rx(null);
+  static const String _currentLocationId = '__current_location__';
 
   @override
   void initState() {
@@ -59,6 +62,7 @@ class _LocationSheetState extends State<LocationSheet> {
                 List<Places> _place =
                     await CommonService.instance.searchPlace(title: value);
                 places.addAll(_place);
+                _prependCurrentLocation();
                 isLocationLoading.value = false;
               });
             },
@@ -95,16 +99,38 @@ class _LocationSheetState extends State<LocationSheet> {
   Future<void> _fetchInitLocation() async {
     Position? position;
     isLocationLoading.value = true;
+
+    // Show the last known fix immediately so the sheet never waits on a cold
+    // GPS lock before showing anything useful.
     try {
-      position = await LocationService.instance
-          .getCurrentLocation(isPermissionDialogShow: true);
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null &&
+          DateTime.now().difference(lastKnown.timestamp).inMinutes <= 10) {
+        position = lastKnown;
+        currentPosition.value = lastKnown;
+        places.clear();
+        await searchNearBy(lastKnown.latitude, lastKnown.longitude);
+        isLocationLoading.value = false;
+      }
     } catch (e) {
-      isLocationError.value = true;
-      isLocationLoading.value = false;
+      Loggers.error('last known location failed: $e');
     }
 
-    if (position != null) {
-      await searchNearBy(position.latitude, position.longitude);
+    // Then refresh with a high-accuracy fix and update the list in place.
+    try {
+      final fresh = await LocationService.instance
+          .getCurrentLocation(isPermissionDialogShow: true);
+      position = fresh;
+      currentPosition.value = fresh;
+      places.clear();
+      await searchNearBy(fresh.latitude, fresh.longitude);
+      isLocationLoading.value = false;
+    } catch (e) {
+      // With a recent last-known fix already displayed there is nothing to
+      // report to the user; only show the error state when we have no fix.
+      if (position == null) {
+        isLocationError.value = true;
+      }
       isLocationLoading.value = false;
     }
   }
@@ -113,6 +139,27 @@ class _LocationSheetState extends State<LocationSheet> {
     List<Places> _place =
         await CommonService.instance.searchNearBy(lat: lat, lon: lon);
     places.addAll(_place);
+    _prependCurrentLocation();
+  }
+
+  /// Puts an exact "Current Location" entry at the top of the list. The
+  /// Google Places results are businesses/landmarks near the user, so picking
+  /// one of them never gives the author's real position.
+  void _prependCurrentLocation() {
+    final position = currentPosition.value;
+    if (position == null) return;
+    places.removeWhere((place) => place.id == _currentLocationId);
+    places.insert(
+      0,
+      Places(
+        id: _currentLocationId,
+        displayName: DisplayName(text: LKey.currentLocation.tr),
+        location: Location(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        ),
+      ),
+    );
   }
 }
 

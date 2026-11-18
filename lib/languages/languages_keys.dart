@@ -181,6 +181,7 @@ class LKey {
   static const String mention = "Mention";
   static const String hashtags = "Hashtags";
   static const String location = "Location";
+  static const String currentLocation = "Current Location";
   static const String allowComments = "Allow Comments";
   static const String selectMusic = "Select Music";
   static const String explore = "Explore";

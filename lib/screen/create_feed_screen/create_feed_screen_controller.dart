@@ -73,6 +73,11 @@ class CreateFeedScreenController extends BaseController {
 
   UploadType _lastUploadType = UploadType.none;
 
+  // High-accuracy fix taken while the screen is open. Reusing a fresh fix
+  // keeps "Publish" instant without falling back to a rough location.
+  Position? _cachedPosition;
+  DateTime? _cachedPositionAt;
+
   String localPath = '';
 
   @override
@@ -85,6 +90,9 @@ class CreateFeedScreenController extends BaseController {
   void onReady() {
     super.onReady();
     Future.wait({_fetchSetting()});
+    // Warm up the GPS while the author is writing the caption, so the exact
+    // fix is ready the moment they tap Publish.
+    unawaited(_prefetchLocation());
   }
 
   @override
@@ -244,20 +252,65 @@ class CreateFeedScreenController extends BaseController {
     });
   }
 
+  /// A recent high-accuracy fix from the screen's warm-up, or a fresh one
+  /// when it is older than two minutes. Never prompts for permission.
+  Future<Position?> _getBestPosition() async {
+    final cached = _cachedPosition;
+    final cachedAt = _cachedPositionAt;
+    if (cached != null &&
+        cachedAt != null &&
+        DateTime.now().difference(cachedAt).inSeconds < 120) {
+      return cached;
+    }
+
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return cached;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      _cachedPosition = position;
+      _cachedPositionAt = DateTime.now();
+      return position;
+    } catch (e) {
+      Loggers.error('_getBestPosition $e');
+      return cached;
+    }
+  }
+
+  Future<void> _prefetchLocation() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.best,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      _cachedPosition = position;
+      _cachedPositionAt = DateTime.now();
+    } catch (e) {
+      Loggers.error('_prefetchLocation $e');
+    }
+  }
+
   Future<void> _addCurrentLocationData(Map<String, dynamic> params) async {
     Position? position;
     PlaceDetail? detail;
 
-    try {
-      position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 5),
-        ),
-      );
-    } catch (e) {
-      Loggers.error('_addCurrentLocationData gps $e');
-    }
+    position = await _getBestPosition();
 
     // Only fall back to IP geolocation when GPS did not return a fix; this
     // avoids an extra network round-trip before the upload starts.
@@ -299,18 +352,8 @@ class CreateFeedScreenController extends BaseController {
       // Never trigger a permission prompt just because someone is posting.
       // If location was already granted, attach a fresh exact fix; otherwise
       // the backend falls back to the user's last known location.
-      final permission = await Geolocator.checkPermission();
-      if (permission != LocationPermission.whileInUse &&
-          permission != LocationPermission.always) {
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 5),
-        ),
-      );
+      final position = await _getBestPosition();
+      if (position == null) return;
       params.addAll({
         Params.placeLatExact: '${position.latitude}',
         Params.placeLonExact: '${position.longitude}',
