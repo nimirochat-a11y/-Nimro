@@ -20,6 +20,7 @@ import 'package:nimiro/screen/create_feed_screen/widget/reel_preview_card.dart';
 import 'package:nimiro/screen/create_feed_screen/widget/url_meta_data_card.dart';
 import 'package:nimiro/utilities/app_res.dart';
 import 'package:nimiro/utilities/asset_res.dart';
+import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
 enum CreateFeedType { feed, reel }
@@ -107,8 +108,10 @@ class CreateFeedScreen extends StatelessWidget {
               controller.feedPostType.value == FeedPostType.text)
           .obs;
 
+      final bool isPublishing = controller.isPublishing.value;
+
       return TextButtonCustom(
-        onTap: controller.handleUpload,
+        onTap: isPublishing ? () {} : controller.handleUpload,
         title: LKey.uploadNow.tr,
         backgroundColor:
             textDarkGrey(context).withValues(alpha: isEmpty.value ? .5 : 1),
@@ -116,6 +119,27 @@ class CreateFeedScreen extends StatelessWidget {
             whitePure(context).withValues(alpha: isEmpty.value ? .5 : 1),
         margin: EdgeInsets.symmetric(
             vertical: AppBar().preferredSize.height, horizontal: 20),
+        child: isPublishing
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: whitePure(context),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    LKey.postIsBeginUploading.tr,
+                    style: TextStyleCustom.outFitRegular400(
+                        color: whitePure(context), fontSize: 17),
+                  ),
+                ],
+              )
+            : null,
       );
     });
   }

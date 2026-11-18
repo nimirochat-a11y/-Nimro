@@ -58,6 +58,9 @@ class CreateFeedScreenController extends BaseController {
   Rx<ImageWithFilter?> video = Rx(null);
   Rx<Places?> selectedLocation = Rx(null);
   RxDouble progress = 0.0.obs;
+  // Guards the publish button: set immediately on tap so the UI can show a
+  // spinner and repeated taps cannot start duplicate uploads.
+  RxBool isPublishing = false.obs;
   Rx<VideoPlayerController?> videoPlayerController = Rx(null);
   RxInt selectedImageIndex = 0.obs;
   Function({Post? post, CreateFeedType? type})? onAddPost;
@@ -99,6 +102,11 @@ class CreateFeedScreenController extends BaseController {
   }
 
   void handleUpload() async {
+    // Ignore taps while a publish is already in flight (GPS lookup,
+    // moderation or upload). Without this guard a slow location fix made the
+    // button look dead and every extra tap started another upload.
+    if (isPublishing.value || BaseController.share.isLoading.value) return;
+
     FocusManager.instance.primaryFocus?.unfocus();
 
     // Early return if nothing to upload for feed posts
@@ -106,19 +114,31 @@ class CreateFeedScreenController extends BaseController {
       Loggers.warning('Nothing to upload. Aborting...');
       return;
     }
-    final rawDescription = commentHelper.detectableTextController.text;
 
-    final postParams = await _buildPostParams(rawDescription);
+    isPublishing.value = true;
+    try {
+      final rawDescription = commentHelper.detectableTextController.text;
 
-    Loggers.info('Post Data: $postParams');
+      final postParams = await _buildPostParams(rawDescription);
 
-    if (createType == CreateFeedType.reel) {
-      _uploadPostHandler(postParams);
-    } else {
-      runContentModerationAndUpload(
-        description: rawDescription,
-        params: postParams,
-      );
+      Loggers.info('Post Data: $postParams');
+
+      if (createType == CreateFeedType.reel) {
+        await _uploadPostHandler(postParams);
+      } else {
+        // Moderation shows its own global loader, so the button spinner can
+        // stop as soon as we hand the post over to it.
+        isPublishing.value = false;
+        runContentModerationAndUpload(
+          description: rawDescription,
+          params: postParams,
+        );
+      }
+    } catch (e) {
+      Loggers.error('handleUpload failed: $e');
+      BaseController.share.showSnackBar(LKey.uploadingFailed.tr);
+    } finally {
+      isPublishing.value = false;
     }
   }
 
@@ -232,17 +252,21 @@ class CreateFeedScreenController extends BaseController {
       position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 20),
+          timeLimit: Duration(seconds: 5),
         ),
       );
     } catch (e) {
       Loggers.error('_addCurrentLocationData gps $e');
     }
 
-    try {
-      detail = await CommonService.instance.getIPPlaceDetail();
-    } catch (e) {
-      Loggers.error('_addCurrentLocationData ip $e');
+    // Only fall back to IP geolocation when GPS did not return a fix; this
+    // avoids an extra network round-trip before the upload starts.
+    if (position == null) {
+      try {
+        detail = await CommonService.instance.getIPPlaceDetail();
+      } catch (e) {
+        Loggers.error('_addCurrentLocationData ip $e');
+      }
     }
 
     if (detail != null && detail.status == 'success') {
@@ -284,7 +308,7 @@ class CreateFeedScreenController extends BaseController {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.best,
-          timeLimit: Duration(seconds: 15),
+          timeLimit: Duration(seconds: 5),
         ),
       );
       params.addAll({
@@ -349,7 +373,7 @@ class CreateFeedScreenController extends BaseController {
     _lastUploadType = UploadType.uploading;
     updateUploadingProgress(progress: 0);
 
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(milliseconds: 150));
 
     try {
       // Handle post upload based on post type
@@ -488,8 +512,7 @@ class CreateFeedScreenController extends BaseController {
           'url': WebService.post.addUserMusic,
           'fields': {
             Params.title: AppRes.addMusicName,
-            Params.duration:
-                '${duration.inMinutes}:${duration.inSeconds % 60}',
+            Params.duration: '${duration.inMinutes}:${duration.inSeconds % 60}',
             Params.artist: artistName,
           },
           'files': [

@@ -197,18 +197,7 @@ class IconWithLabel extends StatelessWidget {
             Text(
               text,
               style: TextStyleCustom.outFitMedium500(
-                      fontSize: 13, color: labelColor)
-                  .copyWith(
-                shadows: <Shadow>[
-                  // A tight black halo keeps the white numbers crisp on top of
-                  // busy video frames without looking like a smudge.
-                  Shadow(
-                    offset: const Offset(0.0, 1.0),
-                    blurRadius: 2.5,
-                    color: Colors.black.withValues(alpha: .75),
-                  )
-                ],
-              ),
+                  fontSize: 13, color: labelColor),
             ),
         ],
       ),
