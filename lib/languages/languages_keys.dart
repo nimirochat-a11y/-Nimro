@@ -675,4 +675,6 @@ class LKey {
   static const String sendingGiftTo = "Sending gift to";
   static const String giftNotFound = "Gift not found";
   static const String insufficientFunds = "Insufficient balance";
+  static const String realisticTab = "Realistic";
+  static const String giftSentPrefix = "Sent";
 }

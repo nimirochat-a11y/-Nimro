@@ -470,6 +470,7 @@ class Gift {
   String? nameEn;
   String? image;
   String? video;
+  String? category;
   DateTime? createdAt;
   DateTime? updatedAt;
 
@@ -480,6 +481,7 @@ class Gift {
     this.nameEn,
     this.image,
     this.video,
+    this.category,
     this.createdAt,
     this.updatedAt,
   });
@@ -491,6 +493,7 @@ class Gift {
         nameEn: json["name_en"],
         image: json["image"],
         video: json["video"],
+        category: json["category"] ?? 'classic',
         createdAt: json["created_at"] == null
             ? null
             : DateTime.parse(json["created_at"]),
@@ -498,6 +501,8 @@ class Gift {
             ? null
             : DateTime.parse(json["updated_at"]),
       );
+
+  bool get isRealistic => category == 'realistic';
 
   /// The gift name in the requested language.
   ///
@@ -519,6 +524,7 @@ class Gift {
         "name_en": nameEn,
         "image": image,
         "video": video,
+        "category": category ?? 'classic',
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
       };

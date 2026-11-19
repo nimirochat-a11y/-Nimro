@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/common_extension.dart';
@@ -66,11 +68,11 @@ class _SendGiftSheetState extends State<SendGiftSheet> {
   List<Gift> _visibleGifts(List<Gift> all) {
     switch (_tab) {
       case 1:
-        return all.where((gift) => (gift.coinPrice ?? 0) >= 1000).toList();
+        return all.where((gift) => gift.isRealistic).toList();
       case 2:
-        return all;
+        return all.where((gift) => !gift.isRealistic).toList();
       default:
-        return all.where((gift) => (gift.coinPrice ?? 0) < 1000).toList();
+        return all;
     }
   }
 
@@ -243,9 +245,9 @@ class _SendGiftSheetState extends State<SendGiftSheet> {
 
   Widget _buildTabs() {
     final tabs = [
-      LKey.popularTab.tr,
-      LKey.luxuryTab.tr,
       LKey.allGifts.tr,
+      LKey.realisticTab.tr,
+      LKey.popularTab.tr,
     ];
     return Column(
       children: [
@@ -391,7 +393,7 @@ class _CircleIconButton extends StatelessWidget {
   }
 }
 
-class _GiftTile extends StatelessWidget {
+class _GiftTile extends StatefulWidget {
   final Gift gift;
   final String name;
   final bool selected;
@@ -407,7 +409,29 @@ class _GiftTile extends StatelessWidget {
   });
 
   @override
+  State<_GiftTile> createState() => _GiftTileState();
+}
+
+class _GiftTileState extends State<_GiftTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _float = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2200),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _float.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final gift = widget.gift;
+    final name = widget.name;
+    final selected = widget.selected;
+    final onTap = widget.onTap;
+    final onPlay = widget.onPlay;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -431,12 +455,26 @@ class _GiftTile extends StatelessWidget {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    CustomImage(
-                      image: gift.image?.addBaseURL(),
-                      size: const Size(56, 56),
-                      radius: 0,
-                      fit: BoxFit.contain,
-                      isImageLoaderVisible: false,
+                    AnimatedBuilder(
+                      animation: _float,
+                      builder: (context, child) {
+                        final offset = math.sin(_float.value * math.pi * 2) *
+                            (selected ? 4.0 : 2.5);
+                        final scale = selected
+                            ? 1.04 + math.sin(_float.value * math.pi * 2) * .03
+                            : 1.0;
+                        return Transform.translate(
+                          offset: Offset(0, offset),
+                          child: Transform.scale(scale: scale, child: child),
+                        );
+                      },
+                      child: CustomImage(
+                        image: gift.image?.addBaseURL(),
+                        size: const Size(56, 56),
+                        radius: 0,
+                        fit: BoxFit.contain,
+                        isImageLoaderVisible: false,
+                      ),
                     ),
                     if (onPlay != null)
                       Positioned(

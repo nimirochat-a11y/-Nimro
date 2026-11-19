@@ -686,6 +686,8 @@ class LocalTranslations {
       "Sending gift to": "Sending gift to",
       "Gift not found": "Gift not found",
       "Insufficient balance": "Insufficient balance",
+      "Realistic": "Realistic",
+      "Sent": "Sent",
     },
     'ar': {
       "Language": "لغة",
@@ -1365,6 +1367,8 @@ class LocalTranslations {
       "Sending gift to": "إرسال الهدية إلى",
       "Gift not found": "الهدية غير موجودة",
       "Insufficient balance": "رصيدك غير كافٍ",
+      "Realistic": "واقعية",
+      "Sent": "أُرسلت",
     },
   };
 }

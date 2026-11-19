@@ -528,6 +528,7 @@ class ChatScreenController extends BlockUserController
     GiftManager.openGiftSheet(
         userId: userId ?? -1,
         onCompletion: (giftManager) {
+          GiftManager.showAnimationDialog(giftManager.gift);
           sendMessageToFireStore(
               type: MessageType.gift,
               textMessage: giftManager.gift.coinPrice.toString(),

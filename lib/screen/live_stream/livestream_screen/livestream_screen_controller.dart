@@ -417,7 +417,8 @@ class LivestreamScreenController extends BaseController {
         ZegoCanvas canvas =
             ZegoCanvas(viewID, viewMode: ZegoViewMode.AspectFill);
         ZegoPlayerConfig config = ZegoPlayerConfig.defaultConfig();
-        config.resourceMode = ZegoStreamResourceMode.OnlyL3; // interactive live streaming
+        config.resourceMode =
+            ZegoStreamResourceMode.OnlyL3; // interactive live streaming
 
         Loggers.info(
             'StartPlayStream playback: StreamID: $streamID, ViewMode: ${canvas.viewMode}, ResourceMode: ${config.resourceMode}');
@@ -850,6 +851,7 @@ class LivestreamScreenController extends BaseController {
         onCompletion: (giftManager) {
           Gift gift = giftManager.gift;
           AppUser? user = giftManager.streamUser;
+          GiftManager.showAnimationDialog(gift);
 
           int coinPrice = gift.coinPrice?.toInt() ?? 0;
 

@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
 import 'package:nimiro/common/functions/debounce_action.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
-import 'package:nimiro/common/manager/haptic_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/gift_wallet_service.dart';
@@ -12,7 +11,7 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
-import 'package:nimiro/screen/gift_sheet/send_gift_dialog.dart';
+import 'package:nimiro/screen/gift_sheet/gift_animation_overlay.dart';
 import 'package:nimiro/screen/gift_sheet/send_gift_sheet.dart';
 import 'package:nimiro/screen/live_stream/livestream_screen/livestream_screen_controller.dart';
 
@@ -131,32 +130,9 @@ class GiftManager {
     });
   }
 
+  /// Plays the animated gift overlay. The old static white dialog is gone.
   static void showAnimationDialog(Gift gift) {
-    showGeneralDialog(
-      context: Get.context!,
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return SendGiftDialog(gift: gift);
-      },
-      transitionDuration: const Duration(milliseconds: 400),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final slideAnimation = Tween<Offset>(
-          begin: const Offset(0, 1),
-          end: Offset.zero,
-        ).animate(animation);
-
-        if (slideAnimation.isForwardOrCompleted) {
-          HapticManager.shared.light();
-        }
-
-        return SlideTransition(
-          position: slideAnimation,
-          child: FadeTransition(
-            opacity: animation,
-            child: child,
-          ),
-        );
-      },
-    );
+    GiftAnimationOverlay.shared.enqueue(gift);
   }
 
   static void sendNotification(Post? post) {

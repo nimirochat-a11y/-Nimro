@@ -14,83 +14,109 @@ import 'package:nimiro/utilities/style_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
-class ChatGiftMessage extends StatelessWidget {
+class ChatGiftMessage extends StatefulWidget {
   final MessageData message;
   final bool isMe;
 
   const ChatGiftMessage({super.key, required this.message, required this.isMe});
 
   @override
+  State<ChatGiftMessage> createState() => _ChatGiftMessageState();
+}
+
+class _ChatGiftMessageState extends State<ChatGiftMessage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  )..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 175,
-      child: GradientBorder(
-        strokeWidth: 2,
-        radius: 16,
-        gradient: StyleRes.themeGradient,
-        child: Container(
-          margin: const EdgeInsets.all(2),
-          decoration: ShapeDecoration(
-            shape: SmoothRectangleBorder(
-                borderRadius:
-                    SmoothBorderRadius(cornerRadius: 15, cornerSmoothing: 1)),
-            color: scaffoldBackgroundColor(context),
-            shadows: messageBubbleShadow,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: (message.videoMessage?.isNotEmpty ?? false)
-                    ? () => GiftMediaViewer.open(
-                        context, message.videoMessage!.addBaseURL())
-                    : null,
-                child: SizedBox(
-                  width: 130,
-                  height: 130,
-                  child: Stack(
-                    children: [
-                      Center(
-                        child: CustomImage(
-                            size: const Size(130, 130),
-                            image: message.imageMessage?.addBaseURL(),
-                            radius: 10,
-                            cornerSmoothing: 1,
-                            isShowPlaceHolder: true),
-                      ),
-                      if (message.videoMessage?.isNotEmpty ?? false)
-                        const Positioned(
-                          bottom: 6,
-                          right: 6,
-                          child: Icon(
-                            Icons.play_circle_fill,
-                            size: 30,
-                            color: Colors.white,
-                            shadows: [
-                              Shadow(blurRadius: 8, color: Colors.black45)
-                            ],
+    final message = widget.message;
+    final isMe = widget.isMe;
+    return ScaleTransition(
+      scale: CurvedAnimation(parent: _c, curve: Curves.elasticOut)
+          .drive(Tween<double>(begin: .4, end: 1)),
+      child: FadeTransition(
+        opacity: _c,
+        child: SizedBox(
+          width: 175,
+          child: GradientBorder(
+            strokeWidth: 2,
+            radius: 16,
+            gradient: StyleRes.themeGradient,
+            child: Container(
+              margin: const EdgeInsets.all(2),
+              decoration: ShapeDecoration(
+                shape: SmoothRectangleBorder(
+                    borderRadius: SmoothBorderRadius(
+                        cornerRadius: 15, cornerSmoothing: 1)),
+                color: scaffoldBackgroundColor(context),
+                shadows: messageBubbleShadow,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: (message.videoMessage?.isNotEmpty ?? false)
+                        ? () => GiftMediaViewer.open(
+                            context, message.videoMessage!.addBaseURL())
+                        : null,
+                    child: SizedBox(
+                      width: 130,
+                      height: 130,
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: CustomImage(
+                                size: const Size(130, 130),
+                                image: message.imageMessage?.addBaseURL(),
+                                radius: 10,
+                                cornerSmoothing: 1,
+                                isShowPlaceHolder: true),
                           ),
-                        ),
-                    ],
+                          if (message.videoMessage?.isNotEmpty ?? false)
+                            const Positioned(
+                              bottom: 6,
+                              right: 6,
+                              child: Icon(
+                                Icons.play_circle_fill,
+                                size: 30,
+                                color: Colors.white,
+                                shadows: [
+                                  Shadow(blurRadius: 8, color: Colors.black45)
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  GradientText(
+                    '${int.parse(message.textMessage ?? '0').numberFormat} ${LKey.coins.tr}',
+                    gradient: StyleRes.themeGradient,
+                    style: TextStyleCustom.unboundedMedium500(fontSize: 18),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 15, top: 3),
+                    child: Text(
+                        isMe ? LKey.youSentAGift.tr : LKey.youReceivedAGift.tr,
+                        style: TextStyleCustom.outFitRegular400(
+                            color: textDarkGrey(context), fontSize: 14)),
+                  )
+                ],
               ),
-              GradientText(
-                '${int.parse(message.textMessage ?? '0').numberFormat} ${LKey.coins.tr}',
-                gradient: StyleRes.themeGradient,
-                style: TextStyleCustom.unboundedMedium500(fontSize: 18),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 15, top: 3),
-                child: Text(
-                    isMe ? LKey.youSentAGift.tr : LKey.youReceivedAGift.tr,
-                    style: TextStyleCustom.outFitRegular400(
-                        color: textDarkGrey(context), fontSize: 14)),
-              )
-            ],
+            ),
+            onPressed: () {},
           ),
         ),
-        onPressed: () {},
       ),
     );
   }
