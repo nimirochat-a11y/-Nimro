@@ -12,18 +12,19 @@ import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/utilities/const_res.dart';
 
-/// Durable upload queue.
+/// Durable upload queue with a UI uploader and a background supervisor.
 ///
-/// Every upload is written to a small JSON job file *before* any byte is sent.
-/// On Android the actual work runs inside the foreground service isolate, so
-/// leaving the app (or Android reclaiming the UI) does not cancel it. If the
-/// service is killed anyway, the watchdog restarts it and [processQueue]
-/// resumes every job that is still `pending` or `running`. The same files are
-/// replayed on the next app launch.
+/// The UI isolate performs the actual upload, so progress is immediate and an
+/// upload can never hang because the background isolate failed to start (the
+/// bug that made every media upload stay at 0% in 1.1.53).
 ///
-/// The UI isolate only appends a job, starts the service and polls that job's
-/// file for progress/result. All network and file work happens in one place
-/// (the service isolate), which keeps the queue free of cross-isolate races.
+/// Every job is still persisted before the first byte is sent. A foreground
+/// service watches the queue while the app is alive:
+///   * while the UI keeps refreshing the job's heartbeat, the service leaves
+///     it alone;
+///   * when the app is killed the heartbeat stops, the service takes the job
+///     over and finishes it (this is what makes uploads survive app close);
+///   * [resumePending] does the same on the next launch for jobs left behind.
 class UploadQueueService {
   UploadQueueService._();
   static final UploadQueueService instance = UploadQueueService._();
@@ -31,6 +32,11 @@ class UploadQueueService {
   static const String queueDirName = 'nimiro_upload_queue';
   static const String _channelId = 'nimiro_upload';
   static const String _doneChannelId = 'nimiro_upload_done';
+
+  /// A UI-owned job is considered abandoned when its heartbeat is older than
+  /// this. Heartbeats are refreshed every [_heartbeatEvery].
+  static const int _heartbeatStaleMs = 45000;
+  static const Duration _heartbeatEvery = Duration(seconds: 3);
 
   static bool _configured = false;
   static bool _notificationsReady = false;
@@ -43,39 +49,51 @@ class UploadQueueService {
   /// overwrite a newer status (done/failed) on disk.
   static final Map<String, Future<void>> _writeChains = {};
 
+  /// Heartbeats are only needed in the UI isolate, but the map is harmless in
+  /// the service isolate too.
+  static final Map<String, Timer> _heartbeats = {};
+
+  /// Incremented on logout. In-flight UI uploads compare their generation
+  /// before every step and stop writing once the queue was cleared.
+  static int _generation = 0;
+
   // ---------------------------------------------------------------------------
   // Public API
   // ---------------------------------------------------------------------------
 
   /// Creates the notification channels and configures the foreground service.
-  /// Safe to call repeatedly; only the first call in an isolate does work.
+  /// Safe to call repeatedly; every call is time-limited so a misbehaving
+  /// platform plugin can never block the caller.
   Future<void> ensureConfigured() async {
     if (!Platform.isAndroid || _configured) return;
 
     try {
-      await _ensureNotifications();
+      await _ensureNotifications()
+          .timeout(const Duration(seconds: 5), onTimeout: () {});
     } catch (e) {
-      // A notification problem must never disable background uploading.
+      // A notification problem must never disable uploading.
       Loggers.error('upload notification setup failed: $e');
     }
 
     try {
-      await FlutterBackgroundService().configure(
-        androidConfiguration: AndroidConfiguration(
-          onStart: onServiceStart,
-          autoStart: false,
-          isForegroundMode: true,
-          notificationChannelId: _channelId,
-          initialNotificationTitle: 'Nimiro',
-          initialNotificationContent: 'Preparing upload...',
-          foregroundServiceNotificationId: 8901,
-        ),
-        iosConfiguration: IosConfiguration(
-          autoStart: false,
-          onForeground: onServiceStart,
-          onBackground: onIosBackground,
-        ),
-      );
+      await FlutterBackgroundService()
+          .configure(
+            androidConfiguration: AndroidConfiguration(
+              onStart: onServiceStart,
+              autoStart: false,
+              isForegroundMode: true,
+              notificationChannelId: _channelId,
+              initialNotificationTitle: 'Nimiro',
+              initialNotificationContent: 'Preparing upload...',
+              foregroundServiceNotificationId: 8901,
+            ),
+            iosConfiguration: IosConfiguration(
+              autoStart: false,
+              onForeground: onServiceStart,
+              onBackground: onIosBackground,
+            ),
+          )
+          .timeout(const Duration(seconds: 6), onTimeout: () => false);
       _configured = true;
     } catch (e, st) {
       Loggers.error('upload service configure failed: $e\n$st');
@@ -83,8 +101,7 @@ class UploadQueueService {
   }
 
   /// Called once at app startup. Re-arms the service for jobs that were still
-  /// queued when the app was last closed/killed. On iOS it processes them in
-  /// the UI isolate because the platform does not allow a permanent service.
+  /// queued when the app was last closed/killed.
   Future<void> resumePending() async {
     try {
       if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -104,15 +121,17 @@ class UploadQueueService {
       final pending = (await _readJobs()).where(_isResumable).toList();
       if (pending.isEmpty) return;
 
+      // A cold app start means any UI-owned job lost its owner process.
+      for (final job in pending) {
+        job['owner'] = 'service';
+        job['heartbeat'] = 0;
+        await _writeJob(job);
+      }
+
       await _saveAuthToken();
 
       if (Platform.isAndroid) {
-        final started = await _startService();
-        if (!started) {
-          // Extremely rare (service disabled by the OS). At least finish the
-          // queue while this app process is alive.
-          unawaited(processQueue());
-        }
+        unawaited(_startService());
       } else {
         unawaited(processQueue());
       }
@@ -121,9 +140,9 @@ class UploadQueueService {
     }
   }
 
-  /// Queues [steps] durably and returns the final API response (or
-  /// `{'__error': reason}`). The contract is identical to the old inline
-  /// implementation, so every existing caller keeps working unchanged.
+  /// Queues [steps] durably, uploads them from this isolate and returns the
+  /// final API response (or `{'__error': reason}`). The contract is identical
+  /// to the old inline implementation, so every caller keeps working.
   Future<Map<String, dynamic>?> submit(
     List<Map<String, dynamic>> steps, {
     void Function(double progress)? onProgress,
@@ -131,10 +150,14 @@ class UploadQueueService {
     final tag =
         'u${DateTime.now().millisecondsSinceEpoch}${Random().nextInt(9999)}';
     final now = DateTime.now().millisecondsSinceEpoch;
+    final generation = _generation;
+
     final job = <String, dynamic>{
       'tag': tag,
       'steps': steps,
-      'status': 'pending',
+      'status': 'running',
+      'owner': 'ui',
+      'heartbeat': now,
       'createdAt': now,
       'updatedAt': now,
       'attempts': 0,
@@ -143,47 +166,193 @@ class UploadQueueService {
       'userId': _currentUserId(),
     };
 
-    // The token must exist before the service can pick the job up.
+    // The token must exist before a supervisor could pick the job up.
     await _saveAuthToken();
     await _writeJob(job);
+    _startHeartbeat(job);
 
+    // Start the supervisor without blocking the upload. If it fails (some
+    // OEMs block foreground services) the upload below still completes.
     if (Platform.isAndroid) {
-      final started = await _startService();
-      if (started) {
-        final result = await _waitForJob(tag, onProgress);
-        if (result != null) return result;
-
-        // The service reported that it is not running and never picked the
-        // job up. Remove the persisted copy before running inline so the two
-        // paths can never upload the same job twice.
-        Loggers.error('upload $tag was not picked up by the service');
-        await _deleteJob(tag);
-      } else {
-        // Inline fallback below owns the upload; never leave a duplicate job
-        // behind for the next app launch.
-        await _deleteJob(tag);
-      }
+      unawaited(_startService());
     }
 
-    // iOS (no permanent service) or Android fallback. iOS keeps the job file
-    // so a future launch can finish it even if the app is killed mid-upload.
+    return _runJobWithRetries(job, generation, onProgress);
+  }
+
+  /// Cancels and removes every queued upload. Called on logout/account
+  /// deletion so one account's pending media can never be sent with another
+  /// account's token.
+  Future<void> clearQueue() async {
+    _generation++;
+    for (final timer in _heartbeats.values) {
+      timer.cancel();
+    }
+    _heartbeats.clear();
+
     try {
-      if (Platform.isIOS) {
-        // The durable queue is the single owner of the upload. If a resumed
-        // job is already running, this only wakes the loop instead of
-        // starting a second upload of the same job.
-        unawaited(processQueue());
-        return await _waitForJob(tag, onProgress, watchService: false);
+      if (Platform.isAndroid) {
+        try {
+          FlutterBackgroundService().invoke('cancelAll');
+        } catch (_) {}
+        // Give the service engine time to stop before its files disappear;
+        // otherwise an in-flight write could recreate a job file.
+        await Future<void>.delayed(const Duration(milliseconds: 300));
       }
-      return await _runJob(job, (p) => onProgress?.call(p));
+      final dir = await _queueDir();
+      await for (final entry in dir.list()) {
+        if (entry is File) {
+          try {
+            await entry.delete();
+          } catch (_) {}
+        }
+      }
     } catch (e) {
-      Loggers.error('Upload failed: $e');
-      return {'__error': '$e'};
+      Loggers.error('clear upload queue failed: $e');
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Queue processing (service isolate on Android, UI isolate on iOS)
+  // UI uploader (the normal path; progress comes straight from the socket)
+  // ---------------------------------------------------------------------------
+
+  Future<Map<String, dynamic>?> _runJobWithRetries(
+    Map<String, dynamic> job,
+    int generation,
+    void Function(double)? onProgress,
+  ) async {
+    final tag = job['tag'] as String;
+    final lang = (job['lang'] ?? 'ar').toString();
+    var attempts = 0;
+    var lastWrite = 0;
+    var lastNotify = 0;
+
+    void report(double p) {
+      final progress = p.clamp(0.0, 1.0).toDouble();
+      job['progress'] = progress;
+      job['heartbeat'] = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      if (now - lastWrite >= 900 || progress >= 1) {
+        lastWrite = now;
+        unawaited(_writeJob(job));
+      }
+      if (now - lastNotify >= 1000 || progress >= 1) {
+        lastNotify = now;
+        _notifyService(lang, progress);
+      }
+      onProgress?.call(progress);
+    }
+
+    try {
+      while (true) {
+        if (generation != _generation) return {'__error': 'Upload cancelled'};
+
+        attempts++;
+        job['status'] = 'running';
+        job['owner'] = 'ui';
+        job['attempts'] = attempts;
+        job['progress'] = 0.0;
+        job['error'] = null;
+        job['heartbeat'] = DateTime.now().millisecondsSinceEpoch;
+        await _writeJob(job);
+        _notifyService(lang, 0);
+
+        final result = await _runJob(job, report, () async {
+          if (generation != _generation) return false;
+          final current = await _readJob(tag);
+          return current != null && current['owner'] == 'ui';
+        });
+
+        if (result['__cancelled'] == true) {
+          _stopHeartbeat(tag);
+          if (generation == _generation) {
+            final current = await _readJob(tag);
+            if (current != null && current['owner'] == 'service') {
+              // The background supervisor took the job over (the app was
+              // frozen long enough for its heartbeat to look stale). Report
+              // the supervisor's result instead of a confusing error.
+              final takeover = await _waitForJob(tag, onProgress);
+              return takeover ?? {'__error': 'Upload cancelled'};
+            }
+          }
+          return {'__error': 'Upload cancelled'};
+        }
+
+        if (result['__error'] == null) {
+          job['status'] = 'done';
+          job['progress'] = 1.0;
+          job['result'] = result;
+          job['error'] = null;
+          job['heartbeat'] = DateTime.now().millisecondsSinceEpoch;
+          await _writeJob(job);
+          _writeChains.remove(tag);
+          _stopHeartbeat(tag);
+          onProgress?.call(1);
+          _notifyService(lang, 1);
+          unawaited(_showCompletionNotification(job, true)
+              .timeout(const Duration(seconds: 10), onTimeout: () {}));
+          unawaited(_deleteJobSoon(tag));
+          return result;
+        }
+
+        final error = '${result['__error']}';
+        final retryable = result['__retryable'] == true;
+        final isMultipart = result['__multipart'] == true;
+        final maxAttempts = isMultipart ? 2 : 3;
+
+        if (retryable && attempts < maxAttempts) {
+          job['status'] = 'pending';
+          job['error'] = error;
+          await _writeJob(job);
+          Loggers.info(
+              'upload $tag failed (attempt $attempts/$maxAttempts), retrying: $error');
+          await Future<void>.delayed(const Duration(seconds: 8));
+          continue;
+        }
+
+        job['status'] = 'failed';
+        job['error'] = error;
+        await _writeJob(job);
+        _writeChains.remove(tag);
+        _stopHeartbeat(tag);
+        unawaited(_showCompletionNotification(job, false)
+            .timeout(const Duration(seconds: 10), onTimeout: () {}));
+        unawaited(_deleteJobSoon(tag));
+        return {'__error': error};
+      }
+    } catch (e, st) {
+      _stopHeartbeat(tag);
+      Loggers.error('upload $tag crashed: $e\n$st');
+      return {'__error': '$e'.replaceFirst('Exception: ', '')};
+    }
+  }
+
+  static void _startHeartbeat(Map<String, dynamic> job) {
+    final tag = job['tag'] as String;
+    _heartbeats[tag]?.cancel();
+    _heartbeats[tag] = Timer.periodic(_heartbeatEvery, (_) {
+      final status = job['status'];
+      if (status == 'done' || status == 'failed') return;
+      job['heartbeat'] = DateTime.now().millisecondsSinceEpoch;
+      unawaited(_writeJob(job));
+    });
+  }
+
+  static void _stopHeartbeat(String tag) {
+    _heartbeats.remove(tag)?.cancel();
+  }
+
+  static Future<void> _deleteJobSoon(String tag) async {
+    await Future<void>.delayed(const Duration(seconds: 3));
+    final current = await _readJob(tag);
+    if (current == null) return;
+    final status = current['status'];
+    if (status == 'done' || status == 'failed') await _deleteJob(tag);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Queue supervision / background takeover
   // ---------------------------------------------------------------------------
 
   static Future<void> processQueue([ServiceInstance? service]) async {
@@ -198,14 +367,24 @@ class UploadQueueService {
 
       while (true) {
         _wake = false;
-        final pending = (await _readJobs()).where(_isResumable).toList();
-        for (final job in pending) {
+        final jobs = (await _readJobs()).where(_isResumable).toList();
+        final now = DateTime.now().millisecondsSinceEpoch;
+
+        for (final job in jobs) {
+          if (service != null) {
+            final owner = job['owner'];
+            final heartbeat = (job['heartbeat'] as num?)?.toInt() ?? 0;
+            if (owner == 'ui' && now - heartbeat < _heartbeatStaleMs) {
+              // The UI is alive and owns this upload. Supervise only.
+              continue;
+            }
+          }
           await _processJob(job, service);
         }
 
-        // Give a job that was just submitted time to appear on disk before
-        // deciding that the queue is empty and stopping the service.
-        await Future<void>.delayed(const Duration(seconds: 3));
+        // Stay alive while a UI upload is still running: if the app is killed
+        // afterwards this service is the one the watchdog restarts.
+        await Future<void>.delayed(const Duration(seconds: 4));
 
         final remaining = (await _readJobs()).where(_isResumable).toList();
         if (remaining.isEmpty && !_wake) break;
@@ -235,14 +414,15 @@ class UploadQueueService {
 
   static Future<void> _processJob(
     Map<String, dynamic> job,
-    ServiceInstance? service, {
-    void Function(double)? onProgress,
-  }) async {
+    ServiceInstance? service,
+  ) async {
     final tag = job['tag'] as String;
     final lang = (job['lang'] ?? 'ar').toString();
     final attempts = ((job['attempts'] as num?)?.toInt() ?? 0) + 1;
 
     job['attempts'] = attempts;
+    job['owner'] = 'service';
+    job['heartbeat'] = 0;
     job['status'] = 'running';
     job['progress'] = 0.0;
     job['error'] = null;
@@ -268,12 +448,14 @@ class UploadQueueService {
         lastNotify = now;
         unawaited(_setForegroundInfo(service, _uploadingText(lang, progress)));
       }
-      onProgress?.call(progress);
     }
 
     Map<String, dynamic> result;
     try {
-      result = await _runJob(job, report);
+      result = await _runJob(job, report, () async {
+        final current = await _readJob(tag);
+        return current != null && current['owner'] == 'service';
+      });
     } catch (e, st) {
       Loggers.error('upload $tag crashed: $e\n$st');
       result = {
@@ -283,17 +465,27 @@ class UploadQueueService {
       };
     }
 
+    if (result['__cancelled'] == true) {
+      // The queue was cleared (logout) or the UI reclaimed the job.
+      final current = await _readJob(tag);
+      if (current == null) return;
+      if (current['owner'] != 'service') return;
+      result = {'__error': 'Upload cancelled', '__retryable': false};
+    }
+
     if (result['__error'] == null) {
       job['status'] = 'done';
       job['progress'] = 1.0;
       job['result'] = result;
       job['error'] = null;
-      final done = _writeJob(job);
-      await done;
+      await _writeJob(job);
       _writeChains.remove(tag);
-      onProgress?.call(1);
+      if (service != null) {
+        unawaited(_setForegroundInfo(service, _uploadingText(lang, 1)));
+      }
       await _showCompletionNotification(job, true)
           .timeout(const Duration(seconds: 10), onTimeout: () {});
+      unawaited(_deleteJobSoon(tag));
       return;
     }
 
@@ -318,12 +510,14 @@ class UploadQueueService {
     _writeChains.remove(tag);
     await _showCompletionNotification(job, false)
         .timeout(const Duration(seconds: 10), onTimeout: () {});
+    unawaited(_deleteJobSoon(tag));
   }
 
   static Future<Map<String, dynamic>> _runJob(
     Map<String, dynamic> job,
-    void Function(double) onProgress,
-  ) async {
+    void Function(double) onProgress, [
+    Future<bool> Function()? keepGoing,
+  ]) async {
     final steps = (job['steps'] as List)
         .map((e) => Map<String, dynamic>.from(e as Map))
         .toList();
@@ -333,6 +527,10 @@ class UploadQueueService {
     onProgress(0.0);
 
     for (int i = 0; i < steps.length; i++) {
+      if (keepGoing != null && !await keepGoing()) {
+        return {'__cancelled': true};
+      }
+
       final step = _resolvePlaceholders(steps[i], results);
       Map<String, dynamic>? res;
       String? failure;
@@ -382,6 +580,15 @@ class UploadQueueService {
     WidgetsFlutterBinding.ensureInitialized();
     _isServiceIsolate = true;
 
+    // Progress reported by the UI while it owns the upload. The service owns
+    // the foreground notification, so it is the single writer for 8901.
+    service.on('progress').listen((data) {
+      if (data == null) return;
+      final lang = (data['lang'] ?? 'ar').toString();
+      final pct = (data['p'] as num?)?.toDouble() ?? 0;
+      unawaited(_setForegroundInfo(service, _uploadingText(lang, pct / 100)));
+    });
+
     service.on('stop').listen((_) async {
       // Never stop in the middle of a queued upload.
       try {
@@ -409,16 +616,26 @@ class UploadQueueService {
   // ---------------------------------------------------------------------------
 
   static Future<bool> _startService() async {
+    if (!Platform.isAndroid) return false;
     try {
-      await instance.ensureConfigured();
+      await instance
+          .ensureConfigured()
+          .timeout(const Duration(seconds: 8), onTimeout: () {});
       final service = FlutterBackgroundService();
-      if (!await service.isRunning()) {
-        final ok = await service.startService();
+      var running = false;
+      try {
+        running = await service
+            .isRunning()
+            .timeout(const Duration(seconds: 5), onTimeout: () => false);
+      } catch (_) {}
+      if (!running) {
+        final ok = await service
+            .startService()
+            .timeout(const Duration(seconds: 8), onTimeout: () => false);
         if (!ok) return false;
       }
       // The service also processes on start; this wakes an already-running,
-      // idle service. If the listener is not ready yet the start callback has
-      // already covered the job.
+      // supervising service so it can see the newly queued job.
       service.invoke('processQueue');
       return true;
     } catch (e, st) {
@@ -427,9 +644,20 @@ class UploadQueueService {
     }
   }
 
-  /// Pumps this job's persisted state until it finishes. Returns `null` only
-  /// when the service is not running and the job was never picked up, which
-  /// lets [submit] fall back to an inline upload.
+  static void _notifyService(String lang, double progress) {
+    if (!Platform.isAndroid) return;
+    try {
+      FlutterBackgroundService().invoke('progress', {
+        'p': (progress * 100).clamp(0, 100).round(),
+        'lang': lang,
+      });
+    } catch (_) {}
+  }
+
+  /// Pumps a job's persisted state until it finishes. Used only when the
+  /// supervisor took an upload over from a frozen UI, so the UI can still show
+  /// the real result. Returns `null` when the service is not running and the
+  /// job was never picked up.
   Future<Map<String, dynamic>?> _waitForJob(
     String tag,
     void Function(double progress)? onProgress, {
@@ -462,8 +690,6 @@ class UploadQueueService {
         return {'__error': job['error'] ?? 'Upload failed'};
       }
 
-      // If the service died (or was never started) and nothing has moved for
-      // a minute, let submit() take over inline instead of waiting for hours.
       final now = DateTime.now();
       if (watchService && now.difference(lastServiceCheck).inSeconds >= 30) {
         lastServiceCheck = now;
@@ -646,32 +872,6 @@ class UploadQueueService {
     }
   }
 
-  /// Cancels and removes every queued upload. Called on logout/account
-  /// deletion so one account's pending media can never be sent with another
-  /// account's token.
-  Future<void> clearQueue() async {
-    try {
-      if (Platform.isAndroid) {
-        try {
-          FlutterBackgroundService().invoke('cancelAll');
-        } catch (_) {}
-        // Give the service engine time to stop before its files disappear;
-        // otherwise an in-flight write could recreate a job file.
-        await Future<void>.delayed(const Duration(milliseconds: 300));
-      }
-      final dir = await _queueDir();
-      await for (final entry in dir.list()) {
-        if (entry is File) {
-          try {
-            await entry.delete();
-          } catch (_) {}
-        }
-      }
-    } catch (e) {
-      Loggers.error('clear upload queue failed: $e');
-    }
-  }
-
   // ---------------------------------------------------------------------------
   // Notifications
   // ---------------------------------------------------------------------------
@@ -775,7 +975,7 @@ class UploadQueueService {
   }
 
   // ---------------------------------------------------------------------------
-  // Networking (pure dart:io so it works in the service isolate)
+  // Networking (pure dart:io so it also works in the service isolate)
   // ---------------------------------------------------------------------------
 
   static bool _isRetryable(String message) {

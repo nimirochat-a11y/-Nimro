@@ -95,18 +95,18 @@ jobs:
         run: |
           set -euo pipefail
           flutter build apk --release --target-platform android-arm64 \
-            --build-name=1.1.53 --build-number=4063
+            --build-name=1.1.54 --build-number=4064
           cp build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/nimiro-1.1.53-arm64-v8a.apk
+             build/app/outputs/flutter-apk/nimiro-1.1.54-arm64-v8a.apk
 
       - name: Build armeabi-v7a release APK
         run: |
           set -euo pipefail
           rm -f build/app/outputs/flutter-apk/app-release.apk
           flutter build apk --release --target-platform android-arm \
-            --build-name=1.1.53 --build-number=3063
+            --build-name=1.1.54 --build-number=3064
           cp build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/nimiro-1.1.53-armeabi-v7a.apk
+             build/app/outputs/flutter-apk/nimiro-1.1.54-armeabi-v7a.apk
 
       - name: Verify signature and checksums
         run: |
