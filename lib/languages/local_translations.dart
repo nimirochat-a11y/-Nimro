@@ -679,6 +679,13 @@ class LocalTranslations {
       "Sapphire Gift": "Sapphire Gift",
       "Golden Gift": "Golden Gift",
       "Legendary Gift": "Legendary Gift",
+      "Gifts": "Gifts",
+      "Popular": "Popular",
+      "Luxury": "Luxury",
+      "Choose a gift": "Choose a gift",
+      "Sending gift to": "Sending gift to",
+      "Gift not found": "Gift not found",
+      "Insufficient balance": "Insufficient balance",
     },
     'ar': {
       "Language": "لغة",
@@ -1351,6 +1358,13 @@ class LocalTranslations {
       "Sapphire Gift": "هدية ياقوتية",
       "Golden Gift": "هدية ذهبية",
       "Legendary Gift": "هدية أسطورية",
+      "Gifts": "الهدايا",
+      "Popular": "شائع",
+      "Luxury": "فاخر",
+      "Choose a gift": "اختر هدية",
+      "Sending gift to": "إرسال الهدية إلى",
+      "Gift not found": "الهدية غير موجودة",
+      "Insufficient balance": "رصيدك غير كافٍ",
     },
   };
 }

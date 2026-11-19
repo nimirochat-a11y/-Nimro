@@ -55,11 +55,11 @@ class SendGiftSheetController extends BaseController {
 
   void onGiftTap(Gift gift, BuildContext context) {
     if (gift.id == null) {
-      return showSnackBar('Gift Not Found');
+      return showSnackBar(LKey.giftNotFound.tr);
     }
 
     if ((gift.coinPrice ?? 0) >= (myUser.value?.coinWallet ?? 0)) {
-      return showSnackBar('Insufficient fund');
+      return showSnackBar(LKey.insufficientFunds.tr);
     }
 
     sendGift(gift, context);

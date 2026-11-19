@@ -60,6 +60,7 @@ class Setting {
   int? id;
   String? appName;
   String? currency;
+
   /// Cached USD exchange rates keyed by 3-letter currency code (e.g. "EGP": 49.2), refreshed periodically server-side.
   Map<String, double>? exchangeRates;
   double? coinValue;
@@ -465,6 +466,8 @@ class DummyLive {
 class Gift {
   int? id;
   int? coinPrice;
+  String? nameAr;
+  String? nameEn;
   String? image;
   String? video;
   DateTime? createdAt;
@@ -473,6 +476,8 @@ class Gift {
   Gift({
     this.id,
     this.coinPrice,
+    this.nameAr,
+    this.nameEn,
     this.image,
     this.video,
     this.createdAt,
@@ -482,6 +487,8 @@ class Gift {
   factory Gift.fromJson(Map<String, dynamic> json) => Gift(
         id: json["id"],
         coinPrice: json["coin_price"],
+        nameAr: json["name_ar"],
+        nameEn: json["name_en"],
         image: json["image"],
         video: json["video"],
         createdAt: json["created_at"] == null
@@ -492,9 +499,24 @@ class Gift {
             : DateTime.parse(json["updated_at"]),
       );
 
+  /// The gift name in the requested language.
+  ///
+  /// Gifts created from the admin panel do not have localized names yet, so
+  /// fall back to the other language and finally to an empty string. The UI is
+  /// responsible for showing a generic "Gift" label in that last case.
+  String nameFor({required bool isArabic}) {
+    final primary = isArabic ? nameAr : nameEn;
+    final fallback = isArabic ? nameEn : nameAr;
+    if (primary != null && primary.trim().isNotEmpty) return primary.trim();
+    if (fallback != null && fallback.trim().isNotEmpty) return fallback.trim();
+    return '';
+  }
+
   Map<String, dynamic> toJson() => {
         "id": id,
         "coin_price": coinPrice,
+        "name_ar": nameAr,
+        "name_en": nameEn,
         "image": image,
         "video": video,
         "created_at": createdAt?.toIso8601String(),

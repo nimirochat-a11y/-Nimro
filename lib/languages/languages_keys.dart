@@ -668,4 +668,11 @@ class LKey {
   static const String giftTierSapphire = "Sapphire Gift";
   static const String giftTierGolden = "Golden Gift";
   static const String giftTierLegendary = "Legendary Gift";
+  static const String giftsTitle = "Gifts";
+  static const String popularTab = "Popular";
+  static const String luxuryTab = "Luxury";
+  static const String chooseGift = "Choose a gift";
+  static const String sendingGiftTo = "Sending gift to";
+  static const String giftNotFound = "Gift not found";
+  static const String insufficientFunds = "Insufficient balance";
 }
