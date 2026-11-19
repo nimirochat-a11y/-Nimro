@@ -653,4 +653,19 @@ class LKey {
   static const String connectionTimedOutTryAgain =
       "Connection timed out, please try again.";
   static const String errorWhileSaving = "An error occurred while saving";
+  static const String giftStore = "Gift Store";
+  static const String pickGiftAndSend = "Pick a gift and send it right away";
+  static const String topGifts = "Top gifts";
+  static const String allGifts = "All gifts";
+  static const String yourCoinBalance = "Your coin balance";
+  static const String noGiftsAvailable = "No gifts available right now";
+  static const String gift = "Gift";
+  static const String giftTierFresh = "Fresh Gift";
+  static const String giftTierRose = "Rose Gift";
+  static const String giftTierSky = "Sky Gift";
+  static const String giftTierRoyal = "Royal Gift";
+  static const String giftTierEmerald = "Emerald Gift";
+  static const String giftTierSapphire = "Sapphire Gift";
+  static const String giftTierGolden = "Golden Gift";
+  static const String giftTierLegendary = "Legendary Gift";
 }
