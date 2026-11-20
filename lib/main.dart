@@ -138,6 +138,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
+      // A stable root navigator key. Gift animations are inserted directly
+      // into this navigator's overlay because Get.context can be null or can
+      // point at the gift bottom-sheet after Get.back() dismisses it.
+      navigatorKey: Get.key,
       builder: (context, child) => Directionality(
           textDirection: TextDirection.rtl,
           child: ScrollConfiguration(behavior: MyBehavior(), child: child!)),

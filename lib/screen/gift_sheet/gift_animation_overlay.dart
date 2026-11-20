@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
+import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/utilities/asset_res.dart';
@@ -39,14 +40,24 @@ class GiftAnimationOverlay {
     }
     _busy = true;
     final gift = _queue.removeAt(0);
-    final context = Get.context;
-    if (context == null) {
+
+    // Use the root navigator's overlay, NOT Get.context. When the gift sheet
+    // is closed with Get.back(), Get.context may still point at the disposed
+    // bottom-sheet context, so the overlay was never visible. Get.key is the
+    // stable navigator key registered on GetMaterialApp in main.dart.
+    OverlayState? overlay;
+    try {
+      overlay = Get.key.currentState?.overlay;
+    } catch (_) {
+      overlay = null;
+    }
+    if (overlay == null) {
+      Loggers.error('GiftAnimationOverlay: root navigator overlay is null');
       _busy = false;
       return;
     }
 
     HapticManager.shared.medium();
-    final overlay = Overlay.of(context, rootOverlay: true);
     _entry = OverlayEntry(
       builder: (_) => _GiftAnimation(
         gift: gift,
@@ -58,6 +69,7 @@ class GiftAnimationOverlay {
       ),
     );
     overlay.insert(_entry!);
+    Loggers.info('GiftAnimationOverlay: animation shown for gift ${gift.id}');
   }
 }
 
