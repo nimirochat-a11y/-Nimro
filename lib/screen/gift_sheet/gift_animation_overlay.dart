@@ -7,7 +7,9 @@ import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
+import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/model/general/settings_model.dart';
+import 'package:nimiro/screen/gift_sheet/gift_visuals.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 
@@ -101,6 +103,10 @@ class _GiftAnimationState extends State<_GiftAnimation>
   int get _price => widget.gift.coinPrice ?? 0;
   bool get _expensive => _price >= 5000;
 
+  /// Every gift gets its own accent colour so the halo, particles and banner
+  /// are customised instead of all sharing one generic red.
+  Color get _accent => GiftVisuals.accentFor(widget.gift);
+
   Timer? _holdTimer;
   Timer? _exitTimer;
 
@@ -132,8 +138,8 @@ class _GiftAnimationState extends State<_GiftAnimation>
         isCoin: i % 3 == 0,
         color: [
           const Color(0xFFFFD54F),
-          const Color(0xFFFE2C55),
-          const Color(0xFFFF7BA2),
+          _accent,
+          Color.lerp(_accent, Colors.white, .45)!,
           Colors.white,
         ][i % 4],
       );
@@ -195,8 +201,8 @@ class _GiftAnimationState extends State<_GiftAnimation>
                             shape: BoxShape.circle,
                             gradient: RadialGradient(
                               colors: [
-                                const Color(0xFFFE2C55).withValues(alpha: .55),
-                                const Color(0xFFFF7BA2).withValues(alpha: .22),
+                                _accent.withValues(alpha: .55),
+                                _accent.withValues(alpha: .22),
                                 Colors.transparent,
                               ],
                               stops: const [.35, .65, 1],
@@ -218,8 +224,8 @@ class _GiftAnimationState extends State<_GiftAnimation>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              Colors.white.withValues(alpha: .35),
-                              const Color(0xFFFE2C55).withValues(alpha: .18),
+                              Colors.white.withValues(alpha: .30),
+                              _accent.withValues(alpha: .18),
                               Colors.transparent,
                             ],
                           ),
@@ -239,49 +245,33 @@ class _GiftAnimationState extends State<_GiftAnimation>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: const Color(0x33FE2C55),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFFE2C55)
-                                        .withValues(alpha: .6 + haloPulse * .2),
-                                    blurRadius: 40,
-                                    spreadRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: Image.network(
-                                widget.gift.image?.addBaseURL() ?? '',
-                                width: _expensive ? 150 : 120,
-                                height: _expensive ? 150 : 120,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                  Icons.card_giftcard_rounded,
-                                  size: 110,
-                                  color: Colors.white,
-                                ),
-                              ),
+                            // The gift render itself (transparent premium 3D).
+                            // No flat red circle: the custom glow behind it
+                            // lets each gift's own art style breathe.
+                            CustomImage(
+                              image: widget.gift.image?.addBaseURL(),
+                              size: Size(_expensive ? 245 : 215,
+                                  _expensive ? 245 : 215),
+                              radius: 0,
+                              fit: BoxFit.contain,
+                              isImageLoaderVisible: false,
                             ),
-                            const SizedBox(height: 22),
-                            // Name + price banner with TikTok gradient.
+                            const SizedBox(height: 10),
+                            // Name + price banner using the gift accent.
                             Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 10),
                               decoration: BoxDecoration(
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
-                                    Color(0xFFFE2C55),
-                                    Color(0xFFFF7BA2)
+                                    _accent,
+                                    Color.lerp(_accent, Colors.white, .38)!,
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(30),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFFE2C55)
-                                        .withValues(alpha: .5),
+                                    color: _accent.withValues(alpha: .5),
                                     blurRadius: 18,
                                   ),
                                 ],
@@ -310,7 +300,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
                             Text(
                               _isArabic ? 'أُرسلت الهدية!' : 'Gift sent!',
                               style: TextStyleCustom.outFitSemiBold600(
-                                  fontSize: 16, color: const Color(0xFFFF7BA2)),
+                                  fontSize: 16, color: _accent),
                             ),
                           ],
                         ),

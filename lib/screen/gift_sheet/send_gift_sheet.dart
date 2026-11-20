@@ -11,6 +11,7 @@ import 'package:nimiro/common/widget/gift_media_viewer.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/app_user.dart';
+import 'package:nimiro/screen/gift_sheet/gift_visuals.dart';
 import 'package:nimiro/screen/gift_sheet/send_gift_sheet_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/color_res.dart';
@@ -455,6 +456,28 @@ class _GiftTileState extends State<_GiftTile>
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
+                    // Custom accent glow behind each gift, stronger when
+                    // selected, so the collection feels individually styled.
+                    AnimatedBuilder(
+                      animation: _float,
+                      builder: (context, _) {
+                        final accent = GiftVisuals.accentFor(gift);
+                        return Container(
+                          width: selected ? 64 : 54,
+                          height: selected ? 64 : 54,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                accent.withValues(alpha: selected ? .35 : .16),
+                                accent.withValues(alpha: .06),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                     AnimatedBuilder(
                       animation: _float,
                       builder: (context, child) {
