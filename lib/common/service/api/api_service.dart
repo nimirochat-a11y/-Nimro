@@ -69,7 +69,7 @@ class ApiService {
     try {
       final response = await client
           .post(Uri.parse(url), headers: header, body: params)
-          .timeout(const Duration(seconds: 30));
+          .timeout(const Duration(seconds: 12));
       Loggers.success(response.statusCode);
       if (cancelToken?.isCancelled ?? false) {
         if (kDebugMode) {
@@ -98,7 +98,8 @@ class ApiService {
           onError?.call();
         }
 
-        var prettyString = const JsonEncoder.withIndent('  ').convert(decodedResponse);
+        var prettyString =
+            const JsonEncoder.withIndent('  ').convert(decodedResponse);
         Loggers.info(prettyString);
 
         // Use the provided `fromJson` function to parse the response
@@ -112,7 +113,7 @@ class ApiService {
         Loggers.error('Unauthorized Error 401: ${response.statusCode}');
         DebounceAction.shared.call(() {
           Get.offAll(
-            () => const SessionExpiredScreen(type: SessionType.unauthorized));
+              () => const SessionExpiredScreen(type: SessionType.unauthorized));
         });
         throw Exception("Unauthorized Error: ${response.statusCode}");
       } else if (response.statusCode == 404) {
@@ -216,9 +217,8 @@ class ApiService {
     try {
       // 10-minute window: story/post videos can take minutes on slow
       // connections; the previous 45s timeout was cutting uploads at ~90%.
-      final responseStream = await client
-          .send(request)
-          .timeout(const Duration(minutes: 10));
+      final responseStream =
+          await client.send(request).timeout(const Duration(minutes: 10));
 
       if (cancelToken?.isCancelled ?? false) {
         if (kDebugMode) {

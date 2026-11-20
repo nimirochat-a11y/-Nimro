@@ -67,8 +67,15 @@ class GiftAnimationOverlay {
         },
       ),
     );
-    overlay.insert(_entry!);
-    Loggers.info('GiftAnimationOverlay: animation shown for gift ${gift.id}');
+    try {
+      overlay.insert(_entry!);
+      Loggers.info('GiftAnimationOverlay: animation shown for gift ${gift.id}');
+    } catch (e) {
+      // Never let an animation failure crash or freeze the app.
+      _entry = null;
+      _busy = false;
+      Loggers.error('GiftAnimationOverlay insert failed: $e');
+    }
   }
 }
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/service/api/api_service.dart';
@@ -26,6 +27,10 @@ class ActivityTracker with WidgetsBindingObserver {
   bool _bound = false;
   DateTime? _backgroundedAt;
   String? _appVersion;
+  // Bounded retry: a persistently failing endpoint must not keep re-queuing
+  // the same batch forever, which piles up requests and freezes the UI.
+  int _flushFailures = 0;
+  static const int _maxFlushFailures = 2;
 
   /// When the app was last sent to the background. Attention timers use it
   /// so time spent away from the app is never counted as watch time.
@@ -64,11 +69,11 @@ class ActivityTracker with WidgetsBindingObserver {
     _sendSession();
 
     _heartbeat?.cancel();
-    _heartbeat = Timer.periodic(
-        const Duration(seconds: 60), (_) => _sendSession());
+    _heartbeat =
+        Timer.periodic(const Duration(seconds: 60), (_) => _sendSession());
     _flushTimer?.cancel();
-    _flushTimer = Timer.periodic(
-        const Duration(seconds: 30), (_) => flushEvents());
+    _flushTimer =
+        Timer.periodic(const Duration(seconds: 30), (_) => flushEvents());
   }
 
   void _endSession() {
@@ -131,11 +136,19 @@ class ActivityTracker with WidgetsBindingObserver {
           if (_sessionKey.isNotEmpty) 'session_key': _sessionKey,
         },
       );
+      _flushFailures = 0;
     } catch (e) {
-      // Keep the signals for the next attempt (bounded so a persistent
-      // failure cannot grow memory forever).
-      if (_events.length < 200) _events.insertAll(0, batch);
-      Loggers.error('ActivityTracker flush failed: $e');
+      // Retry at most _maxFlushFailures times, then drop the batch. Network
+      // errors are best-effort telemetry and must never freeze the app.
+      _flushFailures++;
+      if (_flushFailures <= _maxFlushFailures && _events.length < 200) {
+        _events.insertAll(0, batch);
+      } else {
+        _events.clear();
+      }
+      // Log at info level only: these are expected offline/server hiccups,
+      // not app errors, and flooding the crash panel is itself a slowdown.
+      if (kDebugMode) debugPrint('ActivityTracker flush failed: $e');
     }
   }
 
