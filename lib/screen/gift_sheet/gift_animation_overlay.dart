@@ -9,7 +9,7 @@ import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/model/general/settings_model.dart';
-import 'package:nimiro/screen/gift_sheet/gift_flight_path.dart';
+import 'package:nimiro/screen/gift_sheet/gift_motion.dart';
 import 'package:nimiro/screen/gift_sheet/gift_visuals.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
@@ -105,6 +105,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
   bool get _isArabic => SessionLanguage.isArabic;
   int get _price => widget.gift.coinPrice ?? 0;
   bool get _expensive => _price >= 5000;
+  GiftMotion get _motion => motionFor(widget.gift.id ?? 0);
 
   /// Every gift gets its own accent colour so the halo, particles and banner
   /// are customised instead of all sharing one generic red.
@@ -118,7 +119,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
     super.initState();
 
     _enter = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1700));
+        vsync: this, duration: const Duration(milliseconds: 2000));
     _float = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1800));
     _halo = AnimationController(
@@ -190,7 +191,6 @@ class _GiftAnimationState extends State<_GiftAnimation>
               parent: _enter,
               curve: Curves.easeOutCubic,
             ).value;
-            final float = math.sin(_float.value * math.pi * 2);
             final haloPulse = math.sin(_halo.value * math.pi * 2);
             final screen = MediaQuery.sizeOf(context);
 
@@ -254,12 +254,15 @@ class _GiftAnimationState extends State<_GiftAnimation>
                   Opacity(
                     opacity: 1 - exit,
                     child: Transform.translate(
-                      offset: giftFlightOffset(enter, screen) +
-                          Offset(0, enter * float * 8),
+                      offset: motionEntranceOffset(
+                              _motion, enter, enter, screen) +
+                          motionAmbientOffset(_motion, _float.value) * enter,
                       child: Transform.rotate(
-                        angle: giftFlightRotation(enter) * (1 - exit),
+                        angle:
+                            motionEntranceRotation(_motion, enter) * (1 - exit),
                         child: Transform.scale(
-                          scale: giftFlightScale(enter) * (1 + haloPulse * .02),
+                          scale: motionEntranceScale(_motion, enter) *
+                              motionAmbientScale(_motion, _float.value),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -338,7 +341,12 @@ class _GiftAnimationState extends State<_GiftAnimation>
   Widget _buildTrailDot(_Trail tr, double enter, double exit, Size screen) {
     // Each dot lags behind the gift along the same flight path.
     final t = (enter - tr.lag).clamp(0.0, 1.0);
-    final offset = giftFlightOffset(t, screen);
+    final offset = motionEntranceOffset(
+      _motion,
+      t,
+      1 - math.pow(1 - t, 3).toDouble(),
+      screen,
+    );
     final visible = enter > tr.lag && enter < .98;
     if (!visible) return const SizedBox.shrink();
     return Opacity(
