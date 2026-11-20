@@ -11,12 +11,13 @@ import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
 
-/// Full-screen, TikTok-style animated gift overlay.
+/// TikTok-style animated gift overlay.
 ///
-/// Replaces the old static white dialog. Gifts animate in with a spring,
-/// float and rotate, emit a glowing halo plus particles and coins, and are
-/// dismissed automatically (or by tap). Fast consecutive gifts are queued so
-/// every animation plays fully instead of being replaced.
+/// Each gift plays a full, clearly visible animation:
+///   1. spring pop-in from the bottom,
+///   2. a long "hero" hold with continuous floating + pulsing + rotating halo,
+///   3. a smooth fade-out at the very end.
+/// Fast consecutive gifts are queued so every one gets its full moment.
 class GiftAnimationOverlay {
   static final GiftAnimationOverlay shared = GiftAnimationOverlay._();
   GiftAnimationOverlay._();
@@ -25,9 +26,9 @@ class GiftAnimationOverlay {
   OverlayEntry? _entry;
   bool _busy = false;
 
-  static const Duration _duration = Duration(milliseconds: 2600);
+  // Long enough to actually see and enjoy the gift (TikTok keeps gifts ~4-5s).
+  static const Duration _duration = Duration(milliseconds: 4800);
 
-  /// Enqueue a gift animation. Safe to call rapidly / from any screen.
   void enqueue(Gift gift) {
     _queue.add(gift);
     if (!_busy) _next();
@@ -41,10 +42,8 @@ class GiftAnimationOverlay {
     _busy = true;
     final gift = _queue.removeAt(0);
 
-    // Use the root navigator's overlay, NOT Get.context. When the gift sheet
-    // is closed with Get.back(), Get.context may still point at the disposed
-    // bottom-sheet context, so the overlay was never visible. Get.key is the
-    // stable navigator key registered on GetMaterialApp in main.dart.
+    // Use the root navigator's overlay, NOT Get.context, which may be null or
+    // may point at the just-dismissed gift bottom sheet.
     OverlayState? overlay;
     try {
       overlay = Get.key.currentState?.overlay;
@@ -84,64 +83,72 @@ class _GiftAnimation extends StatefulWidget {
 }
 
 class _GiftAnimationState extends State<_GiftAnimation>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c;
-  late final Animation<double> _scale;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
-  late final Animation<double> _rotation;
-  late final Animation<double> _halo;
+    with TickerProviderStateMixin {
+  late final AnimationController _enter; // pop-in
+  late final AnimationController _float; // continuous float loop
+  late final AnimationController _halo; // continuous halo pulse loop
+  late final AnimationController _exit; // fade-out at the end
   late final List<_Particle> _particles;
 
   bool get _isArabic => SessionLanguage.isArabic;
   int get _price => widget.gift.coinPrice ?? 0;
   bool get _expensive => _price >= 5000;
 
+  Timer? _holdTimer;
+  Timer? _exitTimer;
+
   @override
   void initState() {
     super.initState();
-    _c = AnimationController(
-        vsync: this, duration: GiftAnimationOverlay._duration);
 
-    _scale = CurvedAnimation(
-      parent: _c,
-      curve: const Interval(0, .26, curve: Curves.elasticOut),
-    ).drive(Tween<double>(begin: .15, end: 1));
-    _fade = CurvedAnimation(
-      parent: _c,
-      curve: const Interval(.72, 1, curve: Curves.easeIn),
-    ).drive(Tween<double>(begin: 1, end: 0));
-    _slide = CurvedAnimation(
-      parent: _c,
-      curve: const Interval(0, .32, curve: Curves.easeOutBack),
-    ).drive(Tween<Offset>(begin: const Offset(0, .55), end: Offset.zero));
-    _rotation = Tween<double>(begin: -.12, end: .12).animate(
-      CurvedAnimation(parent: _c, curve: Curves.easeInOutSine),
-    );
-    _halo = Tween<double>(begin: .7, end: 1.35).animate(
-      CurvedAnimation(parent: _c, curve: Curves.easeOutCubic),
-    );
+    _enter = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 700));
+    _float = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1800));
+    _halo = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1400));
+    _exit = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
+
+    // Continuous loops for the whole time the gift is on screen.
+    _float.repeat(reverse: true);
+    _halo.repeat(reverse: true);
 
     final random = math.Random();
-    _particles = List<_Particle>.generate(_expensive ? 22 : 12, (i) {
-      final angle = (i / (_expensive ? 22 : 12)) * math.pi * 2;
+    final count = _expensive ? 30 : 18;
+    _particles = List<_Particle>.generate(count, (i) {
       return _Particle(
-        angle: angle,
-        distance: 70 + random.nextDouble() * 90,
-        size: 3 + random.nextDouble() * 5,
-        delay: .08 + random.nextDouble() * .18,
+        angle: (i / count) * math.pi * 2 + random.nextDouble() * .3,
+        distance: 90 + random.nextDouble() * 130,
+        size: 4 + random.nextDouble() * 6,
+        delay: random.nextDouble() * .25,
         isCoin: i % 3 == 0,
-        color: Color(0xFFFFD54F + (i % 2) * 0x000101),
+        color: [
+          const Color(0xFFFFD54F),
+          const Color(0xFFFE2C55),
+          const Color(0xFFFF7BA2),
+          Colors.white,
+        ][i % 4],
       );
     });
 
-    _c.forward();
-    Timer(GiftAnimationOverlay._duration, widget.onDone);
+    _enter.forward();
+
+    // Keep the gift fully visible for the "hold" phase, then fade out.
+    _exitTimer = Timer(GiftAnimationOverlay._duration, () {
+      _exit.forward();
+      _holdTimer = Timer(const Duration(milliseconds: 500), widget.onDone);
+    });
   }
 
   @override
   void dispose() {
-    _c.dispose();
+    _holdTimer?.cancel();
+    _exitTimer?.cancel();
+    _enter.dispose();
+    _float.dispose();
+    _halo.dispose();
+    _exit.dispose();
     super.dispose();
   }
 
@@ -152,27 +159,60 @@ class _GiftAnimationState extends State<_GiftAnimation>
         behavior: HitTestBehavior.opaque,
         onTap: widget.onDone,
         child: AnimatedBuilder(
-          animation: _c,
+          animation: Listenable.merge([_enter, _float, _halo, _exit]),
           builder: (context, _) {
+            final exit = _exit.value;
+            final enter = CurvedAnimation(
+              parent: _enter,
+              curve: Curves.elasticOut,
+            ).value;
+            final float = math.sin(_float.value * math.pi * 2);
+            final haloPulse = math.sin(_halo.value * math.pi * 2);
+
             return Container(
-              color: const Color(0x99000000),
+              color: const Color(0xAA000000).withValues(alpha: 1 - exit),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Glowing halo behind the gift.
+                  // Rotating, pulsing halo rings (TikTok-style glow).
                   Opacity(
-                    opacity: (1 - _c.value) * .9,
+                    opacity: (1 - exit) * (.6 + haloPulse * .2),
                     child: Transform.scale(
-                      scale: _halo.value,
+                      scale: 1 + haloPulse * .12,
+                      child: Transform.rotate(
+                        angle: _halo.value * math.pi,
+                        child: Container(
+                          width: 300,
+                          height: 300,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                const Color(0xFFFE2C55).withValues(alpha: .55),
+                                const Color(0xFFFF7BA2).withValues(alpha: .22),
+                                Colors.transparent,
+                              ],
+                              stops: const [.35, .65, 1],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Inner bright halo.
+                  Opacity(
+                    opacity: (1 - exit) * (.5 + haloPulse * .25),
+                    child: Transform.scale(
+                      scale: .8 + haloPulse * .1,
                       child: Container(
-                        width: 220,
-                        height: 220,
+                        width: 200,
+                        height: 200,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              const Color(0xFFFE2C55).withValues(alpha: .55),
-                              const Color(0xFFFE2C55).withValues(alpha: .12),
+                              Colors.white.withValues(alpha: .35),
+                              const Color(0xFFFE2C55).withValues(alpha: .18),
                               Colors.transparent,
                             ],
                           ),
@@ -180,87 +220,92 @@ class _GiftAnimationState extends State<_GiftAnimation>
                       ),
                     ),
                   ),
-                  // Particles / coins flying outwards.
-                  for (final p in _particles) _buildParticle(p),
-                  // The gift itself: spring pop-in + float + rotate + fade.
-                  FadeTransition(
-                    opacity: _fade,
-                    child: SlideTransition(
-                      position: _slide,
-                      child: ScaleTransition(
-                        scale: _scale,
-                        child: RotationTransition(
-                          turns: _rotation,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(18),
-                                decoration: BoxDecoration(
-                                  color: const Color(0x33FE2C55),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFFE2C55)
-                                          .withValues(alpha: .55),
-                                      blurRadius: 34,
-                                      spreadRadius: 6,
-                                    ),
-                                  ],
-                                ),
-                                child: Image.network(
-                                  widget.gift.image?.addBaseURL() ?? '',
-                                  width: _expensive ? 132 : 104,
-                                  height: _expensive ? 132 : 104,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.card_giftcard_rounded,
-                                    size: 96,
-                                    color: Colors.white,
+                  // Golden particles / coins bursting outwards.
+                  for (final p in _particles) _buildParticle(p, exit),
+                  // Gift card: pop-in, continuous float, fade only at the end.
+                  Opacity(
+                    opacity: 1 - exit,
+                    child: Transform.translate(
+                      offset: Offset(0, (1 - enter) * 160 + float * 8),
+                      child: Transform.scale(
+                        scale: enter * (1 + haloPulse * .015),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: const Color(0x33FE2C55),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFE2C55)
+                                        .withValues(alpha: .6 + haloPulse * .2),
+                                    blurRadius: 40,
+                                    spreadRadius: 8,
                                   ),
+                                ],
+                              ),
+                              child: Image.network(
+                                widget.gift.image?.addBaseURL() ?? '',
+                                width: _expensive ? 150 : 120,
+                                height: _expensive ? 150 : 120,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                  Icons.card_giftcard_rounded,
+                                  size: 110,
+                                  color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 18),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 18, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xE60B0B0F),
-                                  borderRadius: BorderRadius.circular(30),
-                                  border: Border.all(
-                                      color: const Color(0xFFFE2C55),
-                                      width: 1.4),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      widget.gift.nameFor(isArabic: _isArabic),
-                                      style: TextStyleCustom.outFitBold700(
-                                          fontSize: 16, color: Colors.white),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Image.asset(AssetRes.icCoin,
-                                        width: 16, height: 16),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '$_price',
-                                      style: TextStyleCustom.outFitBold700(
-                                          fontSize: 14,
-                                          color: const Color(0xFFFFD54F)),
-                                    ),
+                            ),
+                            const SizedBox(height: 22),
+                            // Name + price banner with TikTok gradient.
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 24, vertical: 10),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFE2C55),
+                                    Color(0xFFFF7BA2)
                                   ],
                                 ),
+                                borderRadius: BorderRadius.circular(30),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFE2C55)
+                                        .withValues(alpha: .5),
+                                    blurRadius: 18,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                _isArabic ? 'أُرسلت الهدية!' : 'Gift sent!',
-                                style: TextStyleCustom.outFitSemiBold600(
-                                    fontSize: 15,
-                                    color: const Color(0xFFFE2C55)),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    widget.gift.nameFor(isArabic: _isArabic),
+                                    style: TextStyleCustom.outFitBold700(
+                                        fontSize: 17, color: Colors.white),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Image.asset(AssetRes.icCoin,
+                                      width: 17, height: 17),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    '$_price',
+                                    style: TextStyleCustom.outFitBold700(
+                                        fontSize: 15, color: Colors.white),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _isArabic ? 'أُرسلت الهدية!' : 'Gift sent!',
+                              style: TextStyleCustom.outFitSemiBold600(
+                                  fontSize: 16, color: const Color(0xFFFF7BA2)),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -274,13 +319,13 @@ class _GiftAnimationState extends State<_GiftAnimation>
     );
   }
 
-  Widget _buildParticle(_Particle p) {
-    final t = ((_c.value - p.delay) / (1 - p.delay)).clamp(0.0, 1.0);
-    if (t <= 0) return const SizedBox();
+  Widget _buildParticle(_Particle p, double exit) {
+    // Particles animate on a loop during the hold phase.
+    final t = ((_float.value + p.delay) % 1.0);
     final dx = math.cos(p.angle) * p.distance * t;
-    final dy = math.sin(p.angle) * p.distance * t + 60 * t * t;
+    final dy = math.sin(p.angle) * p.distance * t + 70 * t * t;
     return Opacity(
-      opacity: (1 - t) * .95,
+      opacity: (1 - t) * (1 - exit),
       child: Transform.translate(
         offset: Offset(dx, dy),
         child: p.isCoin
@@ -292,9 +337,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
                 decoration: BoxDecoration(
                   color: p.color,
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(color: p.color, blurRadius: 8),
-                  ],
+                  boxShadow: [BoxShadow(color: p.color, blurRadius: 10)],
                 ),
               ),
       ),
