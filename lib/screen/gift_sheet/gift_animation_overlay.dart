@@ -9,6 +9,7 @@ import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/model/general/settings_model.dart';
+import 'package:nimiro/screen/gift_sheet/gift_flight_path.dart';
 import 'package:nimiro/screen/gift_sheet/gift_visuals.dart';
 import 'package:nimiro/utilities/asset_res.dart';
 import 'package:nimiro/utilities/text_style_custom.dart';
@@ -16,7 +17,8 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 /// TikTok-style animated gift overlay.
 ///
 /// Each gift plays a full, clearly visible animation:
-///   1. spring pop-in from the bottom,
+///   1. the gift flies up from the bottom of the screen on an S-curve with a
+///      glowing trail, sparks and a lively spin (TikTok-style gift throw),
 ///   2. a long "hero" hold with continuous floating + pulsing + rotating halo,
 ///   3. a smooth fade-out at the very end.
 /// Fast consecutive gifts are queued so every one gets its full moment.
@@ -29,7 +31,7 @@ class GiftAnimationOverlay {
   bool _busy = false;
 
   // Long enough to actually see and enjoy the gift (TikTok keeps gifts ~4-5s).
-  static const Duration _duration = Duration(milliseconds: 4800);
+  static const Duration _duration = Duration(milliseconds: 5200);
 
   void enqueue(Gift gift) {
     _queue.add(gift);
@@ -93,11 +95,12 @@ class _GiftAnimation extends StatefulWidget {
 
 class _GiftAnimationState extends State<_GiftAnimation>
     with TickerProviderStateMixin {
-  late final AnimationController _enter; // pop-in
+  late final AnimationController _enter; // 0 -> 1: gift flies bottom -> centre
   late final AnimationController _float; // continuous float loop
   late final AnimationController _halo; // continuous halo pulse loop
   late final AnimationController _exit; // fade-out at the end
   late final List<_Particle> _particles;
+  late final List<_Trail> _trail; // glowing trail that follows the gift
 
   bool get _isArabic => SessionLanguage.isArabic;
   int get _price => widget.gift.coinPrice ?? 0;
@@ -115,7 +118,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
     super.initState();
 
     _enter = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700));
+        vsync: this, duration: const Duration(milliseconds: 1700));
     _float = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 1800));
     _halo = AnimationController(
@@ -142,6 +145,14 @@ class _GiftAnimationState extends State<_GiftAnimation>
           Color.lerp(_accent, Colors.white, .45)!,
           Colors.white,
         ][i % 4],
+      );
+    });
+
+    // A trail of glowing dots that lag behind the gift as it flies.
+    _trail = List<_Trail>.generate(10, (i) {
+      return _Trail(
+        lag: 0.035 + i * 0.026,
+        size: 14 - i * 1.1,
       );
     });
 
@@ -177,10 +188,11 @@ class _GiftAnimationState extends State<_GiftAnimation>
             final exit = _exit.value;
             final enter = CurvedAnimation(
               parent: _enter,
-              curve: Curves.elasticOut,
+              curve: Curves.easeOutCubic,
             ).value;
             final float = math.sin(_float.value * math.pi * 2);
             final haloPulse = math.sin(_halo.value * math.pi * 2);
+            final screen = MediaQuery.sizeOf(context);
 
             return Container(
               color: const Color(0xAA000000).withValues(alpha: 1 - exit),
@@ -233,76 +245,83 @@ class _GiftAnimationState extends State<_GiftAnimation>
                       ),
                     ),
                   ),
-                  // Golden particles / coins bursting outwards.
+                  // Sparkles that burst during the flight and keep shimmering.
                   for (final p in _particles) _buildParticle(p, exit),
-                  // Gift card: pop-in, continuous float, fade only at the end.
+                  // Glowing trail that follows the gift along its flight path.
+                  for (final tr in _trail)
+                    _buildTrailDot(tr, enter, exit, screen),
+                  // Gift card flies in along an S-curve, then floats + pulses.
                   Opacity(
                     opacity: 1 - exit,
                     child: Transform.translate(
-                      offset: Offset(0, (1 - enter) * 160 + float * 8),
-                      child: Transform.scale(
-                        scale: enter * (1 + haloPulse * .015),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // The gift render itself (transparent premium 3D).
-                            // No flat red circle: the custom glow behind it
-                            // lets each gift's own art style breathe.
-                            CustomImage(
-                              image: widget.gift.image?.addBaseURL(),
-                              size: Size(_expensive ? 245 : 215,
-                                  _expensive ? 245 : 215),
-                              radius: 0,
-                              fit: BoxFit.contain,
-                              isImageLoaderVisible: false,
-                            ),
-                            const SizedBox(height: 10),
-                            // Name + price banner using the gift accent.
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 10),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    _accent,
-                                    Color.lerp(_accent, Colors.white, .38)!,
+                      offset: giftFlightOffset(enter, screen) +
+                          Offset(0, enter * float * 8),
+                      child: Transform.rotate(
+                        angle: giftFlightRotation(enter) * (1 - exit),
+                        child: Transform.scale(
+                          scale: giftFlightScale(enter) * (1 + haloPulse * .02),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // The gift render itself (transparent premium 3D).
+                              // No flat red circle: the custom glow behind it
+                              // lets each gift's own art style breathe.
+                              CustomImage(
+                                image: widget.gift.image?.addBaseURL(),
+                                size: Size(_expensive ? 245 : 215,
+                                    _expensive ? 245 : 215),
+                                radius: 0,
+                                fit: BoxFit.contain,
+                                isImageLoaderVisible: false,
+                              ),
+                              const SizedBox(height: 10),
+                              // Name + price banner using the gift accent.
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      _accent,
+                                      Color.lerp(_accent, Colors.white, .38)!,
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(30),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: _accent.withValues(alpha: .5),
+                                      blurRadius: 18,
+                                    ),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.circular(30),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: _accent.withValues(alpha: .5),
-                                    blurRadius: 18,
-                                  ),
-                                ],
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      widget.gift.nameFor(isArabic: _isArabic),
+                                      style: TextStyleCustom.outFitBold700(
+                                          fontSize: 17, color: Colors.white),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Image.asset(AssetRes.icCoin,
+                                        width: 17, height: 17),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      '$_price',
+                                      style: TextStyleCustom.outFitBold700(
+                                          fontSize: 15, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    widget.gift.nameFor(isArabic: _isArabic),
-                                    style: TextStyleCustom.outFitBold700(
-                                        fontSize: 17, color: Colors.white),
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Image.asset(AssetRes.icCoin,
-                                      width: 17, height: 17),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    '$_price',
-                                    style: TextStyleCustom.outFitBold700(
-                                        fontSize: 15, color: Colors.white),
-                                  ),
-                                ],
+                              const SizedBox(height: 8),
+                              Text(
+                                _isArabic ? 'أُرسلت الهدية!' : 'Gift sent!',
+                                style: TextStyleCustom.outFitSemiBold600(
+                                    fontSize: 16, color: _accent),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _isArabic ? 'أُرسلت الهدية!' : 'Gift sent!',
-                              style: TextStyleCustom.outFitSemiBold600(
-                                  fontSize: 16, color: _accent),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -311,6 +330,34 @@ class _GiftAnimationState extends State<_GiftAnimation>
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrailDot(_Trail tr, double enter, double exit, Size screen) {
+    // Each dot lags behind the gift along the same flight path.
+    final t = (enter - tr.lag).clamp(0.0, 1.0);
+    final offset = giftFlightOffset(t, screen);
+    final visible = enter > tr.lag && enter < .98;
+    if (!visible) return const SizedBox.shrink();
+    return Opacity(
+      opacity: (1 - t) * .7 * (1 - exit),
+      child: Transform.translate(
+        offset: offset,
+        child: Container(
+          width: tr.size,
+          height: tr.size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                Colors.white.withValues(alpha: .9),
+                _accent.withValues(alpha: .7),
+                Colors.transparent,
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -340,6 +387,13 @@ class _GiftAnimationState extends State<_GiftAnimation>
       ),
     );
   }
+}
+
+class _Trail {
+  final double lag;
+  final double size;
+
+  _Trail({required this.lag, required this.size});
 }
 
 class _Particle {
