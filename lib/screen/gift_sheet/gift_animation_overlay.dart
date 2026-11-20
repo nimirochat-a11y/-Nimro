@@ -101,6 +101,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
   late final AnimationController _exit; // fade-out at the end
   late final List<_Particle> _particles;
   late final List<_Trail> _trail; // glowing trail that follows the gift
+  late final List<_CoinSpout> _coinSpouts; // coins bubbling under the gift
 
   bool get _isArabic => SessionLanguage.isArabic;
   int get _price => widget.gift.coinPrice ?? 0;
@@ -149,6 +150,16 @@ class _GiftAnimationState extends State<_GiftAnimation>
       );
     });
 
+    // Coins that rise from beneath the gift and fade, TikTok-style.
+    final rand = math.Random(7);
+    _coinSpouts = List<_CoinSpout>.generate(9, (i) {
+      return _CoinSpout(
+        dx: (rand.nextDouble() - .5) * 120,
+        delay: rand.nextDouble(),
+        size: 16 + rand.nextDouble() * 12,
+      );
+    });
+
     // A trail of glowing dots that lag behind the gift as it flies.
     _trail = List<_Trail>.generate(10, (i) {
       return _Trail(
@@ -180,9 +191,9 @@ class _GiftAnimationState extends State<_GiftAnimation>
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onDone,
+      child: IgnorePointer(
+        // Let taps reach the post underneath the gift.
+        ignoring: true,
         child: AnimatedBuilder(
           animation: Listenable.merge([_enter, _float, _halo, _exit]),
           builder: (context, _) {
@@ -195,13 +206,15 @@ class _GiftAnimationState extends State<_GiftAnimation>
             final screen = MediaQuery.sizeOf(context);
 
             return Container(
-              color: const Color(0xAA000000).withValues(alpha: 1 - exit),
+              // Transparent: the gift is displayed on top of the post itself
+              // (like TikTok), never inside a dark full-screen dialog.
+              color: Colors.transparent,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   // Rotating, pulsing halo rings (TikTok-style glow).
                   Opacity(
-                    opacity: (1 - exit) * (.6 + haloPulse * .2),
+                    opacity: (1 - exit) * (.28 + haloPulse * .10),
                     child: Transform.scale(
                       scale: 1 + haloPulse * .12,
                       child: Transform.rotate(
@@ -226,7 +239,7 @@ class _GiftAnimationState extends State<_GiftAnimation>
                   ),
                   // Inner bright halo.
                   Opacity(
-                    opacity: (1 - exit) * (.5 + haloPulse * .25),
+                    opacity: (1 - exit) * (.22 + haloPulse * .10),
                     child: Transform.scale(
                       scale: .8 + haloPulse * .1,
                       child: Container(
@@ -269,15 +282,26 @@ class _GiftAnimationState extends State<_GiftAnimation>
                               // The gift render itself (transparent premium 3D).
                               // No flat red circle: the custom glow behind it
                               // lets each gift's own art style breathe.
-                              CustomImage(
-                                image: widget.gift.image?.addBaseURL(),
-                                size: Size(_expensive ? 245 : 215,
-                                    _expensive ? 245 : 215),
-                                radius: 0,
-                                fit: BoxFit.contain,
-                                isImageLoaderVisible: false,
+                              Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  // Big TikTok-style gift art, sitting directly
+                                  // on the post with no dark card behind it.
+                                  CustomImage(
+                                    image: widget.gift.image?.addBaseURL(),
+                                    size: const Size(280, 280),
+                                    radius: 0,
+                                    fit: BoxFit.contain,
+                                    isImageLoaderVisible: false,
+                                  ),
+                                  // Coins bubbling out from under the gift,
+                                  // exactly like the TikTok rose animation.
+                                  for (final c in _coinSpouts)
+                                    _buildCoinSpout(c, _float.value, exit),
+                                ],
                               ),
-                              const SizedBox(height: 10),
+                              const SizedBox(height: 2),
                               // Name + price banner using the gift accent.
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -334,6 +358,19 @@ class _GiftAnimationState extends State<_GiftAnimation>
             );
           },
         ),
+      ),
+    );
+  }
+
+  Widget _buildCoinSpout(_CoinSpout c, double v, double exit) {
+    // Each coin loops upward from under the gift then fades out.
+    final t = (v + c.delay) % 1.0;
+    final rise = 110 * t;
+    return Opacity(
+      opacity: (1 - t) * (1 - exit),
+      child: Transform.translate(
+        offset: Offset(c.dx * (1 - t * .3), 90 + rise),
+        child: Image.asset(AssetRes.icCoin, width: c.size, height: c.size),
       ),
     );
   }
@@ -402,6 +439,14 @@ class _Trail {
   final double size;
 
   _Trail({required this.lag, required this.size});
+}
+
+class _CoinSpout {
+  final double dx;
+  final double delay;
+  final double size;
+
+  _CoinSpout({required this.dx, required this.delay, required this.size});
 }
 
 class _Particle {
