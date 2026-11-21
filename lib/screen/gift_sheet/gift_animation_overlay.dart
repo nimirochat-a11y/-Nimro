@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
-import 'package:nimiro/common/widget/custom_image.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/screen/gift_sheet/gift_motion.dart';
 import 'package:nimiro/screen/gift_sheet/gift_visuals.dart';
@@ -16,12 +16,12 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 
 /// TikTok-style animated gift overlay.
 ///
-/// Each gift plays a full, clearly visible animation:
-///   1. the gift flies up from the bottom of the screen on an S-curve with a
-///      glowing trail, sparks and a lively spin (TikTok-style gift throw),
-///   2. a long "hero" hold with continuous floating + pulsing + rotating halo,
-///   3. a smooth fade-out at the very end.
-/// Fast consecutive gifts are queued so every one gets its full moment.
+/// A gift is a short, punchy moment (1.9s–3s) that plays directly on top of
+/// the post with a fully transparent background:
+///   1. a quick flash + 3D pop-in (short spin, bounce),
+///   2. a lively hold with rotating light rays, sparkles and rising coins,
+///   3. a fast scale-up + fade so the post is never blocked for long.
+/// A compact pill at the bottom shows "You sent <gift> xN" like TikTok.
 class GiftAnimationOverlay {
   static final GiftAnimationOverlay shared = GiftAnimationOverlay._();
   GiftAnimationOverlay._();
@@ -29,9 +29,6 @@ class GiftAnimationOverlay {
   final List<Gift> _queue = <Gift>[];
   OverlayEntry? _entry;
   bool _busy = false;
-
-  // Long enough to actually see and enjoy the gift (TikTok keeps gifts ~4-5s).
-  static const Duration _duration = Duration(milliseconds: 5200);
 
   void enqueue(Gift gift) {
     _queue.add(gift);
@@ -45,6 +42,13 @@ class GiftAnimationOverlay {
     }
     _busy = true;
     final gift = _queue.removeAt(0);
+
+    // Merge rapid repeats of the same gift into one "xN" combo, like TikTok.
+    var combo = 1;
+    while (_queue.isNotEmpty && _queue.first.id == gift.id) {
+      _queue.removeAt(0);
+      combo++;
+    }
 
     // Use the root navigator's overlay, NOT Get.context, which may be null or
     // may point at the just-dismissed gift bottom sheet.
@@ -64,6 +68,8 @@ class GiftAnimationOverlay {
     _entry = OverlayEntry(
       builder: (_) => _GiftAnimation(
         gift: gift,
+        combo: combo,
+        durationMs: _durationFor(gift),
         onDone: () {
           _entry?.remove();
           _entry = null;
@@ -81,109 +87,108 @@ class GiftAnimationOverlay {
       Loggers.error('GiftAnimationOverlay insert failed: $e');
     }
   }
+
+  /// TikTok animations are short: cheap gifts flash by, big ones linger a bit.
+  static int _durationFor(Gift gift) {
+    final price = gift.coinPrice ?? 0;
+    if (price >= 10000) return 3000;
+    if (price >= 1000) return 2400;
+    return 1900;
+  }
 }
 
 class _GiftAnimation extends StatefulWidget {
   final Gift gift;
+  final int combo;
+  final int durationMs;
   final VoidCallback onDone;
 
-  const _GiftAnimation({required this.gift, required this.onDone});
+  const _GiftAnimation({
+    required this.gift,
+    required this.combo,
+    required this.durationMs,
+    required this.onDone,
+  });
 
   @override
   State<_GiftAnimation> createState() => _GiftAnimationState();
 }
 
+enum _ParticleKind { petal, heart, star, confetti, dust, pixel, orbit, coin }
+
 class _GiftAnimationState extends State<_GiftAnimation>
     with TickerProviderStateMixin {
-  late final AnimationController _enter; // 0 -> 1: gift flies bottom -> centre
-  late final AnimationController _float; // continuous float loop
-  late final AnimationController _halo; // continuous halo pulse loop
-  late final AnimationController _exit; // fade-out at the end
+  late final AnimationController _enter; // 0 -> 1: 3D pop-in
+  late final AnimationController _loop; // ambient sway / particles
+  late final AnimationController _rays; // rotating light rays
+  late final AnimationController _exit; // fast fade at the end
+
   late final List<_Particle> _particles;
-  late final List<_Trail> _trail; // glowing trail that follows the gift
-  late final List<_CoinSpout> _coinSpouts; // coins bubbling under the gift
+  late final List<_Particle> _coins;
+
+  Timer? _exitTimer;
+  Timer? _doneTimer;
 
   bool get _isArabic => SessionLanguage.isArabic;
   int get _price => widget.gift.coinPrice ?? 0;
-  bool get _expensive => _price >= 5000;
+  double get _giftSize => _price >= 10000 ? 250 : (_price >= 1000 ? 210 : 175);
+
   GiftMotion get _motion => motionFor(widget.gift.id ?? 0);
-
-  /// Every gift gets its own accent colour so the halo, particles and banner
-  /// are customised instead of all sharing one generic red.
   Color get _accent => GiftVisuals.accentFor(widget.gift);
-
-  Timer? _holdTimer;
-  Timer? _exitTimer;
+  _ParticleKind get _kind => _particleKindFor(widget.gift.id ?? 0);
 
   @override
   void initState() {
     super.initState();
 
     _enter = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2000));
-    _float = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1800));
-    _halo = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1400));
+        vsync: this, duration: const Duration(milliseconds: 520));
+    _loop = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1500));
+    _rays = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 3600));
     _exit = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 500));
+        vsync: this, duration: const Duration(milliseconds: 320));
 
-    // Continuous loops for the whole time the gift is on screen.
-    _float.repeat(reverse: true);
-    _halo.repeat(reverse: true);
+    _loop.repeat();
+    _rays.repeat();
 
     final random = math.Random();
-    final count = _expensive ? 30 : 18;
+    final count = _price >= 1000 ? 16 : 12;
     _particles = List<_Particle>.generate(count, (i) {
       return _Particle(
-        angle: (i / count) * math.pi * 2 + random.nextDouble() * .3,
-        distance: 90 + random.nextDouble() * 130,
-        size: 4 + random.nextDouble() * 6,
-        delay: random.nextDouble() * .25,
-        isCoin: i % 3 == 0,
-        color: [
-          const Color(0xFFFFD54F),
-          _accent,
-          Color.lerp(_accent, Colors.white, .45)!,
-          Colors.white,
-        ][i % 4],
+        angle: random.nextDouble() * math.pi * 2,
+        distance: 70 + random.nextDouble() * 110,
+        size: (i % 4 == 0 ? 16.0 : 9.0) + random.nextDouble() * 6,
+        delay: random.nextDouble(),
+        color: _particleColor(i),
       );
     });
 
-    // Coins that rise from beneath the gift and fade, TikTok-style.
-    final rand = math.Random(7);
-    _coinSpouts = List<_CoinSpout>.generate(9, (i) {
-      return _CoinSpout(
-        dx: (rand.nextDouble() - .5) * 120,
-        delay: rand.nextDouble(),
-        size: 16 + rand.nextDouble() * 12,
-      );
-    });
-
-    // A trail of glowing dots that lag behind the gift as it flies.
-    _trail = List<_Trail>.generate(10, (i) {
-      return _Trail(
-        lag: 0.035 + i * 0.026,
-        size: 14 - i * 1.1,
+    _coins = List<_Particle>.generate(_price >= 1000 ? 10 : 0, (i) {
+      return _Particle(
+        angle: (i / 10) * math.pi * 2,
+        distance: 40 + random.nextDouble() * 70,
+        size: 14 + random.nextDouble() * 8,
+        delay: random.nextDouble(),
+        color: const Color(0xFFFFD54F),
       );
     });
 
     _enter.forward();
-
-    // Keep the gift fully visible for the "hold" phase, then fade out.
-    _exitTimer = Timer(GiftAnimationOverlay._duration, () {
+    _exitTimer = Timer(Duration(milliseconds: widget.durationMs), () {
       _exit.forward();
-      _holdTimer = Timer(const Duration(milliseconds: 500), widget.onDone);
+      _doneTimer = Timer(const Duration(milliseconds: 320), widget.onDone);
     });
   }
 
   @override
   void dispose() {
-    _holdTimer?.cancel();
     _exitTimer?.cancel();
+    _doneTimer?.cancel();
     _enter.dispose();
-    _float.dispose();
-    _halo.dispose();
+    _loop.dispose();
+    _rays.dispose();
     _exit.dispose();
     super.dispose();
   }
@@ -192,169 +197,95 @@ class _GiftAnimationState extends State<_GiftAnimation>
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: IgnorePointer(
-        // Let taps reach the post underneath the gift.
+        // Taps go through to the post underneath.
         ignoring: true,
         child: AnimatedBuilder(
-          animation: Listenable.merge([_enter, _float, _halo, _exit]),
+          animation: Listenable.merge([_enter, _loop, _rays, _exit]),
           builder: (context, _) {
+            final enter = Curves.easeOutCubic.transform(_enter.value);
             final exit = _exit.value;
-            final enter = CurvedAnimation(
-              parent: _enter,
-              curve: Curves.easeOutCubic,
-            ).value;
-            final haloPulse = math.sin(_halo.value * math.pi * 2);
             final screen = MediaQuery.sizeOf(context);
+            final padding = MediaQuery.paddingOf(context);
+            final spin = (1 - enter) * math.pi * 1.5;
+            final sway = math.sin(_loop.value * math.pi * 2) * .12;
+            final tilt = math.sin(_loop.value * math.pi * 1.3) * .07;
 
-            return Container(
-              // Transparent: the gift is displayed on top of the post itself
-              // (like TikTok), never inside a dark full-screen dialog.
-              color: Colors.transparent,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Rotating, pulsing halo rings (TikTok-style glow).
-                  Opacity(
-                    opacity: (1 - exit) * (.28 + haloPulse * .10),
+            final matrix = Matrix4.identity()
+              ..setEntry(3, 2, .0014)
+              ..rotateY(spin + sway)
+              ..rotateX(tilt);
+
+            final entrance = motionEntranceOffset(
+              _motion,
+              _enter.value,
+              enter,
+              screen,
+            );
+
+            final scale = motionEntranceScale(_motion, enter) *
+                motionAmbientScale(_motion, _loop.value) *
+                (1 + exit * .12);
+
+            final flash = (1 - enter * 4).clamp(0.0, .22);
+            final showParticles = ((enter - .15) / .85).clamp(0.0, 1.0);
+
+            return Stack(
+              children: [
+                // Quick white flash at launch (subtle, never a dark backdrop).
+                if (flash > 0)
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: Colors.white.withValues(alpha: flash),
+                    ),
+                  ),
+                // Rotating light rays behind the gift.
+                Center(
+                  child: Opacity(
+                    opacity: .55 * enter * (1 - exit),
+                    child: CustomPaint(
+                      size: const Size(340, 340),
+                      painter: _RaysPainter(
+                        color: _accent,
+                        progress: _rays.value,
+                      ),
+                    ),
+                  ),
+                ),
+                // Rising coins (only when the gift is worth >= 1000 coins).
+                for (final c in _coins) _buildCoin(c, showParticles, exit),
+                // The gift itself: 3D pop-in + lively float.
+                Center(
+                  child: Transform.translate(
+                    offset: entrance +
+                        motionAmbientOffset(_motion, _loop.value) * enter +
+                        Offset(0, -40 - exit * 34),
                     child: Transform.scale(
-                      scale: 1 + haloPulse * .12,
-                      child: Transform.rotate(
-                        angle: _halo.value * math.pi,
-                        child: Container(
-                          width: 300,
-                          height: 300,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                _accent.withValues(alpha: .55),
-                                _accent.withValues(alpha: .22),
-                                Colors.transparent,
-                              ],
-                              stops: const [.35, .65, 1],
-                            ),
-                          ),
-                        ),
+                      scale: scale,
+                      child: Transform(
+                        transform: matrix,
+                        alignment: Alignment.center,
+                        child: _buildGiftImage(),
                       ),
                     ),
                   ),
-                  // Inner bright halo.
-                  Opacity(
-                    opacity: (1 - exit) * (.22 + haloPulse * .10),
-                    child: Transform.scale(
-                      scale: .8 + haloPulse * .1,
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: RadialGradient(
-                            colors: [
-                              Colors.white.withValues(alpha: .30),
-                              _accent.withValues(alpha: .18),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
+                ),
+                // Sparkles / petals / hearts bursting around the gift.
+                Center(
+                  child: SizedBox(
+                    width: 360,
+                    height: 360,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        for (final p in _particles)
+                          _buildParticle(p, showParticles, exit),
+                      ],
                     ),
                   ),
-                  // Sparkles that burst during the flight and keep shimmering.
-                  for (final p in _particles) _buildParticle(p, exit),
-                  // Glowing trail that follows the gift along its flight path.
-                  for (final tr in _trail)
-                    _buildTrailDot(tr, enter, exit, screen),
-                  // Gift card flies in along an S-curve, then floats + pulses.
-                  Opacity(
-                    opacity: 1 - exit,
-                    child: Transform.translate(
-                      offset: motionEntranceOffset(
-                              _motion, enter, enter, screen) +
-                          motionAmbientOffset(_motion, _float.value) * enter,
-                      child: Transform.rotate(
-                        angle:
-                            motionEntranceRotation(_motion, enter) * (1 - exit),
-                        child: Transform.scale(
-                          scale: motionEntranceScale(_motion, enter) *
-                              motionAmbientScale(_motion, _float.value),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // The gift render itself (transparent premium 3D).
-                              // No flat red circle: the custom glow behind it
-                              // lets each gift's own art style breathe.
-                              Stack(
-                                alignment: Alignment.center,
-                                clipBehavior: Clip.none,
-                                children: [
-                                  // Big TikTok-style gift art, sitting directly
-                                  // on the post with no dark card behind it.
-                                  CustomImage(
-                                    image: widget.gift.image?.addBaseURL(),
-                                    size: const Size(280, 280),
-                                    radius: 0,
-                                    fit: BoxFit.contain,
-                                    isImageLoaderVisible: false,
-                                  ),
-                                  // Coins bubbling out from under the gift,
-                                  // exactly like the TikTok rose animation.
-                                  for (final c in _coinSpouts)
-                                    _buildCoinSpout(c, _float.value, exit),
-                                ],
-                              ),
-                              const SizedBox(height: 2),
-                              // Name + price banner using the gift accent.
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24, vertical: 10),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      _accent,
-                                      Color.lerp(_accent, Colors.white, .38)!,
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(30),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: _accent.withValues(alpha: .5),
-                                      blurRadius: 18,
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      widget.gift.nameFor(isArabic: _isArabic),
-                                      style: TextStyleCustom.outFitBold700(
-                                          fontSize: 17, color: Colors.white),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Image.asset(AssetRes.icCoin,
-                                        width: 17, height: 17),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      '$_price',
-                                      style: TextStyleCustom.outFitBold700(
-                                          fontSize: 15, color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _isArabic ? 'أُرسلت الهدية!' : 'Gift sent!',
-                                style: TextStyleCustom.outFitSemiBold600(
-                                    fontSize: 16, color: _accent),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                // Compact TikTok-style sender pill at the bottom.
+                _buildBanner(padding, enter, exit),
+              ],
             );
           },
         ),
@@ -362,45 +293,91 @@ class _GiftAnimationState extends State<_GiftAnimation>
     );
   }
 
-  Widget _buildCoinSpout(_CoinSpout c, double v, double exit) {
-    // Each coin loops upward from under the gift then fades out.
-    final t = (v + c.delay) % 1.0;
-    final rise = 110 * t;
-    return Opacity(
-      opacity: (1 - t) * (1 - exit),
-      child: Transform.translate(
-        offset: Offset(c.dx * (1 - t * .3), 90 + rise),
-        child: Image.asset(AssetRes.icCoin, width: c.size, height: c.size),
-      ),
+  Widget _buildGiftImage() {
+    final url = widget.gift.image?.addBaseURL() ?? '';
+    final fallback = Icon(
+      Icons.card_giftcard_rounded,
+      size: _giftSize * .55,
+      color: Colors.white,
+    );
+    return SizedBox(
+      width: _giftSize,
+      height: _giftSize,
+      child: url.startsWith('http')
+          ? CachedNetworkImage(
+              imageUrl: url,
+              cacheKey: url,
+              fit: BoxFit.contain,
+              placeholder: (_, __) => const SizedBox.shrink(),
+              errorWidget: (_, __, ___) => fallback,
+            )
+          : fallback,
     );
   }
 
-  Widget _buildTrailDot(_Trail tr, double enter, double exit, Size screen) {
-    // Each dot lags behind the gift along the same flight path.
-    final t = (enter - tr.lag).clamp(0.0, 1.0);
-    final offset = motionEntranceOffset(
-      _motion,
-      t,
-      1 - math.pow(1 - t, 3).toDouble(),
-      screen,
-    );
-    final visible = enter > tr.lag && enter < .98;
-    if (!visible) return const SizedBox.shrink();
-    return Opacity(
-      opacity: (1 - t) * .7 * (1 - exit),
-      child: Transform.translate(
-        offset: offset,
-        child: Container(
-          width: tr.size,
-          height: tr.size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                Colors.white.withValues(alpha: .9),
-                _accent.withValues(alpha: .7),
-                Colors.transparent,
-              ],
+  Widget _buildBanner(EdgeInsets padding, double enter, double exit) {
+    final t = ((enter - .55) / .45).clamp(0.0, 1.0);
+    final eased = Curves.easeOutBack.transform(t);
+    final name = widget.gift.nameFor(isArabic: _isArabic);
+    final sender = _isArabic ? 'أنت' : 'You';
+    final text = _isArabic ? '$sender أرسل $name' : '$sender sent $name';
+
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: padding.bottom + 84,
+      child: Center(
+        child: Opacity(
+          opacity: ((1 - exit) * t).clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, (1 - eased) * 24),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: .58),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                  color: _accent.withValues(alpha: .55),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: _accent.withValues(alpha: .3),
+                      shape: BoxShape.circle,
+                    ),
+                    child:
+                        const Icon(Icons.person, size: 14, color: Colors.white),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    text,
+                    style: TextStyleCustom.outFitMedium500(
+                        fontSize: 12.5, color: Colors.white),
+                  ),
+                  if (widget.combo > 1) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: _accent,
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: Text(
+                        'x${widget.combo}',
+                        style: TextStyleCustom.outFitBold700(
+                            fontSize: 11, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),
@@ -408,45 +385,165 @@ class _GiftAnimationState extends State<_GiftAnimation>
     );
   }
 
-  Widget _buildParticle(_Particle p, double exit) {
-    // Particles animate on a loop during the hold phase.
-    final t = ((_float.value + p.delay) % 1.0);
+  Widget _buildParticle(_Particle p, double show, double exit) {
+    final t = ((_loop.value + p.delay) % 1.0);
     final dx = math.cos(p.angle) * p.distance * t;
-    final dy = math.sin(p.angle) * p.distance * t + 70 * t * t;
-    return Opacity(
-      opacity: (1 - t) * (1 - exit),
-      child: Transform.translate(
-        offset: Offset(dx, dy),
-        child: p.isCoin
-            ? Image.asset(AssetRes.icCoin,
-                width: p.size * 2.2, height: p.size * 2.2)
-            : Container(
-                width: p.size,
-                height: p.size,
-                decoration: BoxDecoration(
-                  color: p.color,
-                  shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: p.color, blurRadius: 10)],
-                ),
-              ),
+    final dy = math.sin(p.angle) * p.distance * t + 24 * t * t;
+    final opacity = (1 - t) * show * (1 - exit);
+    if (opacity <= 0) return const SizedBox.shrink();
+
+    Widget child;
+    switch (_kind) {
+      case _ParticleKind.petal:
+        child = Transform.rotate(
+          angle: t * math.pi * 2,
+          child: Container(
+            width: p.size,
+            height: p.size * .6,
+            decoration: BoxDecoration(
+              color: p.color.withValues(alpha: .9),
+              borderRadius: BorderRadius.circular(p.size),
+            ),
+          ),
+        );
+        break;
+      case _ParticleKind.heart:
+        child = Icon(Icons.favorite_rounded,
+            size: p.size, color: p.color.withValues(alpha: .9));
+        break;
+      case _ParticleKind.star:
+        child = Icon(Icons.star_rounded,
+            size: p.size, color: p.color.withValues(alpha: .95));
+        break;
+      case _ParticleKind.confetti:
+        child = Transform.rotate(
+          angle: t * math.pi * 3,
+          child: Container(
+            width: p.size * .55,
+            height: p.size,
+            color: p.color.withValues(alpha: .9),
+          ),
+        );
+        break;
+      case _ParticleKind.dust:
+        child = Container(
+          width: p.size,
+          height: p.size,
+          decoration: BoxDecoration(
+            color: p.color.withValues(alpha: .5),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: p.color.withValues(alpha: .35), blurRadius: 8)
+            ],
+          ),
+        );
+        break;
+      case _ParticleKind.pixel:
+        child = Container(
+          width: p.size * .7,
+          height: p.size * .7,
+          color: p.color.withValues(alpha: .9),
+        );
+        break;
+      case _ParticleKind.orbit:
+        child = Container(
+          width: p.size * .6,
+          height: p.size * .6,
+          decoration: BoxDecoration(
+            color: p.color,
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: p.color, blurRadius: 6)],
+          ),
+        );
+        break;
+      case _ParticleKind.coin:
+        child = Image.asset(AssetRes.icCoin, width: p.size, height: p.size);
+        break;
+    }
+
+    return Transform.translate(
+      offset: Offset(dx, dy),
+      child: Opacity(opacity: opacity, child: child),
+    );
+  }
+
+  Widget _buildCoin(_Particle c, double show, double exit) {
+    final t = ((_loop.value + c.delay) % 1.0);
+    final rise = 120 * t;
+    return Positioned(
+      left: 0,
+      right: 0,
+      top: 0,
+      bottom: 0,
+      child: Center(
+        child: Transform.translate(
+          offset: Offset(c.distance * (1 - t), 70 + rise),
+          child: Opacity(
+            opacity: (1 - t) * show * (1 - exit),
+            child: Image.asset(AssetRes.icCoin, width: c.size, height: c.size),
+          ),
+        ),
       ),
     );
   }
+
+  Color _particleColor(int i) {
+    switch (_kind) {
+      case _ParticleKind.petal:
+        return i.isEven ? const Color(0xFFFF4D6D) : const Color(0xFFFFC1CC);
+      case _ParticleKind.heart:
+        return const Color(0xFFFF4D6D);
+      case _ParticleKind.confetti:
+        return [
+          _accent,
+          const Color(0xFFFFD54F),
+          Colors.white,
+          Color.lerp(_accent, Colors.white, .5)!,
+        ][i % 4];
+      case _ParticleKind.dust:
+        return const Color(0xFFD7B98E);
+      case _ParticleKind.pixel:
+        return [
+          const Color(0xFF69F0AE),
+          const Color(0xFFB388FF),
+          const Color(0xFFFFD54F),
+        ][i % 3];
+      case _ParticleKind.orbit:
+        return Color.lerp(_accent, Colors.white, .4)!;
+      default:
+        return [
+          const Color(0xFFFFD54F),
+          _accent,
+          Colors.white,
+        ][i % 3];
+    }
+  }
 }
 
-class _Trail {
-  final double lag;
-  final double size;
-
-  _Trail({required this.lag, required this.size});
-}
-
-class _CoinSpout {
-  final double dx;
-  final double delay;
-  final double size;
-
-  _CoinSpout({required this.dx, required this.delay, required this.size});
+_ParticleKind _particleKindFor(int id) {
+  switch (id) {
+    case 5:
+    case 18:
+    case 24:
+      return _ParticleKind.petal;
+    case 6:
+    case 7:
+    case 20:
+      return _ParticleKind.heart;
+    case 15:
+      return _ParticleKind.orbit;
+    case 12:
+      return _ParticleKind.pixel;
+    case 10:
+    case 11:
+      return _ParticleKind.dust;
+    case 17:
+    case 21:
+    case 23:
+      return _ParticleKind.confetti;
+    default:
+      return _ParticleKind.star;
+  }
 }
 
 class _Particle {
@@ -454,7 +551,6 @@ class _Particle {
   final double distance;
   final double size;
   final double delay;
-  final bool isCoin;
   final Color color;
 
   _Particle({
@@ -462,9 +558,48 @@ class _Particle {
     required this.distance,
     required this.size,
     required this.delay,
-    required this.isCoin,
     required this.color,
   });
+}
+
+class _RaysPainter extends CustomPainter {
+  final Color color;
+  final double progress;
+
+  _RaysPainter({required this.color, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final radius = size.width * .5;
+    const rays = 14;
+    for (var i = 0; i < rays; i++) {
+      final a0 = progress * math.pi * 2 + i * (math.pi * 2 / rays);
+      final a1 = a0 + math.pi / 22;
+      final path = Path()
+        ..moveTo(c.dx, c.dy)
+        ..lineTo(c.dx + math.cos(a0) * radius, c.dy + math.sin(a0) * radius)
+        ..lineTo(c.dx + math.cos(a1) * radius, c.dy + math.sin(a1) * radius)
+        ..close();
+      final alpha =
+          .10 + .07 * (0.5 + 0.5 * math.sin(progress * math.pi * 2 + i));
+      canvas.drawPath(path, Paint()..color = color.withValues(alpha: alpha));
+    }
+    // Soft core glow.
+    final glow = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          color.withValues(alpha: .30),
+          color.withValues(alpha: .10),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: c, radius: radius * .8));
+    canvas.drawCircle(c, radius * .8, glow);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RaysPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.color != color;
 }
 
 /// Small helper so the overlay does not need a BuildContext for language.
