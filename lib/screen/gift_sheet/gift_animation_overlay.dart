@@ -318,9 +318,10 @@ class _GiftAnimationState extends State<_GiftAnimation>
   Widget _buildBanner(EdgeInsets padding, double enter, double exit) {
     final t = ((enter - .55) / .45).clamp(0.0, 1.0);
     final eased = Curves.easeOutBack.transform(t);
-    final name = widget.gift.nameFor(isArabic: _isArabic);
+    final rawName = widget.gift.nameFor(isArabic: _isArabic).trim();
+    final name = rawName.isEmpty ? (_isArabic ? 'هدية' : 'Gift') : rawName;
     final sender = _isArabic ? 'أنت' : 'You';
-    final text = _isArabic ? '$sender أرسل $name' : '$sender sent $name';
+    final text = _isArabic ? '$sender أرسلت $name' : '$sender sent $name';
 
     return Positioned(
       left: 0,
@@ -333,6 +334,9 @@ class _GiftAnimationState extends State<_GiftAnimation>
             offset: Offset(0, (1 - eased) * 24),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * .82,
+              ),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: .58),
                 borderRadius: BorderRadius.circular(22),
@@ -355,10 +359,14 @@ class _GiftAnimationState extends State<_GiftAnimation>
                         const Icon(Icons.person, size: 14, color: Colors.white),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    text,
-                    style: TextStyleCustom.outFitMedium500(
-                        fontSize: 12.5, color: Colors.white),
+                  Flexible(
+                    child: Text(
+                      text,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyleCustom.outFitMedium500(
+                          fontSize: 12.5, color: Colors.white),
+                    ),
                   ),
                   if (widget.combo > 1) ...[
                     const SizedBox(width: 6),
