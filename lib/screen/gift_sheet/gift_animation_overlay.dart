@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svga/flutter_svga.dart';
+import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
@@ -113,6 +115,7 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
   MovieEntity? _movie;
   Timer? _safetyTimer;
   bool _finished = false;
+  bool _svgaFailed = false;
 
   bool get _isArabic =>
       SessionManager.instance.getLang() == 'ar' ||
@@ -131,11 +134,16 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
       SVGAParser.shared
           .decodeFromURL(widget.url)
           .then(_onDecoded)
-          .catchError((_) {
-        _finish();
+          .catchError((e) {
+        Loggers.error('GiftAnimationOverlay: SVGA decode failed: $e');
+        if (mounted) setState(() => _svgaFailed = true);
+        _safetyTimer?.cancel();
+        _safetyTimer = Timer(const Duration(milliseconds: 900), _finish);
       });
     } else {
-      _finish();
+      _svgaFailed = true;
+      _safetyTimer?.cancel();
+      _safetyTimer = Timer(const Duration(milliseconds: 900), _finish);
     }
   }
 
@@ -169,6 +177,20 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     super.dispose();
   }
 
+  Widget _buildFallbackImage() {
+    final url = widget.gift.image?.addBaseURL() ?? '';
+    final placeholder = Icon(Icons.card_giftcard_rounded,
+        size: 160, color: Colors.white.withValues(alpha: .9));
+    if (!url.startsWith('http')) return placeholder;
+    return CachedNetworkImage(
+      imageUrl: url,
+      cacheKey: url,
+      fit: BoxFit.contain,
+      placeholder: (_, __) => const SizedBox.shrink(),
+      errorWidget: (_, __, ___) => placeholder,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final padding = MediaQuery.paddingOf(context);
@@ -183,14 +205,15 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // The real SVGA gift movie (transparent, plays once).
+            // The real SVGA gift movie (transparent, plays once), with a
+            // still-image fallback so the gift is always visible.
             Center(
               child: SizedBox(
                 width: 300,
                 height: 300,
-                child: _controller != null
+                child: _controller != null && !_svgaFailed
                     ? SVGAImage(_controller!, fit: BoxFit.contain)
-                    : const SizedBox.shrink(),
+                    : _buildFallbackImage(),
               ),
             ),
             // Compact TikTok-style sender pill at the bottom.
