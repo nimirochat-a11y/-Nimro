@@ -40,10 +40,15 @@ class GiftAnimationOverlay {
   static const String svgaBase =
       'https://pub-e25da76c2db546e780c87294e2c9ff0f.r2.dev/gifts/svga2/';
 
+  /// Bumped whenever the scene files change. flutter_svga caches decoded
+  /// movies on disk keyed by the FULL URL for 7 days without any way to
+  /// invalidate a single entry, so a new version query forces a fresh fetch.
+  static const int _sceneVersion = 2;
+
   static String? svgaUrlFor(Gift gift) {
     final id = gift.id;
     if (id == null || id < 5 || id > 28) return null;
-    return '${svgaBase}gift_$id.svga';
+    return '${svgaBase}gift_$id.svga?v=$_sceneVersion';
   }
 
   /// Enqueue a gift to be played. Safe to call from any screen, at any time —
@@ -83,13 +88,14 @@ class _GiftAnimationHostState extends State<GiftAnimationHost> {
   }
 
   void _onGift(Gift gift) {
-    // Merge rapid repeats of the same gift into one "xN" combo, like TikTok.
-    if (_current != null && _current!.id == gift.id) {
-      _queue.clear();
+    final id = gift.id;
+    // Merge rapid repeats of the SAME gift into one "xN" combo, but only when
+    // it is consecutive. Never drop a different gift that is still queued.
+    if (_current != null && _current!.id == id) {
       if (mounted) setState(() => _combo++);
       return;
     }
-    if (_queue.isNotEmpty && _queue.last.id == gift.id) {
+    if (_queue.isNotEmpty && _queue.last.id == id) {
       // The last queued gift has not started yet; just bump its combo.
       return;
     }
@@ -182,7 +188,8 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
 
     // Hard cap while the movie downloads. The still image is visible from the
     // first frame, so no gift is ever invisible or blocks the post forever.
-    _safetyTimer = Timer(const Duration(milliseconds: 6000), _finish);
+    // Generous enough for a slow mobile connection to fetch a ~150KB scene.
+    _safetyTimer = Timer(const Duration(milliseconds: 12000), _finish);
 
     HapticManager.shared.medium();
     if (widget.url.startsWith('http')) {
@@ -212,20 +219,30 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
       return;
     }
     final controller = _controller!;
+
     controller.videoItem = movie;
 
-    // Give the scene its real duration plus a small buffer instead of cutting
-    // a 1.6s animation short because the network was slow to start.
+    // Give the scene its real duration plus a generous buffer, measured from
+    // the moment playback actually starts (not from download start), so a
+    // 1.6s animation is never cut short on a slow connection.
     final fps = movie.params.fps == 0 ? 20 : movie.params.fps;
     final playMs = (movie.params.frames / fps * 1000).toInt();
-    _safetyTimer?.cancel();
-    _safetyTimer = Timer(Duration(milliseconds: playMs + 1500), _finish);
+    Loggers.info(
+        'Gift ${widget.gift.id}: playing ${movie.params.frames} frames '
+        '@${fps}fps (${playMs}ms)');
 
-    controller.addStatusListener((status) {
-      if (status == AnimationStatus.completed) _finish();
-    });
+    // The status listener can fire early if the last frames are transparent
+    // (our exit animations end fully faded out), so the computed timer below
+    // is the authoritative end of the scene.
     setState(() => _svgaReady = true);
-    controller.forward(from: 0);
+    // Start after the build that mounts SVGAImage, so the painter already has
+    // a listener attached when the first tick arrives.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _finished || _controller != controller) return;
+      _safetyTimer?.cancel();
+      _safetyTimer = Timer(Duration(milliseconds: playMs + 1500), _finish);
+      if (!controller.isAnimating) controller.forward(from: 0);
+    });
   }
 
   void _finish() {
