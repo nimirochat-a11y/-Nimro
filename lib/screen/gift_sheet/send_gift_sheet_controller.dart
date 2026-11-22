@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/controller/base_controller.dart';
@@ -5,6 +7,7 @@ import 'package:nimiro/common/functions/debounce_action.dart';
 import 'package:nimiro/common/manager/firebase_notification_manager.dart';
 import 'package:nimiro/common/manager/logger.dart';
 import 'package:nimiro/common/manager/session_manager.dart';
+import 'package:nimiro/common/service/api/common_service.dart';
 import 'package:nimiro/common/service/api/gift_wallet_service.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
@@ -55,6 +58,20 @@ class SendGiftSheetController extends BaseController {
   _initData() {
     // Always read the freshest persisted user, not a stale copy.
     myUser.value = SessionManager.instance.getUser();
+
+    // The gift catalogue is cached at splash time. On older installs that
+    // cache can be empty, so refresh it in the background every time the sheet
+    // opens. The Obx in the sheet rebuilds as soon as the list is replaced.
+    unawaited(_refreshGifts());
+  }
+
+  Future<void> _refreshGifts() async {
+    final fresh = await CommonService.instance.refreshGifts();
+    if (fresh == null || fresh.isEmpty) return;
+    final current = SessionManager.instance.getSettings();
+    if (current == null) return;
+    // Assign a new object so GetX detects the change and rebuilds the grid.
+    settings.value = Setting.fromJson(current.toJson());
   }
 
   /// Current wallet balance, never negative.

@@ -97,16 +97,16 @@ jobs:
           rm -f build/app/outputs/flutter-apk/app-release.apk
           flutter build apk --release \
             --target-platform android-arm64,android-arm,android-x64 \
-            --build-name=1.1.70 --build-number=4080
+            --build-name=1.1.71 --build-number=4081
           cp build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/nimiro-1.1.70.apk
+             build/app/outputs/flutter-apk/nimiro-1.1.71.apk
 
       - name: Verify signature and checksums
         run: |
           set -uo pipefail
           APKSIGNER=$(ls "$ANDROID_SDK_ROOT"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)
           echo "apksigner: ${APKSIGNER:-not found}"
-          APK=build/app/outputs/flutter-apk/nimiro-1.1.70.apk
+          APK=build/app/outputs/flutter-apk/nimiro-1.1.71.apk
           test -f "$APK" || { echo "::error::Single APK not found"; exit 1; }
           echo "=== $APK ($(du -h "$APK" | cut -f1)) ==="
           sha256sum "$APK"
@@ -118,7 +118,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nimiro-release-apk-${{ github.run_number }}
-          path: build/app/outputs/flutter-apk/nimiro-1.1.70.apk
+          path: build/app/outputs/flutter-apk/nimiro-1.1.71.apk
           if-no-files-found: error
           retention-days: 30
 

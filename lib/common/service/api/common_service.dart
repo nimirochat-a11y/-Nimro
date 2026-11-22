@@ -33,6 +33,35 @@ class CommonService {
     return false;
   }
 
+  /// Refreshes just the gift catalogue from the server.
+  ///
+  /// The gift sheet reads `SessionManager.getSettings()?.gifts`, which is
+  /// populated once at splash time. On installs that predate the current gift
+  /// catalogue (or when the first settings fetch failed), that cached list can
+  /// be empty even though the server has all 24 gifts. This keeps the cached
+  /// settings otherwise untouched, so no credential or preference is lost.
+  /// Returns the fresh list, or null when the request fails.
+  Future<List<Gift>?> refreshGifts() async {
+    try {
+      final SettingModel response = await ApiService.instance.call(
+          url: WebService.setting.fetchSettings,
+          fromJson: SettingModel.fromJson,
+          cancelAuthToken: true);
+      final fresh = response.data?.gifts;
+      if (fresh == null || fresh.isEmpty) return null;
+
+      final cached = SessionManager.instance.getSettings();
+      if (cached != null) {
+        cached.gifts = fresh;
+        SessionManager.instance.setSettings(cached);
+      }
+      return fresh;
+    } catch (e) {
+      Loggers.error('Gift catalogue refresh failed: $e');
+      return null;
+    }
+  }
+
   /// Loads the third-party credentials (ZEGO / Google Places / Giphy / DeepAR)
   /// from the authenticated endpoint and merges them into the cached settings.
   ///
