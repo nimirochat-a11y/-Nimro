@@ -13,9 +13,12 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 
 /// TikTok-style gift overlay backed by real SVGA video animations.
 ///
-/// Each gift is a genuine keyframed SVGA movie (24 frames @ 30fps, ~0.8s)
-/// played once with [SVGAAnimationController] directly on top of the post.
-/// The background is fully transparent and touches pass through to the post.
+/// Every gift is its own keyframed scene (30-48 frames @ 30fps, 1.0-1.6s):
+/// a unique entrance, idle motion and exit plus its own particles and
+/// shockwaves. It is played once with [SVGAAnimationController] directly on
+/// top of the post. The background is fully transparent, touches pass through
+/// to the post, and a still image is shown immediately while the movie loads
+/// so the gift is never invisible.
 class GiftAnimationOverlay {
   static final GiftAnimationOverlay shared = GiftAnimationOverlay._();
   GiftAnimationOverlay._();
@@ -24,9 +27,9 @@ class GiftAnimationOverlay {
   OverlayEntry? _entry;
   bool _busy = false;
 
-  /// Public R2 bucket base for SVGA gift movies.
+  /// Public R2 bucket base for SVGA gift movies (v2 scenes).
   static const String svgaBase =
-      'https://pub-e25da76c2db546e780c87294e2c9ff0f.r2.dev/gifts/svga/';
+      'https://pub-e25da76c2db546e780c87294e2c9ff0f.r2.dev/gifts/svga2/';
 
   static String? svgaUrlFor(Gift gift) {
     final id = gift.id;
@@ -112,9 +115,9 @@ class _GiftSvgaAnimation extends StatefulWidget {
 class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     with TickerProviderStateMixin {
   SVGAAnimationController? _controller;
-  MovieEntity? _movie;
   Timer? _safetyTimer;
   bool _finished = false;
+  bool _svgaReady = false;
   bool _svgaFailed = false;
 
   bool get _isArabic =>
@@ -126,9 +129,9 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     super.initState();
     _controller = SVGAAnimationController(vsync: this);
 
-    // Safety timeout: never block the post for more than 2.2s even if the
-    // network is slow or decoding fails.
-    _safetyTimer = Timer(const Duration(milliseconds: 2200), _finish);
+    // Hard cap while the movie downloads. The still image is visible from the
+    // first frame, so the post is never covered and the gift never vanishes.
+    _safetyTimer = Timer(const Duration(milliseconds: 6000), _finish);
 
     if (widget.url.startsWith('http')) {
       SVGAParser.shared
@@ -138,27 +141,35 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
         Loggers.error('GiftAnimationOverlay: SVGA decode failed: $e');
         if (mounted) setState(() => _svgaFailed = true);
         _safetyTimer?.cancel();
-        _safetyTimer = Timer(const Duration(milliseconds: 900), _finish);
+        _safetyTimer = Timer(const Duration(milliseconds: 1200), _finish);
       });
     } else {
       _svgaFailed = true;
       _safetyTimer?.cancel();
-      _safetyTimer = Timer(const Duration(milliseconds: 900), _finish);
+      _safetyTimer = Timer(const Duration(milliseconds: 1200), _finish);
     }
   }
 
   void _onDecoded(MovieEntity movie) {
-    if (!mounted || _controller == null) {
+    if (!mounted || _controller == null || _finished) {
       movie.dispose();
       _finish();
       return;
     }
-    setState(() => _movie = movie);
     final controller = _controller!;
     controller.videoItem = movie;
+
+    // Give the scene its real duration plus a small buffer instead of cutting
+    // a 1.6s animation short because the network was slow to start.
+    final fps = movie.params.fps == 0 ? 20 : movie.params.fps;
+    final playMs = (movie.params.frames / fps * 1000).toInt();
+    _safetyTimer?.cancel();
+    _safetyTimer = Timer(Duration(milliseconds: playMs + 1500), _finish);
+
     controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) _finish();
     });
+    setState(() => _svgaReady = true);
     controller.forward(from: 0);
   }
 
@@ -172,8 +183,8 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
   @override
   void dispose() {
     _safetyTimer?.cancel();
+    // SVGAAnimationController.dispose() releases its videoItem (autorelease).
     _controller?.dispose();
-    _movie?.dispose();
     super.dispose();
   }
 
@@ -211,7 +222,7 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
               child: SizedBox(
                 width: 300,
                 height: 300,
-                child: _controller != null && !_svgaFailed
+                child: _svgaReady && !_svgaFailed && _controller != null
                     ? SVGAImage(_controller!, fit: BoxFit.contain)
                     : _buildFallbackImage(),
               ),
