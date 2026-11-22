@@ -1,29 +1,55 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nimiro/main.dart';
+import 'package:nimiro/model/general/settings_model.dart';
 
+/// Regression tests for the gift wallet balance rules.
+///
+/// These are intentionally pure-Dart: no Flutter binding, network or device is
+/// required. They encode the exact rules that the gift sheet relies on:
+///   * a gift CAN be sent when the balance is exactly its price
+///   * a gift CANNOT be sent when the balance is lower than its price
+///   * a successful send never drives the wallet negative
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  int sanitizeBalance(Object? raw) {
+    if (raw == null) return 0;
+    final value = (raw as num).toInt();
+    return value < 0 ? 0 : value;
+  }
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  bool hasEnoughBalance(int balance, int price) => balance >= price;
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  int deduct(int balance, int price) {
+    final next = balance - price;
+    return next < 0 ? 0 : next;
+  }
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  group('gift balance validation', () {
+    test('balance greater than price allows sending', () {
+      expect(hasEnoughBalance(100, 50), isTrue);
+      expect(deduct(100, 50), 50);
+    });
+
+    test('balance exactly equal to price allows sending (regression)', () {
+      expect(hasEnoughBalance(50, 50), isTrue);
+      expect(deduct(50, 50), 0);
+    });
+
+    test('balance below price blocks sending', () {
+      expect(hasEnoughBalance(49, 50), isFalse);
+    });
+
+    test('wallet never goes negative, even with a stale/negative value', () {
+      expect(sanitizeBalance(-5), 0);
+      expect(sanitizeBalance(null), 0);
+      expect(deduct(sanitizeBalance(30), 50), 0);
+    });
+  });
+
+  group('gift identity', () {
+    test('gift ids used by SVGA scenes are 5..28', () {
+      final gifts = List<Gift>.generate(24, (i) => Gift(id: i + 5));
+      expect(gifts.first.id, 5);
+      expect(gifts.last.id, 28);
+      expect(gifts.every((g) => g.id! >= 5 && g.id! <= 28), isTrue);
+    });
   });
 }

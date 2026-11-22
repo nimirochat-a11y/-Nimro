@@ -688,7 +688,7 @@ class GiftForLiveStream extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final giftUser = controller.livestreamController.selectedGiftUser.value;
+      final giftUser = controller.livestreamController?.selectedGiftUser.value;
       if (giftUser == null) return const SizedBox();
       return Container(
         margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
@@ -715,7 +715,7 @@ class GiftForLiveStream extends StatelessWidget {
                 : PopupMenuButton<AppUser>(
                     initialValue: giftUser,
                     onSelected: (AppUser value) {
-                      controller.livestreamController.selectedGiftUser.value =
+                      controller.livestreamController?.selectedGiftUser.value =
                           value;
                     },
                     color: const Color(0xFF1C1C22),

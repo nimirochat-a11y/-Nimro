@@ -15,17 +15,26 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 ///
 /// Every gift is its own keyframed scene (30-48 frames @ 30fps, 1.0-1.6s):
 /// a unique entrance, idle motion and exit plus its own particles and
-/// shockwaves. It is played once with [SVGAAnimationController] directly on
-/// top of the post. The background is fully transparent, touches pass through
-/// to the post, and a still image is shown immediately while the movie loads
-/// so the gift is never invisible.
+/// shockwaves. It is played once over the whole application, directly on top
+/// of the current screen. The background is fully transparent, touches pass
+/// through to the app underneath, and a still image is shown immediately while
+/// the movie loads so the gift is never invisible.
+///
+/// DESIGN: this used to insert an [OverlayEntry] through
+/// `Get.key.currentState?.overlay`. That was fragile: right after `Get.back()`
+/// (which closes the gift sheet) the navigator's overlay can still be `null`
+/// or can belong to a route that is being popped, so the entry was silently
+/// dropped and no gift was ever shown. Instead, [GiftAnimationHost] is mounted
+/// once in `MyApp.build` above the whole app and listens to a broadcast stream
+/// here. It cannot depend on navigator/route lifecycle at all.
 class GiftAnimationOverlay {
   static final GiftAnimationOverlay shared = GiftAnimationOverlay._();
   GiftAnimationOverlay._();
 
-  final List<Gift> _queue = <Gift>[];
-  OverlayEntry? _entry;
-  bool _busy = false;
+  final StreamController<Gift> _controller = StreamController<Gift>.broadcast();
+
+  /// Emits gifts in the order they should be played.
+  Stream<Gift> get stream => _controller.stream;
 
   /// Public R2 bucket base for SVGA gift movies (v2 scenes).
   static const String svgaBase =
@@ -37,61 +46,100 @@ class GiftAnimationOverlay {
     return '${svgaBase}gift_$id.svga';
   }
 
+  /// Enqueue a gift to be played. Safe to call from any screen, at any time —
+  /// including right after `Get.back()` or while another animation is running.
   void enqueue(Gift gift) {
-    _queue.add(gift);
-    if (!_busy) _next();
+    if (_controller.isClosed) return;
+    _controller.add(gift);
   }
 
-  void _next() {
-    if (_queue.isEmpty || _entry != null) {
-      if (_entry == null) _busy = false;
+  void dispose() {
+    if (!_controller.isClosed) _controller.close();
+  }
+}
+
+/// Mounted once near the root of the app. Owns the queue so duplicate/missing
+/// animations cannot happen due to route changes or `Get.back()`.
+class GiftAnimationHost extends StatefulWidget {
+  final Widget child;
+
+  const GiftAnimationHost({super.key, required this.child});
+
+  @override
+  State<GiftAnimationHost> createState() => _GiftAnimationHostState();
+}
+
+class _GiftAnimationHostState extends State<GiftAnimationHost> {
+  StreamSubscription<Gift>? _subscription;
+  final List<Gift> _queue = <Gift>[];
+  Gift? _current;
+  int _combo = 1;
+  int _generation = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = GiftAnimationOverlay.shared.stream.listen(_onGift);
+  }
+
+  void _onGift(Gift gift) {
+    // Merge rapid repeats of the same gift into one "xN" combo, like TikTok.
+    if (_current != null && _current!.id == gift.id) {
+      _queue.clear();
+      if (mounted) setState(() => _combo++);
       return;
     }
-    _busy = true;
-    final gift = _queue.removeAt(0);
+    if (_queue.isNotEmpty && _queue.last.id == gift.id) {
+      // The last queued gift has not started yet; just bump its combo.
+      return;
+    }
+    _queue.add(gift);
+    _pump();
+  }
 
-    // Merge rapid repeats of the same gift into one "xN" combo, like TikTok.
+  void _pump() {
+    if (_current != null || _queue.isEmpty || !mounted) return;
+    final gift = _queue.removeAt(0);
     var combo = 1;
     while (_queue.isNotEmpty && _queue.first.id == gift.id) {
       _queue.removeAt(0);
       combo++;
     }
+    setState(() {
+      _current = gift;
+      _combo = combo;
+      _generation++;
+    });
+  }
 
-    OverlayState? overlay;
-    try {
-      overlay = Get.key.currentState?.overlay;
-    } catch (_) {
-      overlay = null;
-    }
-    if (overlay == null) {
-      Loggers.error('GiftAnimationOverlay: root navigator overlay is null');
-      _busy = false;
-      return;
-    }
+  void _onDone(int generation) {
+    if (!mounted || generation != _generation) return;
+    setState(() => _current = null);
+    _pump();
+  }
 
-    HapticManager.shared.medium();
-    final url = svgaUrlFor(gift) ?? '';
-    _entry = OverlayEntry(
-      builder: (_) => _GiftSvgaAnimation(
-        gift: gift,
-        url: url,
-        combo: combo,
-        onDone: () {
-          _entry?.remove();
-          _entry = null;
-          _next();
-        },
-      ),
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gift = _current;
+    return Stack(
+      children: [
+        widget.child,
+        if (gift != null)
+          _GiftSvgaAnimation(
+            key: ValueKey<int>(_generation),
+            gift: gift,
+            url: GiftAnimationOverlay.svgaUrlFor(gift) ?? '',
+            combo: _combo,
+            onDone: () => _onDone(_generation),
+          ),
+      ],
     );
-    try {
-      overlay.insert(_entry!);
-      Loggers.info(
-          'GiftAnimationOverlay: SVGA animation shown for gift ${gift.id}');
-    } catch (e) {
-      _entry = null;
-      _busy = false;
-      Loggers.error('GiftAnimationOverlay insert failed: $e');
-    }
   }
 }
 
@@ -102,6 +150,7 @@ class _GiftSvgaAnimation extends StatefulWidget {
   final VoidCallback onDone;
 
   const _GiftSvgaAnimation({
+    super.key,
     required this.gift,
     required this.url,
     required this.combo,
@@ -127,19 +176,22 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
   @override
   void initState() {
     super.initState();
+    // Do NOT gate this on the navigator being ready — the host is mounted
+    // above the whole app, so the animation can always be created.
     _controller = SVGAAnimationController(vsync: this);
 
     // Hard cap while the movie downloads. The still image is visible from the
-    // first frame, so the post is never covered and the gift never vanishes.
+    // first frame, so no gift is ever invisible or blocks the post forever.
     _safetyTimer = Timer(const Duration(milliseconds: 6000), _finish);
 
+    HapticManager.shared.medium();
     if (widget.url.startsWith('http')) {
       SVGAParser.shared
           .decodeFromURL(widget.url)
           .then(_onDecoded)
           .catchError((e) {
         Loggers.error('GiftAnimationOverlay: SVGA decode failed: $e');
-        if (mounted) setState(() => _svgaFailed = true);
+        if (mounted && !_finished) setState(() => _svgaFailed = true);
         _safetyTimer?.cancel();
         _safetyTimer = Timer(const Duration(milliseconds: 1200), _finish);
       });
@@ -152,6 +204,9 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
 
   void _onDecoded(MovieEntity movie) {
     if (!mounted || _controller == null || _finished) {
+      // Nobody is showing this movie: release it ourselves. When it is handed
+      // to the controller instead, the controller owns it and its dispose()
+      // releases it (MovieEntity.autorelease).
       movie.dispose();
       _finish();
       return;
@@ -190,34 +245,50 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
 
   Widget _buildFallbackImage() {
     final url = widget.gift.image?.addBaseURL() ?? '';
-    final placeholder = Icon(Icons.card_giftcard_rounded,
-        size: 160, color: Colors.white.withValues(alpha: .9));
+    final placeholder = Align(
+      alignment: Alignment.center,
+      child: Container(
+        width: 180,
+        height: 180,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF4D6D).withValues(alpha: .10),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(Icons.card_giftcard_rounded,
+            size: 110, color: Colors.white.withValues(alpha: .92)),
+      ),
+    );
     if (!url.startsWith('http')) return placeholder;
     return CachedNetworkImage(
       imageUrl: url,
       cacheKey: url,
       fit: BoxFit.contain,
-      placeholder: (_, __) => const SizedBox.shrink(),
+      placeholder: (_, __) => placeholder,
       errorWidget: (_, __, ___) => placeholder,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final padding = MediaQuery.paddingOf(context);
-    final rawName = widget.gift.nameFor(isArabic: _isArabic).trim();
-    final name = rawName.isEmpty ? (_isArabic ? 'هدية' : 'Gift') : rawName;
+    final name = widget.gift.nameFor(isArabic: _isArabic).trim();
+    final displayName = name.isEmpty ? (_isArabic ? 'هدية' : 'Gift') : name;
     final sender = _isArabic ? 'أنت' : 'You';
-    final text = _isArabic ? '$sender أرسلت $name' : '$sender sent $name';
+    final text =
+        _isArabic ? '$sender أرسلت $displayName' : '$sender sent $displayName';
+    // The host sits above GetMaterialApp, so a MediaQuery may not exist yet
+    // (e.g. very early startup). Fall back to zero instead of throwing.
+    final padding = MediaQuery.maybePaddingOf(context) ?? EdgeInsets.zero;
+    final bottom = padding.bottom + 84.0;
 
+    // IMPORTANT: no Material/Container/ColoredBox backdrop here. The layer is
+    // fully transparent and IgnorePointer makes every touch pass through to
+    // the post/video underneath, including its buttons.
     return Positioned.fill(
       child: IgnorePointer(
         ignoring: true,
         child: Stack(
           alignment: Alignment.center,
           children: [
-            // The real SVGA gift movie (transparent, plays once), with a
-            // still-image fallback so the gift is always visible.
             Center(
               child: SizedBox(
                 width: 300,
@@ -227,17 +298,17 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
                     : _buildFallbackImage(),
               ),
             ),
-            // Compact TikTok-style sender pill at the bottom.
             Positioned(
               left: 0,
               right: 0,
-              bottom: padding.bottom + 84,
+              bottom: bottom,
               child: Center(
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   constraints: BoxConstraints(
-                    maxWidth: MediaQuery.sizeOf(context).width * .82,
+                    maxWidth:
+                        (MediaQuery.maybeSizeOf(context)?.width ?? 400) * .82,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: .58),

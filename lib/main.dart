@@ -18,6 +18,7 @@ import 'package:nimiro/common/service/subscription/subscription_manager.dart';
 import 'package:nimiro/common/service/upload/upload_queue_service.dart';
 import 'package:nimiro/common/widget/restart_widget.dart';
 import 'package:nimiro/languages/dynamic_translations.dart';
+import 'package:nimiro/screen/gift_sheet/gift_animation_overlay.dart';
 import 'package:nimiro/screen/splash_screen/splash_screen.dart';
 import 'package:nimiro/utilities/theme_res.dart';
 
@@ -137,14 +138,22 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // GiftAnimationHost owns the gift animation queue via a stream, so
+    // animations never depend on the navigator overlay being available (e.g.
+    // right after Get.back() closes the gift sheet) and work on every screen.
+    // It is mounted from GetMaterialApp.builder so it sits above the
+    // navigator but still inherits Theme/Directionality/MediaQuery.
     return GetMaterialApp(
-      // A stable root navigator key. Gift animations are inserted directly
-      // into this navigator's overlay because Get.context can be null or can
-      // point at the gift bottom-sheet after Get.back() dismisses it.
+      // The root key is only used by GetX routing now; gift animations do
+      // not touch it any more.
       navigatorKey: Get.key,
       builder: (context, child) => Directionality(
           textDirection: TextDirection.rtl,
-          child: ScrollConfiguration(behavior: MyBehavior(), child: child!)),
+          child: ScrollConfiguration(
+              behavior: MyBehavior(),
+              child: GiftAnimationHost(
+                child: child ?? const SizedBox.shrink(),
+              ))),
       translations: Get.find<DynamicTranslations>(),
       locale: Locale(SessionManager.instance.getLang()),
       fallbackLocale: Locale(SessionManager.instance.getFallbackLang()),

@@ -8,6 +8,7 @@ import 'package:nimiro/common/manager/session_manager.dart';
 import 'package:nimiro/common/service/api/gift_wallet_service.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
+import 'package:nimiro/model/general/status_model.dart';
 import 'package:nimiro/model/user_model/app_user.dart';
 import 'package:nimiro/model/post_story/post_model.dart';
 import 'package:nimiro/model/user_model/user_model.dart';
@@ -21,7 +22,11 @@ class SendGiftSheetController extends BaseController {
   int? userId;
   List<AppUser> liveUsers;
   GiftType? giftType;
-  late LivestreamScreenController livestreamController;
+  LivestreamScreenController? livestreamController;
+
+  /// Guards against double-taps / concurrent sends producing duplicate
+  /// transactions or duplicate `Get.back()` calls.
+  bool _sending = false;
 
   SendGiftSheetController(this.giftType, this.userId, this.liveUsers);
 
@@ -31,16 +36,16 @@ class SendGiftSheetController extends BaseController {
     _initData();
 
     if (liveUsers.isNotEmpty &&
-        (giftType == GiftType.livestream || giftType == GiftType.battle)) {
+        (giftType == GiftType.livestream || giftType == GiftType.battle) &&
+        Get.isRegistered<LivestreamScreenController>()) {
       livestreamController = Get.find<LivestreamScreenController>();
-      if (livestreamController.selectedGiftUser.value == null) {
-        livestreamController.selectedGiftUser = liveUsers.first.obs;
+      if (livestreamController!.selectedGiftUser.value == null) {
+        livestreamController!.selectedGiftUser = liveUsers.first.obs;
       } else {
         DebounceAction.shared.call(() {
-          livestreamController.selectedGiftUser.value = liveUsers.firstWhere(
-              (element) =>
-                  element.userId ==
-                  livestreamController.selectedGiftUser.value?.userId,
+          final selected = livestreamController!.selectedGiftUser.value;
+          livestreamController!.selectedGiftUser.value = liveUsers.firstWhere(
+              (element) => element.userId == selected?.userId,
               orElse: () => liveUsers.first);
         });
       }
@@ -48,55 +53,95 @@ class SendGiftSheetController extends BaseController {
   }
 
   _initData() {
-    settings.value = SessionManager.instance.getSettings();
+    // Always read the freshest persisted user, not a stale copy.
     myUser.value = SessionManager.instance.getUser();
   }
 
+  /// Current wallet balance, never negative.
+  int get _balance {
+    final raw = myUser.value?.coinWallet;
+    if (raw == null) return 0;
+    final value = raw.toInt();
+    return value < 0 ? 0 : value;
+  }
+
+  bool _hasEnoughBalance(int price) => _balance >= price;
+
   void onGiftTap(Gift gift, BuildContext context) {
-    if (gift.id == null) {
+    if (_sending) return;
+    final giftId = gift.id;
+    if (giftId == null) {
       return showSnackBar(LKey.giftNotFound.tr);
     }
-
-    if ((gift.coinPrice ?? 0) >= (myUser.value?.coinWallet ?? 0)) {
+    final coinPrice = gift.coinPrice ?? 0;
+    if (coinPrice <= 0) {
+      return Loggers.error('Invalid coin price: $coinPrice');
+    }
+    // Allow sending when the balance is exactly equal to the price.
+    if (!_hasEnoughBalance(coinPrice)) {
       return showSnackBar(LKey.insufficientFunds.tr);
     }
-
     sendGift(gift, context);
   }
 
   Future<void> sendGift(Gift gift, BuildContext context) async {
+    if (_sending) return;
+    _sending = true;
+
     final giftId = gift.id?.toInt() ?? -1;
-
     final coinPrice = gift.coinPrice ?? 0;
-    userId ??= livestreamController.selectedGiftUser.value?.userId;
 
-    if (giftId == -1 || userId == -1) {
+    if ((giftType == GiftType.livestream || giftType == GiftType.battle) &&
+        userId == null) {
+      userId = livestreamController?.selectedGiftUser.value?.userId;
+    }
+
+    if (giftId == -1 || userId == null || userId == -1) {
+      _sending = false;
       return Loggers.error('Invalid Gift: $giftId or User: $userId');
     }
-
     if (coinPrice <= 0) {
-      return Loggers.error(
-          'Invalid coin price: $coinPrice, skipping gift sending.');
+      _sending = false;
+      return Loggers.error('Invalid coin price: $coinPrice, skipping gift.');
     }
+    if (!_hasEnoughBalance(coinPrice)) {
+      _sending = false;
+      return showSnackBar(LKey.insufficientFunds.tr);
+    }
+
     showLoader();
-    final response = await GiftWalletService.instance
-        .sendGift(giftId: giftId, userId: userId);
+    StatusModel response;
+    try {
+      response = await GiftWalletService.instance
+          .sendGift(giftId: giftId, userId: userId);
+    } catch (e, s) {
+      Loggers.error('SendGift failed: $e $s');
+      stopLoader();
+      _sending = false;
+      return showSnackBar(LKey.somethingWentWrong.tr);
+    }
     stopLoader();
+
     if (response.status == true) {
-      // Deduct gift coins from user wallet
+      // Deduct coins from a fresh copy and clamp at zero, never negative.
       myUser.update((val) {
-        val?.removeCoinFromWallet(coinPrice);
+        if (val == null) return;
+        final next = (val.coinWallet ?? 0).toInt() - coinPrice;
+        val.coinWallet = next < 0 ? 0 : next;
       });
-      Loggers.info(myUser.value?.coinWallet);
-      SessionManager.instance.setUser(myUser.value);
+      final fresh = myUser.value;
+      if (fresh != null) SessionManager.instance.setUser(fresh);
+
+      _sending = false;
       if (giftType == GiftType.none) {
         Get.back(result: GiftManager(gift));
       } else {
         Get.back(
             result: GiftManager(gift,
-                streamUser: livestreamController.selectedGiftUser.value));
+                streamUser: livestreamController?.selectedGiftUser.value));
       }
     } else {
+      _sending = false;
       showSnackBar(response.message);
     }
   }
@@ -130,7 +175,8 @@ class GiftManager {
     });
   }
 
-  /// Plays the animated gift overlay. The old static white dialog is gone.
+  /// Plays the animated gift overlay. Safe from any screen and at any time —
+  /// the app-level host handles it independently of navigation state.
   static void showAnimationDialog(Gift gift) {
     GiftAnimationOverlay.shared.enqueue(gift);
   }
