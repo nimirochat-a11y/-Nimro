@@ -222,11 +222,14 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
 
     controller.videoItem = movie;
 
-    // Give the scene its real duration plus a generous buffer, measured from
-    // the moment playback actually starts (not from download start), so a
-    // 1.6s animation is never cut short on a slow connection.
+    // Play the 1.2-1.6s scene slower so it reads like a real TikTok gift
+    // moment instead of a flash. Stretching the controller duration keeps every
+    // keyframe and particle intact — only the pacing changes.
+    const double playbackSlowdown = 1.75;
     final fps = movie.params.fps == 0 ? 20 : movie.params.fps;
-    final playMs = (movie.params.frames / fps * 1000).toInt();
+    final nativeMs = (movie.params.frames / fps * 1000).toInt();
+    final playMs = (nativeMs * playbackSlowdown).toInt();
+    controller.duration = Duration(milliseconds: playMs);
     Loggers.info(
         'Gift ${widget.gift.id}: playing ${movie.params.frames} frames '
         '@${fps}fps (${playMs}ms)');
