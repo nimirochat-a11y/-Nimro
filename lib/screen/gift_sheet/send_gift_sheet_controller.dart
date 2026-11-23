@@ -63,6 +63,10 @@ class SendGiftSheetController extends BaseController {
     // cache can be empty, so refresh it in the background every time the sheet
     // opens. The Obx in the sheet rebuilds as soon as the list is replaced.
     unawaited(_refreshGifts());
+
+    // Warm the SVGA cache while the user browses the catalogue, so the chosen
+    // gift starts its movie immediately instead of downloading first.
+    unawaited(GiftAnimationOverlay.prefetchAll());
   }
 
   Future<void> _refreshGifts() async {

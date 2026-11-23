@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svga/flutter_svga.dart';
+import 'package:http/http.dart' as http;
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:get/get.dart';
 import 'package:nimiro/common/manager/haptic_manager.dart';
@@ -13,7 +14,7 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 
 /// TikTok-style gift overlay backed by real SVGA video animations.
 ///
-/// Every gift is its own keyframed scene (30-48 frames @ 30fps, 1.0-1.6s):
+/// Every gift is its own keyframed scene (60-96 frames @ 30fps, 2.0-3.2s):
 /// a unique entrance, idle motion and exit plus its own particles and
 /// shockwaves. It is played once over the whole application, directly on top
 /// of the current screen. The background is fully transparent, touches pass
@@ -36,19 +37,68 @@ class GiftAnimationOverlay {
   /// Emits gifts in the order they should be played.
   Stream<Gift> get stream => _controller.stream;
 
-  /// Public R2 bucket base for SVGA gift movies (v2 scenes).
+  /// Public R2 bucket base for SVGA gift movies (v3 scenes).
   static const String svgaBase =
-      'https://pub-e25da76c2db546e780c87294e2c9ff0f.r2.dev/gifts/svga2/';
+      'https://pub-e25da76c2db546e780c87294e2c9ff0f.r2.dev/gifts/svga3/';
 
   /// Bumped whenever the scene files change. flutter_svga caches decoded
   /// movies on disk keyed by the FULL URL for 7 days without any way to
   /// invalidate a single entry, so a new version query forces a fresh fetch.
-  static const int _sceneVersion = 2;
+  static const int _sceneVersion = 3;
+
+  /// True while [prefetchAll] is walking the catalogue.
+  static bool _prefetchRunning = false;
+
+  /// Scenes already present in the on-disk cache during this app session.
+  static final Set<int> _prefetched = <int>{};
 
   static String? svgaUrlFor(Gift gift) {
     final id = gift.id;
     if (id == null || id < 5 || id > 28) return null;
     return '${svgaBase}gift_$id.svga?v=$_sceneVersion';
+  }
+
+  /// Warm the on-disk SVGA cache in the background, four files at a time.
+  ///
+  /// Without this the first time a gift is sent the movie has to be downloaded
+  /// and decoded before it can play, which is why the animation used to appear
+  /// "after a while". The cache is keyed by URL, so it only happens once per
+  /// scene version; later plays start on the very next frame.
+  static Future<void> prefetchAll() async {
+    if (_prefetchRunning) return;
+    _prefetchRunning = true;
+    final client = http.Client();
+    try {
+      for (var start = 5; start <= 28; start += 4) {
+        final batch = <Future<void>>[];
+        for (var id = start; id < start + 4 && id <= 28; id++) {
+          if (_prefetched.contains(id)) continue;
+          batch.add(_prefetchOne(client, id));
+        }
+        if (batch.isNotEmpty) await Future.wait(batch);
+      }
+    } finally {
+      client.close();
+      _prefetchRunning = false;
+    }
+  }
+
+  static Future<void> _prefetchOne(http.Client client, int id) async {
+    final url = '${svgaBase}gift_$id.svga?v=$_sceneVersion';
+    try {
+      final cached = await SVGACache.shared.getRawBytes(url);
+      if (cached == null) {
+        final response = await client
+            .get(Uri.parse(url))
+            .timeout(const Duration(seconds: 20));
+        if (response.statusCode != 200 || response.bodyBytes.isEmpty) return;
+        await SVGACache.shared.putRawBytes(url, response.bodyBytes);
+      }
+      _prefetched.add(id);
+    } catch (e) {
+      // Best effort only: if it fails, playback will download on demand.
+      Loggers.error('GiftAnimationOverlay: prefetch gift_$id failed: $e');
+    }
   }
 
   /// Enqueue a gift to be played. Safe to call from any screen, at any time —
@@ -222,14 +272,12 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
 
     controller.videoItem = movie;
 
-    // Play the 1.2-1.6s scene slower so it reads like a real TikTok gift
-    // moment instead of a flash. Stretching the controller duration keeps every
-    // keyframe and particle intact — only the pacing changes.
-    const double playbackSlowdown = 1.75;
+    // Assigning videoItem already sets the controller duration to
+    // frames / fps. The v3 scenes are authored twice as long (60-96 frames at
+    // the full 30fps = 2.0-3.2s), so no time-stretching is needed: every
+    // keyframe plays at its designed speed and the motion stays smooth.
     final fps = movie.params.fps == 0 ? 20 : movie.params.fps;
-    final nativeMs = (movie.params.frames / fps * 1000).toInt();
-    final playMs = (nativeMs * playbackSlowdown).toInt();
-    controller.duration = Duration(milliseconds: playMs);
+    final playMs = (movie.params.frames / fps * 1000).toInt();
     Loggers.info(
         'Gift ${widget.gift.id}: playing ${movie.params.frames} frames '
         '@${fps}fps (${playMs}ms)');
@@ -243,7 +291,9 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _finished || _controller != controller) return;
       _safetyTimer?.cancel();
-      _safetyTimer = Timer(Duration(milliseconds: playMs + 1500), _finish);
+      // Small grace period after the scene's real length; the last frame is
+      // fully transparent, so holding a long time would only delay the queue.
+      _safetyTimer = Timer(Duration(milliseconds: playMs + 400), _finish);
       if (!controller.isAnimating) controller.forward(from: 0);
     });
   }
