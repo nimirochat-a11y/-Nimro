@@ -1,0 +1,178 @@
+import 'package:nimiro/model/general/settings_model.dart';
+
+/// Built-in copy of the 24-gift catalogue.
+///
+/// The catalogue normally comes from `fetchSettings` and is cached locally.
+/// This fallback guarantees the gift sheet is never empty when the app starts
+/// without network (or before the first settings request finishes), which is
+/// exactly when users could not see or send any gift.
+final List<Gift> kFallbackGifts = <Gift>[
+  Gift(
+      id: 5,
+      coinPrice: 10,
+      nameAr: 'وردة',
+      nameEn: 'Rose',
+      image: 'gifts/tiktok_rose.webp',
+      category: 'classic'),
+  Gift(
+      id: 6,
+      coinPrice: 25,
+      nameAr: 'قلب',
+      nameEn: 'Heart',
+      image: 'gifts/tiktok_heart.webp',
+      category: 'classic'),
+  Gift(
+      id: 7,
+      coinPrice: 50,
+      nameAr: 'دبدوب',
+      nameEn: 'Teddy',
+      image: 'gifts/tiktok_teddy.webp',
+      category: 'classic'),
+  Gift(
+      id: 8,
+      coinPrice: 250,
+      nameAr: 'ألماسة',
+      nameEn: 'Diamond',
+      image: 'gifts/tiktok_diamond.webp',
+      category: 'classic'),
+  Gift(
+      id: 9,
+      coinPrice: 500,
+      nameAr: 'تاج',
+      nameEn: 'Crown',
+      image: 'gifts/tiktok_crown.webp',
+      category: 'classic'),
+  Gift(
+      id: 10,
+      coinPrice: 1000,
+      nameAr: 'صقر',
+      nameEn: 'Falcon',
+      image: 'gifts/tiktok_falcon.png',
+      category: 'classic'),
+  Gift(
+      id: 11,
+      coinPrice: 2500,
+      nameAr: 'أسد',
+      nameEn: 'Lion',
+      image: 'gifts/tiktok_lion.png',
+      category: 'classic'),
+  Gift(
+      id: 12,
+      coinPrice: 100,
+      nameAr: 'لعبة',
+      nameEn: 'Game',
+      image: 'gifts/tiktok_game.webp',
+      category: 'classic'),
+  Gift(
+      id: 13,
+      coinPrice: 5000,
+      nameAr: 'صاروخ',
+      nameEn: 'Rocket',
+      image: 'gifts/tiktok_rocket.webp',
+      category: 'classic'),
+  Gift(
+      id: 14,
+      coinPrice: 7500,
+      nameAr: 'قلعة',
+      nameEn: 'Castle',
+      image: 'gifts/tiktok_castle.png',
+      category: 'classic'),
+  Gift(
+      id: 15,
+      coinPrice: 10000,
+      nameAr: 'كوكب',
+      nameEn: 'Planet',
+      image: 'gifts/tiktok_planet.webp',
+      category: 'classic'),
+  Gift(
+      id: 16,
+      coinPrice: 15000,
+      nameAr: 'كأس',
+      nameEn: 'Trophy',
+      image: 'gifts/tiktok_trophy.webp',
+      category: 'classic'),
+  Gift(
+      id: 17,
+      coinPrice: 250,
+      nameAr: 'شوكولاتة فاخرة',
+      nameEn: 'Luxury Chocolate',
+      image: 'gifts/tiktok_chocolate.webp',
+      category: 'realistic'),
+  Gift(
+      id: 18,
+      coinPrice: 500,
+      nameAr: 'وردة كريستالية',
+      nameEn: 'Crystal Rose',
+      image: 'gifts/tiktok_crystal_rose.webp',
+      category: 'realistic'),
+  Gift(
+      id: 19,
+      coinPrice: 1000,
+      nameAr: 'بالونة ذهبية',
+      nameEn: 'Golden Balloon',
+      image: 'gifts/tiktok_balloon.webp',
+      category: 'realistic'),
+  Gift(
+      id: 20,
+      coinPrice: 1500,
+      nameAr: 'دبدوب مخملي',
+      nameEn: 'Velvet Teddy Bear',
+      image: 'gifts/tiktok_velvet_teddy.webp',
+      category: 'realistic'),
+  Gift(
+      id: 21,
+      coinPrice: 3000,
+      nameAr: 'كعكة عيد',
+      nameEn: 'Birthday Cake',
+      image: 'gifts/tiktok_cake.webp',
+      category: 'realistic'),
+  Gift(
+      id: 22,
+      coinPrice: 5000,
+      nameAr: 'خاتم ألماس',
+      nameEn: 'Diamond Ring',
+      image: 'gifts/tiktok_ring.webp',
+      category: 'realistic'),
+  Gift(
+      id: 23,
+      coinPrice: 8000,
+      nameAr: 'صندوق هدايا',
+      nameEn: 'Gift Box',
+      image: 'gifts/tiktok_giftbox.webp',
+      category: 'realistic'),
+  Gift(
+      id: 24,
+      coinPrice: 12000,
+      nameAr: 'باقة ورد',
+      nameEn: 'Flower Bouquet',
+      image: 'gifts/tiktok_bouquet.webp',
+      category: 'realistic'),
+  Gift(
+      id: 25,
+      coinPrice: 25000,
+      nameAr: 'جوهرة نادرة',
+      nameEn: 'Rare Gemstone',
+      image: 'gifts/tiktok_gem.png',
+      category: 'realistic'),
+  Gift(
+      id: 26,
+      coinPrice: 50000,
+      nameAr: 'تاج ملكي',
+      nameEn: 'Royal Crown',
+      image: 'gifts/tiktok_royal_crown.webp',
+      category: 'realistic'),
+  Gift(
+      id: 27,
+      coinPrice: 75000,
+      nameAr: 'نجمة متألقة',
+      nameEn: 'Shining Star',
+      image: 'gifts/tiktok_star.webp',
+      category: 'realistic'),
+  Gift(
+      id: 28,
+      coinPrice: 150000,
+      nameAr: 'كأس البطل',
+      nameEn: 'Champion Trophy',
+      image: 'gifts/tiktok_champion.webp',
+      category: 'realistic'),
+];

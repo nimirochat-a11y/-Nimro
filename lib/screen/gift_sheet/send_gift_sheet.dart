@@ -11,6 +11,8 @@ import 'package:nimiro/common/widget/gift_media_viewer.dart';
 import 'package:nimiro/languages/languages_keys.dart';
 import 'package:nimiro/model/general/settings_model.dart';
 import 'package:nimiro/model/user_model/app_user.dart';
+import 'package:nimiro/screen/gift_sheet/gift_artwork.dart';
+import 'package:nimiro/screen/gift_sheet/gift_catalog.dart';
 import 'package:nimiro/screen/gift_sheet/gift_visuals.dart';
 import 'package:nimiro/screen/gift_sheet/send_gift_sheet_controller.dart';
 import 'package:nimiro/utilities/asset_res.dart';
@@ -60,8 +62,12 @@ class _SendGiftSheetState extends State<SendGiftSheet> {
   }
 
   List<Gift> _allGifts() {
-    final gifts =
-        List<Gift>.from(controller.settings.value?.gifts ?? const <Gift>[]);
+    // Never show an empty store: use the bundled catalogue until the cached
+    // settings or the background refresh provide the server list.
+    final source = controller.settings.value?.gifts;
+    final gifts = source == null || source.isEmpty
+        ? List<Gift>.from(kFallbackGifts)
+        : List<Gift>.from(source);
     gifts.sort((a, b) => (a.coinPrice ?? 0).compareTo(b.coinPrice ?? 0));
     return gifts;
   }
@@ -323,12 +329,9 @@ class _SendGiftSheetState extends State<SendGiftSheet> {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: _kBorder),
                 ),
-                child: CustomImage(
-                  image: selected.image?.addBaseURL(),
+                child: GiftArtwork(
+                  image: selected.image,
                   size: const Size(34, 34),
-                  radius: 0,
-                  fit: BoxFit.contain,
-                  isImageLoaderVisible: false,
                 ),
               ),
               const SizedBox(width: 10),
@@ -491,12 +494,9 @@ class _GiftTileState extends State<_GiftTile>
                           child: Transform.scale(scale: scale, child: child),
                         );
                       },
-                      child: CustomImage(
-                        image: gift.image?.addBaseURL(),
+                      child: GiftArtwork(
+                        image: gift.image,
                         size: const Size(56, 56),
-                        radius: 0,
-                        fit: BoxFit.contain,
-                        isImageLoaderVisible: false,
                       ),
                     ),
                     if (onPlay != null)

@@ -29,12 +29,11 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   Loggers.success("Handling a background message: ${message.data}");
   await Firebase.initializeApp();
-  // The background handler runs in its own isolate, so local storage must be
-  // (re)initialized here before it can read/write the persisted unread count.
-  await GetStorage.init('nimiro');
-  if (message.data['type'] != NotificationType.chat.type) {
-    SessionManager.instance.setNotifyCount(1);
-  }
+  // Do NOT open the app's get_storage file from this isolate. This callback
+  // runs in a separate isolate with its own in-memory copy; writing the same
+  // file while the UI isolate has it open can lose data and contributed to
+  // "Bad state: No element" crash loops at startup. The unread count is
+  // recalculated when the app opens.
   if (Platform.isIOS) {
     FirebaseNotificationManager.instance.showNotification(message);
   }
@@ -73,9 +72,27 @@ Future<void> main() async {
   );
 }
 
+/// Opens the local key-value store before anything reads or listens to it.
+///
+/// Startup used to await `GetStorage.init('nimiro')` after several SDKs had
+/// already been initialised. On some devices that ordering crashed the app
+/// with `Bad state: No element` and users saw repeated errors instead of the
+/// feed. Storage is now the first thing initialised and a failure is logged
+/// without aborting the launch: the app still opens and can log in again.
+Future<void> _initLocalStorage() async {
+  try {
+    await GetStorage.init('nimiro').timeout(const Duration(seconds: 8));
+  } catch (e, st) {
+    Loggers.error('Local storage init failed (continuing): $e\n$st');
+  }
+}
+
 /// The original startup sequence, unchanged and in the same order - it only
 /// moved from main() into Sentry's appRunner (see comment above).
 Future<void> _runStartupSequence() async {
+  // Local storage must exist before SessionManager listeners are registered.
+  await _initLocalStorage();
+
   // Initialize Supabase's client layer for the migration phase. Firebase
   // remains active until authentication, realtime, and messaging are
   // migrated and verified feature-by-feature.
@@ -97,8 +114,6 @@ Future<void> _runStartupSequence() async {
   }
   // Register background handler
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  await GetStorage.init('nimiro');
 
   // v1.1.41: retry any crash reports that could not be uploaded on a previous
   // run (offline / server down). Runs in the background - never blocks startup.

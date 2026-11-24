@@ -59,23 +59,26 @@ class SendGiftSheetController extends BaseController {
     // Always read the freshest persisted user, not a stale copy.
     myUser.value = SessionManager.instance.getUser();
 
+    // Show the cached catalogue on the very first frame. The network refresh
+    // below runs in the background and replaces it when (and if) it succeeds;
+    // waiting for that request is what used to leave the sheet empty for 12
+    // seconds and then show "no gifts" on a slow connection.
+    settings.value = SessionManager.instance.getSettings();
+
     // The gift catalogue is cached at splash time. On older installs that
     // cache can be empty, so refresh it in the background every time the sheet
     // opens. The Obx in the sheet rebuilds as soon as the list is replaced.
     unawaited(_refreshGifts());
-
-    // Warm the SVGA cache while the user browses the catalogue, so the chosen
-    // gift starts its movie immediately instead of downloading first.
-    unawaited(GiftAnimationOverlay.prefetchAll());
   }
 
   Future<void> _refreshGifts() async {
     final fresh = await CommonService.instance.refreshGifts();
     if (fresh == null || fresh.isEmpty) return;
     final current = SessionManager.instance.getSettings();
-    if (current == null) return;
     // Assign a new object so GetX detects the change and rebuilds the grid.
-    settings.value = Setting.fromJson(current.toJson());
+    settings.value = current != null
+        ? Setting.fromJson(current.toJson())
+        : Setting(gifts: fresh);
   }
 
   /// Current wallet balance, never negative.

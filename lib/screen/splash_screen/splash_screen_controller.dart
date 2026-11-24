@@ -14,6 +14,7 @@ import 'package:nimiro/common/service/api/user_service.dart';
 import 'package:nimiro/common/service/network_helper/network_helper.dart';
 import 'package:nimiro/common/widget/no_internet_sheet.dart';
 import 'package:nimiro/model/general/settings_model.dart';
+import 'package:nimiro/model/user_model/user_model.dart';
 import 'package:nimiro/screen/auth_screen/login_screen.dart';
 import 'package:nimiro/screen/dashboard_screen/dashboard_screen.dart';
 import 'package:nimiro/screen/on_boarding_screen/on_boarding_screen.dart';
@@ -53,13 +54,11 @@ class SplashScreenController extends BaseController {
           .timeout(const Duration(seconds: 12));
     } catch (e) {
       Loggers.error('Settings loading failed: $e');
-      if (Get.currentRoute != '/login-screen') {
-        Get.off(() => const LoginScreen());
-      }
+      _openCachedSessionOrLogin(e);
       return;
     }
     if (!showNavigate) {
-      Get.off(() => const LoginScreen());
+      _openCachedSessionOrLogin();
       return;
     }
     if (showNavigate) {
@@ -79,20 +78,10 @@ class SplashScreenController extends BaseController {
         } catch (e) {
           Loggers.error('Secure settings loading failed: $e');
         }
-        UserService.instance.fetchUserDetails(userId: SessionManager.instance.getUserID()).then((value) {
-          if (value != null) {
-            try {
-              OneSignal.login(value.id.toString());
-            } catch (e) {
-              Loggers.error('OneSignal login failed: $e');
-            }
-            Get.off(() => DashboardScreen(myUser: value));
-          } else {
-            Get.off(() => const LoginScreen());
-          }
-        });
+        await _openSignedInUser();
       } else {
-        bool onBoardingShow = SessionManager.instance.getBool(SessionKeys.isOnBoardingScreenSelect);
+        bool onBoardingShow = SessionManager.instance
+            .getBool(SessionKeys.isOnBoardingScreenSelect);
         if (onBoardingShow == false && (setting?.onBoarding ?? []).isNotEmpty) {
           Get.off(() => const OnBoardingScreen());
         } else {
@@ -102,7 +91,56 @@ class SplashScreenController extends BaseController {
     }
   }
 
-  Future<Map<String, Map<String, String>>> downloadAndParseLanguages(List<Language> languages) async {
+  /// Continues into the app with the saved account when settings cannot be
+  /// loaded, instead of sending a signed-in user back to the login screen.
+  ///
+  /// A 12 second timeout on a slow connection used to look exactly like a
+  /// logout. Only transport errors fall back to the cached session; an expired
+  /// token is handled by ApiService, which opens the session-expired screen,
+  /// so that case must not be overridden here.
+  void _openCachedSessionOrLogin([Object? error]) {
+    final text = error?.toString() ?? '';
+    final unauthorized = text.contains('Unauthorized') ||
+        Get.currentRoute.contains('session-expired');
+    if (unauthorized) return;
+
+    final cachedUser = SessionManager.instance.getUser();
+    if (SessionManager.instance.isLogin() && cachedUser != null) {
+      Get.off(() => DashboardScreen(myUser: cachedUser));
+      return;
+    }
+    if (Get.currentRoute != '/login-screen') {
+      Get.off(() => const LoginScreen());
+    }
+  }
+
+  /// Loads the signed-in user's profile, falling back to the copy saved on the
+  /// device when the request fails. A failed refresh is not a logout.
+  Future<void> _openSignedInUser() async {
+    final cachedUser = SessionManager.instance.getUser();
+    User? user;
+    try {
+      user = await UserService.instance
+          .fetchUserDetails(userId: SessionManager.instance.getUserID());
+    } catch (e) {
+      Loggers.error('User details loading failed: $e');
+      if (e.toString().contains('Unauthorized')) return;
+    }
+    final resolved = user ?? cachedUser;
+    if (resolved == null) {
+      Get.off(() => const LoginScreen());
+      return;
+    }
+    try {
+      OneSignal.login(resolved.id.toString());
+    } catch (e) {
+      Loggers.error('OneSignal login failed: $e');
+    }
+    Get.off(() => DashboardScreen(myUser: resolved));
+  }
+
+  Future<Map<String, Map<String, String>>> downloadAndParseLanguages(
+      List<Language> languages) async {
     const int maxConcurrentDownloads = 3; // Limit concurrent downloads
     final Set<Future<void>> activeDownloads = {}; // Track active downloads
     final languageData = <String, Map<String, String>>{};
@@ -119,7 +157,8 @@ class SplashScreenController extends BaseController {
           await Future.any(activeDownloads);
 
           // Remove completed tasks from the set
-          activeDownloads.removeWhere((task) => task == Future.any(activeDownloads));
+          activeDownloads
+              .removeWhere((task) => task == Future.any(activeDownloads));
         }
       }
     }
@@ -130,7 +169,8 @@ class SplashScreenController extends BaseController {
     return languageData;
   }
 
-  Future<void> downloadAndProcessLanguage(Language language, Map<String, Map<String, String>> languageData) async {
+  Future<void> downloadAndProcessLanguage(
+      Language language, Map<String, Map<String, String>> languageData) async {
     try {
       final response = await http
           .get(Uri.parse(language.csvFile?.addBaseURL() ?? ''))
@@ -143,7 +183,8 @@ class SplashScreenController extends BaseController {
 
         Loggers.info('Downloaded and parsed: ${language.code}');
       } else {
-        Loggers.error('Failed to download ${language.code}: ${response.statusCode}');
+        Loggers.error(
+            'Failed to download ${language.code}: ${response.statusCode}');
       }
     } catch (e) {
       Loggers.error('Error downloading ${language.code}: $e');

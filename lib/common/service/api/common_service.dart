@@ -54,6 +54,11 @@ class CommonService {
       if (cached != null) {
         cached.gifts = fresh;
         SessionManager.instance.setSettings(cached);
+      } else {
+        // First launch (or a failed splash fetch): persist at least the gift
+        // catalogue so the next launch does not have to rely on the bundled
+        // fallback list.
+        SessionManager.instance.setSettings(Setting(gifts: fresh));
       }
       return fresh;
     } catch (e) {

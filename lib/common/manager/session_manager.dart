@@ -60,16 +60,31 @@ class SessionManager {
     return storage.read(SessionKeys.notifyCount) ?? 0;
   }
 
+  /// Listens to one stored key without `GetStorage.listenKey`.
+  ///
+  /// `listenKey` calls `changes.keys.first` on every storage notification. The
+  /// notification fired by `GetStorage.init` replaces the whole value map
+  /// while the change set is still empty, so any listener registered before
+  /// init crashed the app at startup with `Bad state: No element`. Guarding
+  /// the empty set keeps startup safe regardless of initialisation order.
+  void _listenKey(String key, void Function(dynamic value) callback) {
+    storage.listen(() {
+      final changes = storage.changes;
+      if (changes.isEmpty || changes.keys.first != key) return;
+      callback(changes[key]);
+    });
+  }
+
   void listenNotifyCount() {
     notifyCount.value = getNotifyCount;
-    storage.listenKey(SessionKeys.notifyCount, (value) {
+    _listenKey(SessionKeys.notifyCount, (value) {
       notifyCount.value = (value is int) ? value : 0;
     });
   }
 
   void listenModerator() {
     isModerator.value = getUser()?.isModerator ?? 0;
-    storage.listenKey(SessionKeys.user, (value) {
+    _listenKey(SessionKeys.user, (value) {
       User? user = value as User?;
       isModerator.value = user?.isModerator ?? 0;
     });
@@ -77,7 +92,7 @@ class SessionManager {
 
   void listenSubscription() {
     isModerator.value = getUser()?.isVerify ?? 0;
-    storage.listenKey(SessionKeys.user, (value) {
+    _listenKey(SessionKeys.user, (value) {
       User? user = value as User?;
       isModerator.value = user?.isModerator ?? 0;
     });
