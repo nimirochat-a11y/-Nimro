@@ -14,10 +14,12 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 
 /// TikTok-style gift overlay backed by real SVGA video animations.
 ///
-/// Every gift is its own keyframed scene (60-96 frames @ 30fps, 2.0-3.2s):
+/// Every gift is its own keyframed scene (120-192 frames @ 30fps, 4.0-6.4s):
 /// a unique entrance, idle motion and exit plus its own particles and
-/// shockwaves. It is played once over the whole application, directly on top
-/// of the current screen. The background is fully transparent, touches pass
+/// shockwaves. The entrance itself is absolute (0.55s) so the gift becomes
+/// visible almost immediately and then holds at full size for several seconds.
+/// It is played once over the whole application, directly on top of the
+/// current screen. The background is fully transparent, touches pass
 /// through to the app underneath, and the scene is bundled inside the APK so it
 /// plays offline and starts on the very next frame.
 ///
@@ -213,9 +215,10 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     controller.videoItem = movie;
 
     // Assigning videoItem already sets the controller duration to
-    // frames / fps. The v3 scenes are authored twice as long (60-96 frames at
-    // the full 30fps = 2.0-3.2s), so no time-stretching is needed: every
-    // keyframe plays at its designed speed and the motion stays smooth.
+    // frames / fps. The scenes are authored at the full 30fps (120-192 frames
+    // = 4.0-6.4s), so no time-stretching is needed: every keyframe plays at
+    // its designed speed and the motion stays smooth. The entrance is only
+    // 0.55s of that, so the gift is on screen at full size almost instantly.
     final fps = movie.params.fps == 0 ? 20 : movie.params.fps;
     final playMs = (movie.params.frames / fps * 1000).toInt();
     Loggers.info(
@@ -299,6 +302,11 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     // (e.g. very early startup). Fall back to zero instead of throwing.
     final padding = MediaQuery.maybePaddingOf(context) ?? EdgeInsets.zero;
     final bottom = padding.bottom + 84.0;
+    // 92% of the screen width, capped so it looks right on tiny phones and
+    // tablets. The old fixed 300x300 box made the 250px gift look small and
+    // easy to miss on a 1080p phone.
+    final screenWidth = MediaQuery.maybeSizeOf(context)?.width ?? 400.0;
+    final giftSide = (screenWidth * 0.92).clamp(280.0, 420.0).toDouble();
 
     // IMPORTANT: no Material/Container/ColoredBox backdrop here. The layer is
     // fully transparent and IgnorePointer makes every touch pass through to
@@ -311,8 +319,8 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
           children: [
             Center(
               child: SizedBox(
-                width: 300,
-                height: 300,
+                width: giftSide,
+                height: giftSide,
                 child: _svgaReady && !_svgaFailed && _controller != null
                     ? SVGAImage(_controller!, fit: BoxFit.contain)
                     : _buildFallbackImage(),
