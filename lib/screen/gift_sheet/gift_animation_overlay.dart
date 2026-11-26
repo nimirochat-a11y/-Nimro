@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_svga/flutter_svga.dart';
 import 'package:nimiro/common/extensions/string_extension.dart';
 import 'package:get/get.dart';
@@ -18,6 +19,9 @@ import 'package:nimiro/utilities/text_style_custom.dart';
 /// a unique entrance, idle motion and exit plus its own particles and
 /// shockwaves. The entrance itself is absolute (0.55s) so the gift becomes
 /// visible almost immediately and then holds at full size for several seconds.
+/// Playback is driven by a dedicated [Ticker] instead of
+/// `AnimationController.forward()`, so Android's "Remove animations" setting
+/// cannot shorten the scene to a 0.05x flash.
 /// It is played once over the whole application, directly on top of the
 /// current screen. The background is fully transparent, touches pass
 /// through to the app underneath, and the scene is bundled inside the APK so it
@@ -169,6 +173,10 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
     with TickerProviderStateMixin {
   SVGAAnimationController? _controller;
   Timer? _safetyTimer;
+  Ticker? _ticker;
+  Duration? _tickerStart;
+  Duration _sceneDuration = Duration.zero;
+  Size _viewBoxSize = const Size(300, 300);
   bool _finished = false;
   bool _svgaReady = false;
   bool _svgaFailed = false;
@@ -214,43 +222,81 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
 
     controller.videoItem = movie;
 
-    // Assigning videoItem already sets the controller duration to
-    // frames / fps. The scenes are authored at the full 30fps (120-192 frames
-    // = 4.0-6.4s), so no time-stretching is needed: every keyframe plays at
-    // its designed speed and the motion stays smooth. The entrance is only
-    // 0.55s of that, so the gift is on screen at full size almost instantly.
+    // The scenes are authored at the full 30fps (120-192 frames = 4.0-6.4s),
+    // with a 0.55s entrance. We deliberately do NOT call controller.forward():
+    // when the phone has "Remove animations" enabled (or the developer animator
+    // scale is off), Flutter multiplies every AnimationController duration by
+    // 0.05 — a 4.8s gift became a 0.24s flash. Driving the controller from our
+    // own Ticker keeps the whole scene regardless of that setting.
     final fps = movie.params.fps == 0 ? 20 : movie.params.fps;
     final playMs = (movie.params.frames / fps * 1000).toInt();
+    _sceneDuration = Duration(milliseconds: playMs);
+    _viewBoxSize = Size(
+      movie.params.viewBoxWidth > 0 ? movie.params.viewBoxWidth : 300,
+      movie.params.viewBoxHeight > 0 ? movie.params.viewBoxHeight : 300,
+    );
+    final disableAnimations =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     Loggers.info(
         'Gift ${widget.gift.id}: playing ${movie.params.frames} frames '
-        '@${fps}fps (${playMs}ms)');
+        '@${fps}fps (${playMs}ms), disableAnimations=$disableAnimations');
 
-    // The status listener can fire early if the last frames are transparent
-    // (our exit animations end fully faded out), so the computed timer below
-    // is the authoritative end of the scene.
+    // The computed timer is the authoritative end of the scene: the last
+    // frames are fully transparent, so listening for "completed" is unreliable.
     setState(() => _svgaReady = true);
-    // Start after the build that mounts SVGAImage, so the painter already has
-    // a listener attached when the first tick arrives.
+    // Start after the build that mounts SVGAImage, so the painter is attached
+    // before the first value is written.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || _finished || _controller != controller) return;
       _safetyTimer?.cancel();
-      // Small grace period after the scene's real length; the last frame is
-      // fully transparent, so holding a long time would only delay the queue.
-      _safetyTimer = Timer(Duration(milliseconds: playMs + 400), _finish);
-      if (!controller.isAnimating) controller.forward(from: 0);
+      _safetyTimer =
+          Timer(_sceneDuration + const Duration(milliseconds: 400), _finish);
+      _startScene(controller);
     });
+  }
+
+  void _startScene(SVGAAnimationController controller) {
+    _ticker?.dispose();
+    _ticker = null;
+    _tickerStart = null;
+    controller.value = 0;
+    final ticker = createTicker(_onTick);
+    _ticker = ticker;
+    ticker.start();
+  }
+
+  void _onTick(Duration elapsed) {
+    final controller = _controller;
+    if (!mounted || _finished || controller == null) {
+      _ticker?.stop();
+      return;
+    }
+    _tickerStart ??= elapsed;
+    final totalUs = _sceneDuration.inMicroseconds;
+    final elapsedUs = (elapsed - _tickerStart!).inMicroseconds;
+    final progress =
+        totalUs <= 0 ? 1.0 : (elapsedUs / totalUs).clamp(0.0, 1.0).toDouble();
+    controller.value = progress;
+    if (progress >= 1.0) {
+      // Stop here; dispose() releases the ticker after the host unmounts us.
+      _ticker?.stop();
+      _tickerStart = null;
+      _finish();
+    }
   }
 
   void _finish() {
     if (_finished) return;
     _finished = true;
     _safetyTimer?.cancel();
+    _ticker?.stop();
     widget.onDone();
   }
 
   @override
   void dispose() {
     _safetyTimer?.cancel();
+    _ticker?.dispose();
     // SVGAAnimationController.dispose() releases its videoItem (autorelease).
     _controller?.dispose();
     super.dispose();
@@ -322,7 +368,17 @@ class _GiftSvgaAnimationState extends State<_GiftSvgaAnimation>
                 width: giftSide,
                 height: giftSide,
                 child: _svgaReady && !_svgaFailed && _controller != null
-                    ? SVGAImage(_controller!, fit: BoxFit.contain)
+                    // SVGAImage always paints at the movie's viewBox size
+                    // (300x300), so the SizedBox alone does not enlarge it.
+                    // FittedBox scales the rendered scene to the full box.
+                    ? FittedBox(
+                        fit: BoxFit.contain,
+                        child: SizedBox(
+                          width: _viewBoxSize.width,
+                          height: _viewBoxSize.height,
+                          child: SVGAImage(_controller!, fit: BoxFit.contain),
+                        ),
+                      )
                     : _buildFallbackImage(),
               ),
             ),
